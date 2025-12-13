@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structural Design Suite | AISC & ACI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;800&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#03070f;--bg2:#0a1120;--card:rgba(15,25,45,0.85);--blue:#00d4ff;--cyan:#00fff2;--green:#00ff88;--orange:#ff9500;--red:#ff3366;--purple:#a855f7;--text:#e8f0f8;--text2:#8899aa;--border:rgba(0,212,255,0.15)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none}
+        .bg-glow{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(150px);opacity:0.15;pointer-events:none}
+        .bg-glow-1{top:-200px;left:-200px;background:var(--blue)}
+        .bg-glow-2{bottom:-200px;right:-200px;background:var(--purple)}
+        .app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+        .header{background:rgba(10,20,40,0.7);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:100}
+        .header-content{max-width:1600px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+        .logo{display:flex;align-items:center;gap:14px}
+        .logo-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-weight:800;font-size:15px;color:var(--bg);box-shadow:0 0 40px rgba(0,212,255,0.5)}
+        .logo-text h1{font-family:'Orbitron',monospace;font-size:1.5rem;background:linear-gradient(90deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .logo-text span{font-size:0.72rem;color:var(--text2);letter-spacing:3px}
+        .version{padding:6px 14px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--cyan)}
+        .main{flex:1;padding:30px;max-width:1600px;margin:0 auto;width:100%}
+        .hero{text-align:center;margin-bottom:50px;padding:40px 20px;background:linear-gradient(135deg,rgba(0,212,255,0.05),rgba(168,85,247,0.05));border-radius:24px;border:1px solid var(--border)}
+        .hero h2{font-family:'Orbitron',monospace;font-size:2.5rem;margin-bottom:12px;background:linear-gradient(90deg,var(--text),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero p{color:var(--text2);font-size:1.15rem;max-width:600px;margin:0 auto 30px}
+        .stats{display:flex;justify-content:center;gap:40px;flex-wrap:wrap}
+        .stat{text-align:center}
+        .stat-val{font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:700;background:linear-gradient(90deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat-lbl{font-size:0.8rem;color:#506070;text-transform:uppercase}
+        .category{margin-bottom:50px}
+        .cat-header{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+        .cat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+        .cat-icon.steel{background:linear-gradient(135deg,var(--blue),var(--cyan))}
+        .cat-icon.concrete{background:linear-gradient(135deg,var(--orange),#ffd500)}
+        .cat-icon.specialty{background:linear-gradient(135deg,var(--purple),var(--red))}
+        .cat-title{font-family:'Orbitron',monospace;font-size:1.4rem}
+        .cat-count{margin-left:auto;padding:5px 14px;background:rgba(0,212,255,0.1);border-radius:20px;font-size:0.75rem;color:var(--cyan)}
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:26px;cursor:pointer;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);position:relative;overflow:hidden;text-decoration:none;display:block}
+        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;opacity:0;transition:opacity 0.3s}
+        .card.steel::before{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+        .card.concrete::before{background:linear-gradient(90deg,var(--orange),#ffd500)}
+        .card.specialty::before{background:linear-gradient(90deg,var(--purple),var(--red))}
+        .card:hover{transform:translateY(-10px);border-color:rgba(0,212,255,0.4);box-shadow:0 25px 80px rgba(0,212,255,0.2)}
+        .card:hover::before{opacity:1}
+        .card-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px}
+        .card-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem}
+        .card-icon.steel{background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(0,255,242,0.1));border:1px solid rgba(0,212,255,0.3)}
+        .card-icon.concrete{background:linear-gradient(135deg,rgba(255,149,0,0.2),rgba(255,213,0,0.1));border:1px solid rgba(255,149,0,0.3)}
+        .card-icon.specialty{background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(255,51,102,0.1));border:1px solid rgba(168,85,247,0.3)}
+        .card-info h3{font-size:1.15rem;margin-bottom:6px}
+        .code{font-family:'JetBrains Mono',monospace;font-size:0.68rem;padding:3px 10px;border-radius:6px}
+        .code.steel{background:rgba(0,212,255,0.15);color:var(--cyan)}
+        .code.concrete{background:rgba(255,149,0,0.15);color:var(--orange)}
+        .code.specialty{background:rgba(168,85,247,0.15);color:var(--purple)}
+        .card-desc{color:var(--text2);font-size:0.92rem;line-height:1.6;margin-bottom:18px}
+        .tags{display:flex;flex-wrap:wrap;gap:8px}
+        .tag{padding:5px 12px;background:rgba(255,255,255,0.05);border-radius:8px;font-size:0.7rem;color:#506070}
+        .launch{position:absolute;bottom:22px;right:22px;padding:8px 16px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:20px;font-size:0.72rem;font-weight:600;color:var(--bg);opacity:0;transform:translateX(10px);transition:all 0.3s}
+        .card:hover .launch{opacity:1;transform:translateX(0)}
+        .footer{padding:20px;background:rgba(10,20,40,0.7);border-top:1px solid var(--border);text-align:center}
+        .footer p{font-size:0.75rem;color:#506070}
+        .loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity 0.6s,visibility 0.6s}
+        .loading.hidden{opacity:0;visibility:hidden}
+        .loading-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:20px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-weight:800;font-size:22px;color:var(--bg);animation:pulse 1.5s ease-in-out infinite}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        .loading-text{margin-top:24px;font-family:'Orbitron',monospace;color:var(--cyan);font-size:0.85rem;letter-spacing:4px}
+        @media(max-width:768px){.header-content{flex-direction:column;gap:14px}.hero h2{font-size:1.8rem}.grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="loading" id="lo"><div class="loading-logo">SDS</div><div class="loading-text">INITIALIZING</div></div>
+    <div class="app">
+        <header class="header"><div class="header-content"><div class="logo"><div class="logo-icon">SDS</div><div class="logo-text"><h1>STRUCTURAL DESIGN SUITE</h1><span>AISC 360-22 • ACI 318-19 • AISI S310</span></div></div><span class="version">v1.0.0</span></div></header>
+        <main class="main">
+            <section class="hero"><h2>Engineering Design Tools</h2><p>Professional structural design applications for steel and concrete structures</p><div class="stats"><div class="stat"><div class="stat-val">10</div><div class="stat-lbl">Design Tools</div></div><div class="stat"><div class="stat-val">4</div><div class="stat-lbl">Steel</div></div><div class="stat"><div class="stat-val">5</div><div class="stat-lbl">Concrete</div></div><div class="stat"><div class="stat-val">3</div><div class="stat-lbl">Codes</div></div></div></section>
+            <section class="category"><div class="cat-header"><div class="cat-icon steel">🔩</div><h2 class="cat-title">Steel Design</h2><span class="cat-count">4 TOOLS</span></div><div class="grid">
+                <a href="steel-member-design.html" class="card steel"><div class="card-header"><div class="card-icon steel">📐</div><div class="card-info"><h3>Steel Member Design</h3><span class="code steel">AISC 360-22</span></div></div><p class="card-desc">W-shapes, HSS, channels. Tension, compression, flexure, shear, P-M interaction.</p><div class="tags"><span class="tag">W-Shape</span><span class="tag">HSS</span><span class="tag">P-M</span></div><div class="launch">↗ LAUNCH</div></a>
+                <a href="frame-analysis.html" class="card steel"><div class="card-header"><div class="card-icon steel">🏗️</div><div class="card-info"><h3>Frame Analysis</h3><span class="code steel">AISC 360-22 + P-Δ</span></div></div><p class="card-desc">Multi-bay, multi-story frame with P-Delta, load combos, drift checks.</p><div class="tags"><span class="tag">P-Delta</span><span class="tag">B1-B2</span><span class="tag">Drift</span></div><div class="launch">↗ LAUNCH</div></a>
+                <a href="hss-connection.html" class="card steel"><div class="card-header"><div class="card-icon steel">🔗</div><div class="card-info"><h3>HSS Connection 3D</h3><span class="code steel">AISC DG24</span></div></div><p class="card-desc">3D moment connection for HSS columns. Welded, bolted, combined.</p><div class="tags"><span class="tag">3D View</span><span class="tag">Welded</span><span class="tag">Bolted</span></div><div class="launch">↗ LAUNCH</div></a>
+                <a href="base-plate.html" class="card steel"><div class="card-header"><div class="card-icon steel">🔧</div><div class="card-info"><h3>Base Plate Design</h3><span class="code steel">AISC DG1 + ACI</span></div></div><p class="card-desc">Base plate with anchor bolts, bearing, concrete embedment.</p><div class="tags"><span class="tag">Anchor</span><span class="tag">Bearing</span><span class="tag">Moment</span></div><div class="launch">↗ LAUNCH</div></a>
+            </div></section>
+            <section class="category"><div class="cat-header"><div class="cat-icon concrete">🧱</div><h2 class="cat-title">Concrete Design</h2><span class="cat-count">5 TOOLS</span></div><div class="grid">
+                <a href="slab-design.html" class="card concrete"><div class="card-header"><div class="card-icon concrete">📋</div><div class="card-info"><h3>Slab Design</h3><span class="code concrete">ACI 318-19</span></div></div><p class="card-desc">One-way/two-way slabs. Flexure, shear, deflection, crack control.</p><div class="tags"><span class="tag">One-Way</span><span class="tag">Two-Way</span><span class="tag">Deflection</span></div><div class="launch">↗ LAUNCH</div></a>
+                <a href="beam-design.html" class="card concrete"><div class="card-header"><div class="card-icon concrete">📏</div><div class="card-info"><h3>Beam Design</h3><span class="code concrete">ACI 318-19</span></div></div><p class="card-desc">Rectangular/T-beam. Flexure, shear, torsion, development.</p><div class="tags"><span class="tag">Flexure</span><span class="tag">Shear</span><span class="tag">Torsion</span></div><div class="launch">↗ LAUNCH</div></a>
+                <a href="column-design.html" class="card concrete"><div class="card-header"><div class="card-icon concrete">🏛️</div><div class="card-info"><h3>Column Design P-M</h3><span class="code concrete">ACI 318-19</span></div></div><p class="card-desc">P-M diagram, slenderness, biaxial bending, detailing.</p><div class="tags"><span class="tag">P-M</span><span class="tag">Slenderness</span><span class="tag">Biaxial</span></div><div class="launch">↗ LAUNCH</div></a>
+                <a href="wall-design.html" class="card concrete"><div class="card-header"><div class="card-icon concrete">🧱</div><div class="card-info"><h3>Wall Design</h3><span class="code concrete">ACI 318-19</span></div></div><p class="card-desc">In-plane shear, out-of-plane, boundary elements.</p><div class="tags"><span class="tag">In-Plane</span><span class="tag">Out-of-Plane</span><span class="tag">Boundary</span></div><div class="launch">↗ LAUNCH</div></a>
+                <a href="foundation-design.html" class="card concrete"><div class="card-header"><div class="card-icon concrete">⬛</div><div class="card-info"><h3>Foundation Design</h3><span class="code concrete">ACI 318-19</span></div></div><p class="card-desc">Spread footing. Bearing, shear, punching, flexure.</p><div class="tags"><span class="tag">Bearing</span><span class="tag">Punching</span><span class="tag">Flexure</span></div><div class="launch">↗ LAUNCH</div></a>
+            </div></section>
+            <section class="category"><div class="cat-header"><div class="cat-icon specialty">⚙️</div><h2 class="cat-title">Specialty Design</h2><span class="cat-count">1 TOOL</span></div><div class="grid">
+                <a href="metal-deck.html" class="card specialty"><div class="card-header"><div class="card-icon specialty">🔲</div><div class="card-info"><h3>Metal Deck & Bracing</h3><span class="code specialty">AISI S310 • SDI</span></div></div><p class="card-desc">Diaphragm shear, chord/collector forces, bracing design.</p><div class="tags"><span class="tag">Diaphragm</span><span class="tag">Chord</span><span class="tag">Bracing</span></div><div class="launch">↗ LAUNCH</div></a>
+            </div></section>
+        </main>
+        <footer class="footer"><p>Structural Design Suite v1.0 • AISC 360-22, ACI 318-19, AISI S310</p></footer>
+    </div>
+    <script>document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>document.getElementById('lo').classList.add('hidden'),800));</script>
+</body>
+</html>

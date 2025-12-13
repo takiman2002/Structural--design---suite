@@ -1,0 +1,163 @@
+--red)}
+        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
+        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
+        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
+        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="back">← Back</a>
+        <div style="text-align:center"><h1>🔗 HSS Connection 3D</h1><span style="font-size:0.75rem;color:var(--text2)">AISC Design Guide 24</span></div>
+        <div></div>
+    </header>
+    <div class="main">
+        <div class="panel">
+            <div class="panel-title">Connection Type</div>
+            <div class="form-group">
+                <select id="connType" onchange="calculate()">
+                    <option value="welded">Welded</option>
+                    <option value="bolted">Bolted</option>
+                    <option value="combined">Combined (Welded + Bolted)</option>
+                </select>
+            </div>
+            <div class="panel-title" style="margin-top:16px">HSS Column</div>
+            <div class="form-row">
+                <div class="form-group"><label>B (in)</label><input type="number" id="colB" value="10" onchange="draw3D();calculate()"></div>
+                <div class="form-group"><label>H (in)</label><input type="number" id="colH" value="10" onchange="draw3D();calculate()"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>t (in)</label><input type="number" id="colT" value="0.465" step="0.001" onchange="calculate()"></div>
+                <div class="form-group"><label>Fy (ksi)</label><input type="number" id="colFy" value="46" onchange="calculate()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Beam</div>
+            <div class="form-row">
+                <div class="form-group"><label>B (in)</label><input type="number" id="beamB" value="8" onchange="draw3D();calculate()"></div>
+                <div class="form-group"><label>H (in)</label><input type="number" id="beamH" value="12" onchange="draw3D();calculate()"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>t (in)</label><input type="number" id="beamT" value="0.465" step="0.001" onchange="calculate()"></div>
+                <div class="form-group"><label>Fy (ksi)</label><input type="number" id="beamFy" value="46" onchange="calculate()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Design Forces</div>
+            <div class="form-row">
+                <div class="form-group"><label>Mu (k-ft)</label><input type="number" id="Mu" value="150" onchange="calculate()"></div>
+                <div class="form-group"><label>Vu (kips)</label><input type="number" id="Vu" value="45" onchange="calculate()"></div>
+            </div>
+            <button class="btn btn-primary" onclick="calculate()">⚙️ Calculate</button>
+        </div>
+        <div class="panel">
+            <div class="panel-title">3D Visualization (Drag to Rotate)</div>
+            <div class="canvas-box"><canvas id="canvas3d"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between">
+                <span>Results</span>
+                <span class="status pass" id="status">● PASS</span>
+            </div>
+            <div class="result-grid">
+                <div class="result-card pass" id="momCard"><div class="result-label">φMn</div><div class="result-value" id="phiMn">--</div></div>
+                <div class="result-card pass" id="shearCard"><div class="result-label">φVn</div><div class="result-value" id="phiVn">--</div></div>
+                <div class="result-card"><div class="result-label">Gov DCR</div><div class="result-value" id="govDCR">--</div></div>
+                <div class="result-card"><div class="result-label">β Ratio</div><div class="result-value" id="beta">--</div></div>
+            </div>
+            <div class="panel-title">Design Checks</div>
+            <div class="checks" id="checks"></div>
+        </div>
+    </div>
+    <script>
+        let rx=-25,ry=35,drag=false,lx,ly;
+        const c=document.getElementById('canvas3d');
+        const ctx=c.getContext('2d');
+        function resizeCanvas(){
+            const box=c.parentElement;
+            c.width=box.clientWidth;
+            c.height=box.clientHeight;
+            draw3D();
+        }
+        document.addEventListener('DOMContentLoaded',()=>{resizeCanvas();calculate();});
+        window.addEventListener('resize',resizeCanvas);
+        c.onmousedown=e=>{drag=true;lx=e.clientX;ly=e.clientY;c.style.cursor='grabbing'};
+        c.onmousemove=e=>{if(drag){ry+=(e.clientX-lx)*0.5;rx+=(e.clientY-ly)*0.5;rx=Math.max(-90,Math.min(90,rx));lx=e.clientX;ly=e.clientY;draw3D()}};
+        c.onmouseup=()=>{drag=false;c.style.cursor='grab'};
+        c.onmouseleave=()=>{drag=false;c.style.cursor='grab'};
+        function draw3D(){
+            const W=c.width,H=c.height;
+            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+            const colB=+document.getElementById('colB').value;
+            const colH=+document.getElementById('colH').value;
+            const beamB=+document.getElementById('beamB').value;
+            const beamH=+document.getElementById('beamH').value;
+            const sc=Math.min(W,H)/50,cx=W/2,cy=H/2;
+            const rxr=rx*Math.PI/180,ryr=ry*Math.PI/180;
+            function proj(x,y,z){
+                let x1=x*Math.cos(ryr)-z*Math.sin(ryr);
+                let z1=x*Math.sin(ryr)+z*Math.cos(ryr);
+                let y1=y*Math.cos(rxr)-z1*Math.sin(rxr);
+                let z2=y*Math.sin(rxr)+z1*Math.cos(rxr);
+                const f=500/(500+z2);
+                return{x:cx+x1*sc*f,y:cy-y1*sc*f,z:z2};
+            }
+            function box(x,y,z,w,h,d,fill,stroke){
+                const v=[proj(x-w/2,y-h/2,z-d/2),proj(x+w/2,y-h/2,z-d/2),proj(x+w/2,y+h/2,z-d/2),proj(x-w/2,y+h/2,z-d/2),
+                         proj(x-w/2,y-h/2,z+d/2),proj(x+w/2,y-h/2,z+d/2),proj(x+w/2,y+h/2,z+d/2),proj(x-w/2,y+h/2,z+d/2)];
+                const faces=[[0,1,2,3],[5,4,7,6],[4,0,3,7],[1,5,6,2],[4,5,1,0],[3,2,6,7]];
+                faces.sort((a,b)=>(b.reduce((s,i)=>s+v[i].z,0)-a.reduce((s,i)=>s+v[i].z,0))/4);
+                faces.forEach(f=>{
+                    ctx.beginPath();ctx.moveTo(v[f[0]].x,v[f[0]].y);
+                    f.forEach(i=>ctx.lineTo(v[i].x,v[i].y));ctx.closePath();
+                    ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();
+                });
+            }
+            box(0,-10,0,colB,18,colH,'rgba(0,180,216,0.7)','#00b4d8');
+            box(0,-beamH/2-0.5,0,colB+2,0.75,colH+2,'rgba(255,209,102,0.8)','#ffd166');
+            box(0,0,0,24,beamH,beamB,'rgba(6,214,160,0.7)','#06d6a0');
+            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
+            ctx.fillText('Column (HSS)',cx-100,cy+100);
+            ctx.fillText('Beam (HSS)',cx+40,cy-80);
+        }
+        function calculate(){
+            const colB=+document.getElementById('colB').value;
+            const colH=+document.getElementById('colH').value;
+            const colT=+document.getElementById('colT').value;
+            const colFy=+document.getElementById('colFy').value;
+            const beamH=+document.getElementById('beamH').value;
+            const beamT=+document.getElementById('beamT').value;
+            const Mu=+document.getElementById('Mu').value;
+            const Vu=+document.getElementById('Vu').value;
+            const arm=beamH-beamT;
+            const Ff=(Mu*12)/arm;
+            const phi=0.75;
+            const Fnw=0.6*70;
+            const throat=0.25*0.707;
+            const weldL=2*colB+2*beamH;
+            const weldCap=phi*Fnw*throat*weldL;
+            const momCap=weldCap*arm/12;
+            const shearCap=phi*0.6*colFy*colH*colT*2;
+            const dcrM=Mu/momCap;
+            const dcrV=Vu/shearCap;
+            const beta=beamH/colB;
+            const gamma=colB/(2*colT);
+            const checks=[
+                {name:'Moment Capacity',dcr:dcrM,pass:dcrM<=1,ref:'DG24 §4.2'},
+                {name:'Shear Capacity',dcr:dcrV,pass:dcrV<=1,ref:'DG24 §4.3'},
+                {name:'β Ratio (0.25-1.0)',dcr:beta>=0.25&&beta<=1?0.5:1.5,pass:beta>=0.25&&beta<=1,ref:'DG24 §3.1'},
+                {name:'γ Slenderness (≤35)',dcr:gamma/35,pass:gamma<=35,ref:'DG24 §3.2'}
+            ];
+            const allPass=checks.every(c=>c.pass);
+            const maxDCR=Math.max(dcrM,dcrV);
+            document.getElementById('phiMn').textContent=momCap.toFixed(1)+' k-ft';
+            document.getElementById('phiVn').textContent=shearCap.toFixed(1)+' k';
+            document.getElementById('govDCR').textContent=maxDCR.toFixed(3);
+            document.getElementById('beta').textContent=beta.toFixed(2);
+            document.getElementById('status').className='status '+(allPass?'pass':'fail');
+            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
+            document.getElementById('momCard').className='result-card '+(dcrM<=1?'pass':'fail');
+            document.getElementById('shearCard').className='result-card '+(dcrV<=1?'pass':'fail');
+            document.getElementById('checks').innerHTML=checks.map(c=>
+                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
+            ).join('');
+        }
+    </script>
+</body>
+</html>

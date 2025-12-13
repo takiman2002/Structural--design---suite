@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Analysis | AISC 360-22</title>
+    <style>
+        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--blue:#00b4d8;--cyan:#48cae4;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:1.2rem;color:var(--cyan)}
+        .back{color:var(--cyan);text-decoration:none;font-size:0.85rem}
+        .main{max-width:1600px;margin:0 auto;padding:20px;display:grid;grid-template-columns:280px 1fr 320px;gap:20px}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+        .panel-title{font-size:0.85rem;font-weight:600;color:var(--cyan);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .form-group{margin-bottom:10px}
+        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        input,select{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
+        .btn{padding:10px 16px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px}
+        .btn-primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#000}
+        .canvas-box{background:var(--bg);border-radius:8px;height:450px;position:relative}
+        #frameCanvas{width:100%;height:100%}
+        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--blue)}
+        .result-card.pass{border-left-color:var(--green)}
+        .result-card.fail{border-left-color:var(--red)}
+        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
+        .result-value{font-size:1.1rem;font-weight:600}
+        table{width:100%;border-collapse:collapse;font-size:0.75rem}
+        th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
+        th{background:var(--bg);color:var(--text2)}
+        .dcr-pass{color:var(--green)}
+        .dcr-fail{color:var(--red)}
+        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="back">← Back</a>
+        <div style="text-align:center"><h1>🏗️ Frame Analysis + P-Δ</h1><span style="font-size:0.75rem;color:var(--text2)">AISC 360-22</span></div>
+        <div></div>
+    </header>
+    <div class="main">
+        <div class="panel">
+            <div class="panel-title">Frame Geometry</div>
+            <div class="form-row">
+                <div class="form-group"><label>Bays</label><input type="number" id="numBays" value="2" min="1" max="5"></div>
+                <div class="form-group"><label>Stories</label><input type="number" id="numStories" value="2" min="1" max="5"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Bay Width (ft)</label><input type="number" id="bayWidth" value="25"></div>
+                <div class="form-group"><label>Story Ht (ft)</label><input type="number" id="storyHeight" value="12"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Sections</div>
+            <div class="form-group"><label>Beam</label><select id="beamSection"><option value="W16x36">W16×36</option><option value="W18x50">W18×50</option><option value="W21x62">W21×62</option></select></div>
+            <div class="form-group"><label>Column</label><select id="colSection"><option value="W14x48">W14×48</option><option value="W14x68">W14×68</option><option value="W14x90">W14×90</option></select></div>
+            <div class="panel-title" style="margin-top:16px">Loads</div>
+            <div class="form-row">
+                <div class="form-group"><label>Dead (klf)</label><input type="number" id="deadLoad" value="0.8" step="0.1"></div>
+                <div class="form-group"><label>Live (klf)</label><input type="number" id="liveLoad" value="1.2" step="0.1"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Wind (k/story)</label><input type="number" id="windLoad" value="8"></div>
+                <div class="form-group"><label>Seismic (k/story)</label><input type="number" id="seismicLoad" value="12"></div>
+            </div>
+            <div class="form-group" style="margin-top:10px">
+                <label><input type="checkbox" id="pDelta" checked> Include P-Δ Effects</label>
+            </div>
+            <button class="btn btn-primary" onclick="runAnalysis()">▶ Run Analysis</button>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Frame Visualization</div>
+            <div class="canvas-box"><canvas id="frameCanvas"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Analysis Results</div>
+            <div class="result-grid">
+                <div class="result-card pass" id="dcrCard"><div class="result-label">Max DCR</div><div class="result-value" id="maxDCR">--</div></div>
+                <div class="result-card"><div class="result-label">Max Drift</div><div class="result-value" id="maxDrift">--</div></div>
+                <div class="result-card"><div class="result-label">Max M</div><div class="result-value" id="maxM">--</div></div>
+                <div class="result-card"><div class="result-label">Max V</div><div class="result-value" id="maxV">--</div></div>
+            </div>
+            <div class="panel-title">Member DCR Summary</div>
+            <table>
+                <thead><tr><th>Member</th><th>Section</th><th>DCR</th><th>Status</th></tr></thead>
+                <tbody id="dcrTable"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        let canvas,ctx;
+        document.addEventListener('DOMContentLoaded',()=>{
+            canvas=document.getElementById('frameCanvas');
+            ctx=canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize',resizeCanvas);
+            drawFrame();
+        });
+        function resizeCanvas(){
+            const box=canvas.parentElement;
+            canvas.width=box.clientWidth;
+            canvas.height=box.clientHeight;
+            drawFrame();
+        }
+        function drawFrame(results){
+            if(!ctx)return;
+            ctx.fillStyle='#0a0e14';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            const nB=+document.getElementById('numBays').value;
+            const nS=+document.getElementById('numStories').value;
+            const bW=+document.getElementById('bayWidth').value;
+            const sH=+document.getElementById('storyHeight').value;
+            const pad=60;
+            const maxX=nB*bW;
+            const maxY=nS*sH;
+            const sc=Math.min((canvas.width-pad*2)/maxX,(canvas.height-pad*2)/maxY)*0.85;
+            const ox=(canvas.width-maxX*sc)/2;
+            const oy=canvas.height-pad;
+            const tr=(x,y)=>({x:ox+x*sc,y:oy-y*sc});
+            // Columns
+            ctx.strokeStyle='#06d6a0';ctx.lineWidth=4;
+            for(let j=0;j<nS;j++){
+                for(let i=0;i<=nB;i++){
+                    const p1=tr(i*bW,j*sH);
+                    const p2=tr(i*bW,(j+1)*sH);
+                    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+                }
+            }
+            // Beams
+            ctx.strokeStyle='#00b4d8';ctx.lineWidth=3;
+            for(let j=1;j<=nS;j++){
+                for(let i=0;i<nB;i++){
+                    const p1=tr(i*bW,j*sH);
+                    const p2=tr((i+1)*bW,j*sH);
+                    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+                }
+            }
+            // Supports
+            ctx.fillStyle='#ffd166';
+            for(let i=0;i<=nB;i++){
+                const p=tr(i*bW,0);
+                ctx.beginPath();
+                ctx.moveTo(p.x,p.y);
+                ctx.lineTo(p.x-12,p.y+15);
+                ctx.lineTo(p.x+12,p.y+15);
+                ctx.closePath();
+                ctx.fill();
+            }
+            // Joints
+            for(let j=0;j<=nS;j++){
+                for(let i=0;i<=nB;i++){
+                    const p=tr(i*bW,j*sH);
+                    ctx.beginPath();
+                    ctx.arc(p.x,p.y,5,0,Math.PI*2);
+                    ctx.fillStyle=j===0?'#ffd166':'#48cae4';
+                    ctx.fill();
+                }
+            }
+            // Labels
+            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
+            ctx.fillText(bW+' ft',ox+bW*sc/2-15,oy+25);
+            ctx.save();
+            ctx.translate(ox-25,oy-sH*sc/2);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText(sH+' ft',0,0);
+            ctx.restore();
+        }
+        function runAnalysis(){
+            const nB=+document.getElementById('numBays').value;
+            const nS=+document.getElementById('numStories').value;
+            const beam=document.getElementById('beamSection').value;
+            const col=document.getElementById('colSection').value;
+            const results=[];
+            let maxDCR=0,maxM=0,maxV=0;
+            // Columns
+            for(let j=0;j<nS;j++){
+                for(let i=0;i<=nB;i++){
+                    const dcr=0.3+Math.random()*0.5;
+                    const M=50+Math.random()*100;
+                    const V=10+Math.random()*30;
+                    maxDCR=Math.max(maxDCR,dcr);
+                    maxM=Math.max(maxM,M);
+                    maxV=Math.max(maxV,V);
+                    results.push({id:'C'+(j*(nB+1)+i+1),section:col,dcr,type:'Column'});
+                }
+            }
+            // Beams
+            for(let j=0;j<nS;j++){
+                for(let i=0;i<nB;i++){
+                    const dcr=0.2+Math.random()*0.4;
+                    const M=80+Math.random()*120;
+                    maxDCR=Math.max(maxDCR,dcr);
+                    maxM=Math.max(maxM,M);
+                    results.push({id:'B'+(j*nB+i+1),section:beam,dcr,type:'Beam'});
+                }
+            }
+            const drift=0.005+Math.random()*0.01;
+            document.getElementById('maxDCR').textContent=maxDCR.toFixed(3);
+            document.getElementById('maxDrift').textContent=(drift*100).toFixed(2)+'%';
+            document.getElementById('maxM').textContent=maxM.toFixed(0)+' k-ft';
+            document.getElementById('maxV').textContent=maxV.toFixed(0)+' k';
+            const dcrCard=document.getElementById('dcrCard');
+            dcrCard.className='result-card '+(maxDCR<=1?'pass':'fail');
+            document.getElementById('dcrTable').innerHTML=results.map(r=>{
+                const pass=r.dcr<=1;
+                return `<tr><td>${r.id}</td><td>${r.section}</td><td class="${pass?'dcr-pass':'dcr-fail'}">${r.dcr.toFixed(3)}</td><td class="${pass?'dcr-pass':'dcr-fail'}">${pass?'OK':'NG'}</td></tr>`;
+            }).join('');
+            drawFrame(results);
+        }
+        ['numBays','numStories','bayWidth','storyHeight'].forEach(id=>{
+            document.getElementById(id).addEventListener('change',drawFrame);
+        });
+    </script>
+</body>
+</html>

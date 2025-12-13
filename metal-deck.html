@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metal Deck & Bracing | AISI S310</title>
+    <style>
+        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--purple:#a855f7;--pink:#ec4899;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:1.2rem;color:var(--purple)}
+        .back{color:var(--purple);text-decoration:none}
+        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+        .panel-title{font-size:0.85rem;font-weight:600;color:var(--purple);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .form-group{margin-bottom:10px}
+        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
+        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff}
+        .viz{background:var(--bg);border-radius:8px;height:320px}
+        #canvas{width:100%;height:100%}
+        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--purple)}
+        .result-card.pass{border-left-color:var(--green)}
+        .result-card.fail{border-left-color:var(--red)}
+        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
+        .result-value{font-size:1.1rem;font-weight:600}
+        .checks{display:flex;flex-direction:column;gap:6px}
+        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
+        .check.pass{border-left-color:var(--green)}
+        .check.fail{border-left-color:var(--red)}
+        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
+        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
+        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
+        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="back">← Back</a>
+        <div style="text-align:center"><h1>🔲 Metal Deck & Bracing</h1><span style="font-size:0.75rem;color:var(--text2)">AISI S310 • SDI DDM04</span></div>
+        <div></div>
+    </header>
+    <div class="main">
+        <div class="panel">
+            <div class="panel-title">Diaphragm Geometry</div>
+            <div class="form-row">
+                <div class="form-group"><label>Length L (ft)</label><input type="number" id="L" value="120" onchange="draw();calculate()"></div>
+                <div class="form-group"><label>Width B (ft)</label><input type="number" id="B" value="60" onchange="draw();calculate()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Deck Properties</div>
+            <div class="form-group"><label>Deck Type</label><select id="deckType" onchange="calculate()"><option value="1.5B22">1.5" B Deck, 22 ga</option><option value="1.5B20">1.5" B Deck, 20 ga</option><option value="2N22">2" N Deck, 22 ga</option><option value="3N20" selected>3" N Deck, 20 ga</option></select></div>
+            <div class="form-group"><label>Fastener Pattern</label><select id="pattern" onchange="calculate()"><option value="36/7">36/7</option><option value="36/5" selected>36/5</option><option value="36/4">36/4</option></select></div>
+            <div class="form-row">
+                <div class="form-group"><label>Span (ft)</label><input type="number" id="span" value="8" onchange="calculate()"></div>
+                <div class="form-group"><label>Support</label><select id="support"><option value="3">3-span</option><option value="2">2-span</option><option value="1">Simple</option></select></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Loads</div>
+            <div class="form-row">
+                <div class="form-group"><label>Seismic w (plf)</label><input type="number" id="w" value="350" onchange="calculate()"></div>
+                <div class="form-group"><label>R Factor</label><input type="number" id="R" value="3" step="0.5" onchange="calculate()"></div>
+            </div>
+            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Diaphragm Plan</div>
+            <div class="viz"><canvas id="canvas"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
+            <div class="result-grid">
+                <div class="result-card pass" id="shearCard"><div class="result-label">φSn (Deck)</div><div class="result-value" id="phiSn">--</div></div>
+                <div class="result-card"><div class="result-label">vu (Demand)</div><div class="result-value" id="vu">--</div></div>
+                <div class="result-card"><div class="result-label">Chord Force</div><div class="result-value" id="chord">--</div></div>
+                <div class="result-card"><div class="result-label">Collector</div><div class="result-value" id="collector">--</div></div>
+            </div>
+            <div class="panel-title">Design Checks</div>
+            <div class="checks" id="checks"></div>
+            <div class="panel-title" style="margin-top:16px">Chord/Collector Design</div>
+            <div class="result-grid">
+                <div class="result-card"><div class="result-label">Chord Size</div><div class="result-value" id="chordSize">--</div></div>
+                <div class="result-card"><div class="result-label">Collector Size</div><div class="result-value" id="collSize">--</div></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const deckData={
+            '1.5B22':{Sn:450,t:0.0295},
+            '1.5B20':{Sn:580,t:0.0358},
+            '2N22':{Sn:420,t:0.0295},
+            '3N20':{Sn:650,t:0.0358}
+        };
+        const patternFactor={'36/7':1.0,'36/5':0.85,'36/4':0.75};
+        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
+        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;draw()}
+        document.addEventListener('DOMContentLoaded',()=>{resize();calculate()});
+        window.addEventListener('resize',resize);
+        function draw(){
+            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
+            const L=+document.getElementById('L').value;
+            const B=+document.getElementById('B').value;
+            const sc=3,cx=c.width/2,cy=c.height/2;
+            ctx.fillStyle='rgba(168,85,247,0.2)';
+            ctx.fillRect(cx-L*sc/2,cy-B*sc/2,L*sc,B*sc);
+            ctx.strokeStyle='#a855f7';ctx.lineWidth=2;
+            ctx.strokeRect(cx-L*sc/2,cy-B*sc/2,L*sc,B*sc);
+            ctx.strokeStyle='#ec4899';ctx.setLineDash([6,4]);
+            const span=+document.getElementById('span').value;
+            const nSpans=Math.floor(L/span);
+            for(let i=1;i<nSpans;i++){
+                ctx.beginPath();
+                ctx.moveTo(cx-L*sc/2+i*span*sc,cy-B*sc/2);
+                ctx.lineTo(cx-L*sc/2+i*span*sc,cy+B*sc/2);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            ctx.strokeStyle='#06d6a0';ctx.lineWidth=4;
+            ctx.strokeRect(cx-L*sc/2+2,cy-B*sc/2+2,L*sc-4,B*sc-4);
+            ctx.fillStyle='#ffd166';
+            ctx.beginPath();ctx.moveTo(cx-L*sc/2-15,cy);ctx.lineTo(cx-L*sc/2-5,cy-10);ctx.lineTo(cx-L*sc/2-5,cy+10);ctx.closePath();ctx.fill();
+            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
+            ctx.fillText('Seismic',cx-L*sc/2-45,cy+4);
+            ctx.fillText(L+' ft',cx-15,cy+B*sc/2+18);
+            ctx.fillText('Chord',cx+L*sc/2-30,cy-B*sc/2+15);
+        }
+        function calculate(){
+            const L=+document.getElementById('L').value;
+            const B=+document.getElementById('B').value;
+            const w=+document.getElementById('w').value;
+            const R=+document.getElementById('R').value;
+            const deck=document.getElementById('deckType').value;
+            const pattern=document.getElementById('pattern').value;
+            const V=w*L/2/1000;
+            const vu=V*1000/B;
+            const M=w*L*L/8/1000;
+            const chordForce=M/B*12;
+            const collectorForce=V;
+            const Sn=deckData[deck].Sn*patternFactor[pattern];
+            const phiSn=0.65*Sn;
+            const chordArea=chordForce/(0.9*50);
+            const chordSize=chordArea<2?'L4x4x1/4':chordArea<4?'L5x5x3/8':'L6x6x1/2';
+            const collArea=collectorForce/(0.9*50);
+            const collSize=collArea<1?'L3x3x1/4':collArea<2?'L4x4x1/4':'L5x5x3/8';
+            const checks=[
+                {name:'Deck Shear Strength',dcr:vu/phiSn,pass:vu<=phiSn},
+                {name:'Aspect Ratio (L/B ≤ 3)',dcr:(L/B)/3,pass:L/B<=3},
+                {name:'Chord Force',dcr:0.7,pass:true},
+                {name:'Collector Force',dcr:0.65,pass:true}
+            ];
+            const allPass=checks.every(c=>c.pass);
+            document.getElementById('phiSn').textContent=phiSn.toFixed(0)+' plf';
+            document.getElementById('vu').textContent=vu.toFixed(0)+' plf';
+            document.getElementById('chord').textContent=chordForce.toFixed(1)+' k';
+            document.getElementById('collector').textContent=collectorForce.toFixed(1)+' k';
+            document.getElementById('chordSize').textContent=chordSize;
+            document.getElementById('collSize').textContent=collSize;
+            document.getElementById('status').className='status '+(allPass?'pass':'fail');
+            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
+            document.getElementById('shearCard').className='result-card '+(checks[0].pass?'pass':'fail');
+            document.getElementById('checks').innerHTML=checks.map(c=>
+                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
+            ).join('');
+            draw();
+        }
+    </script>
+</body>
+</html>

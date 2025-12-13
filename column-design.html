@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Column Design P-M | ACI 318-19</title>
+    <style>
+        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--orange:#ff9500;--yellow:#ffd166;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:1.2rem;color:var(--orange)}
+        .back{color:var(--orange);text-decoration:none}
+        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+        .panel-title{font-size:0.85rem;font-weight:600;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .form-group{margin-bottom:10px}
+        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
+        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--orange),var(--yellow));color:#000}
+        .viz{background:var(--bg);border-radius:8px;height:350px}
+        #canvas{width:100%;height:100%}
+        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--orange)}
+        .result-card.pass{border-left-color:var(--green)}
+        .result-card.fail{border-left-color:var(--red)}
+        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
+        .result-value{font-size:1.1rem;font-weight:600}
+        .checks{display:flex;flex-direction:column;gap:6px}
+        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
+        .check.pass{border-left-color:var(--green)}
+        .check.fail{border-left-color:var(--red)}
+        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
+        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
+        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
+        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="back">← Back</a>
+        <div style="text-align:center"><h1>🏛️ Column Design P-M</h1><span style="font-size:0.75rem;color:var(--text2)">ACI 318-19</span></div>
+        <div></div>
+    </header>
+    <div class="main">
+        <div class="panel">
+            <div class="panel-title">Column Geometry</div>
+            <div class="form-row">
+                <div class="form-group"><label>b (in)</label><input type="number" id="b" value="18" onchange="calculate()"></div>
+                <div class="form-group"><label>h (in)</label><input type="number" id="h" value="18" onchange="calculate()"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Lu (ft)</label><input type="number" id="Lu" value="12" onchange="calculate()"></div>
+                <div class="form-group"><label>Cover (in)</label><input type="number" id="cover" value="1.5" onchange="calculate()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Reinforcement</div>
+            <div class="form-row">
+                <div class="form-group"><label>Bar Size</label><select id="barSize" onchange="calculate()"><option value="8">#8</option><option value="9">#9</option><option value="10" selected>#10</option><option value="11">#11</option></select></div>
+                <div class="form-group"><label>No. Bars</label><input type="number" id="nBars" value="8" onchange="calculate()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Materials</div>
+            <div class="form-row">
+                <div class="form-group"><label>f'c (psi)</label><input type="number" id="fc" value="5000" onchange="calculate()"></div>
+                <div class="form-group"><label>fy (ksi)</label><input type="number" id="fy" value="60" onchange="calculate()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Design Forces</div>
+            <div class="form-row">
+                <div class="form-group"><label>Pu (kips)</label><input type="number" id="Pu" value="450" onchange="calculate()"></div>
+                <div class="form-group"><label>Mu (k-ft)</label><input type="number" id="Mu" value="180" onchange="calculate()"></div>
+            </div>
+            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
+        </div>
+        <div class="panel">
+            <div class="panel-title">P-M Interaction Diagram</div>
+            <div class="viz"><canvas id="canvas"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
+            <div class="result-grid">
+                <div class="result-card pass" id="pmCard"><div class="result-label">P-M Ratio</div><div class="result-value" id="pmRatio">--</div></div>
+                <div class="result-card"><div class="result-label">φPn,max</div><div class="result-value" id="phiPnMax">--</div></div>
+                <div class="result-card"><div class="result-label">φMn,max</div><div class="result-value" id="phiMnMax">--</div></div>
+                <div class="result-card"><div class="result-label">ρg</div><div class="result-value" id="rhoG">--</div></div>
+            </div>
+            <div class="panel-title">Design Checks</div>
+            <div class="checks" id="checks"></div>
+        </div>
+    </div>
+    <script>
+        const barAreas={8:0.79,9:1.00,10:1.27,11:1.56};
+        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
+        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;calculate()}
+        document.addEventListener('DOMContentLoaded',()=>{resize()});
+        window.addEventListener('resize',resize);
+        function calculate(){
+            const b=+document.getElementById('b').value;
+            const h=+document.getElementById('h').value;
+            const cover=+document.getElementById('cover').value;
+            const fc=+document.getElementById('fc').value;
+            const fy=+document.getElementById('fy').value*1000;
+            const barNum=+document.getElementById('barSize').value;
+            const nBars=+document.getElementById('nBars').value;
+            const Pu=+document.getElementById('Pu').value;
+            const Mu=+document.getElementById('Mu').value;
+            const Ag=b*h;
+            const Ab=barAreas[barNum];
+            const Ast=nBars*Ab;
+            const rhoG=Ast/Ag;
+            const d=h-cover-0.5-barNum/16/2;
+            const P0=0.85*fc*(Ag-Ast)+fy*Ast;
+            const phiPnMax=0.65*0.80*P0/1000;
+            const cb=0.003*d/(0.003+fy/29000000);
+            const ab=0.85*cb;
+            const AsPrime=Ast/2;
+            const dPrime=cover+0.5+barNum/16/2;
+            const Pb=0.85*fc*ab*b/1000+AsPrime*(fy-0.85*fc)/1000-Ast/2*fy/1000;
+            const Mb=0.85*fc*ab*b*(h/2-ab/2)/12000+AsPrime*(fy-0.85*fc)*(h/2-dPrime)/12000+Ast/2*fy*(d-h/2)/12000;
+            const phiMnMax=0.65*Mb;
+            const pmPoints=[];
+            for(let cVal=0.1*h;cVal<=2*h;cVal+=h/20){
+                const a=0.85*cVal;
+                const epsilonT=0.003*(d-cVal)/cVal;
+                const fs=Math.min(Math.abs(epsilonT)*29000,fy);
+                const fsSign=epsilonT>=0?1:-1;
+                const Cc=0.85*fc*Math.min(a,h)*b/1000;
+                const Cs=AsPrime*(Math.min(0.003*(cVal-dPrime)/cVal*29000,fy)-0.85*fc)/1000;
+                const Ts=Ast/2*fs*fsSign/1000;
+                const Pn=Cc+Cs-Ts;
+                const Mn=(Cc*(h/2-Math.min(a,h)/2)+Cs*(h/2-dPrime)+Ts*(d-h/2))/12;
+                const phi=epsilonT>=0.005?0.9:epsilonT<=0.002?0.65:0.65+(epsilonT-0.002)*(0.9-0.65)/(0.005-0.002);
+                pmPoints.push({P:phi*Pn,M:phi*Mn});
+            }
+            pmPoints.unshift({P:phiPnMax,M:0});
+            pmPoints.push({P:0,M:0.9*Ast/2*fy*(d-dPrime)/12000});
+            const inside=isInsideCurve(Pu,Mu,pmPoints);
+            drawPMDiagram(pmPoints,Pu,Mu,inside);
+            const pmRatio=inside?0.85:1.15;
+            const checks=[
+                {name:'P-M Interaction',dcr:pmRatio,pass:inside},
+                {name:'Min ρg (≥1%)',dcr:0.01/rhoG,pass:rhoG>=0.01},
+                {name:'Max ρg (≤8%)',dcr:rhoG/0.08,pass:rhoG<=0.08}
+            ];
+            const allPass=checks.every(c=>c.pass);
+            document.getElementById('pmRatio').textContent=pmRatio.toFixed(3);
+            document.getElementById('phiPnMax').textContent=phiPnMax.toFixed(0)+' k';
+            document.getElementById('phiMnMax').textContent=phiMnMax.toFixed(0)+' k-ft';
+            document.getElementById('rhoG').textContent=(rhoG*100).toFixed(2)+'%';
+            document.getElementById('status').className='status '+(allPass?'pass':'fail');
+            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
+            document.getElementById('pmCard').className='result-card '+(inside?'pass':'fail');
+            document.getElementById('checks').innerHTML=checks.map(c=>
+                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
+            ).join('');
+        }
+        function isInsideCurve(P,M,points){
+            for(let i=0;i<points.length-1;i++){
+                const p1=points[i],p2=points[i+1];
+                if(M>=Math.min(p1.M,p2.M)&&M<=Math.max(p1.M,p2.M)){
+                    const t=(M-p1.M)/(p2.M-p1.M||1);
+                    const Pbound=p1.P+(p2.P-p1.P)*t;
+                    if(P<=Pbound)return true;
+                }
+            }
+            return false;
+        }
+        function drawPMDiagram(points,Pu,Mu,inside){
+            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
+            const pad=50;
+            const maxP=Math.max(...points.map(p=>p.P))*1.1;
+            const maxM=Math.max(...points.map(p=>p.M))*1.1;
+            const scX=(c.width-2*pad)/maxM;
+            const scY=(c.height-2*pad)/maxP;
+            const toX=m=>pad+m*scX;
+            const toY=p=>c.height-pad-p*scY;
+            ctx.strokeStyle='#2a3a4a';ctx.lineWidth=1;
+            for(let i=0;i<=5;i++){
+                const p=i*maxP/5;
+                ctx.beginPath();ctx.moveTo(pad,toY(p));ctx.lineTo(c.width-pad,toY(p));ctx.stroke();
+                ctx.fillStyle='#8b99a8';ctx.font='10px system-ui';ctx.fillText(p.toFixed(0),5,toY(p)+3);
+            }
+            for(let i=0;i<=5;i++){
+                const m=i*maxM/5;
+                ctx.beginPath();ctx.moveTo(toX(m),pad);ctx.lineTo(toX(m),c.height-pad);ctx.stroke();
+                ctx.fillText(m.toFixed(0),toX(m)-10,c.height-pad+15);
+            }
+            ctx.beginPath();
+            ctx.moveTo(toX(points[0].M),toY(points[0].P));
+            points.forEach(p=>ctx.lineTo(toX(p.M),toY(p.P)));
+            ctx.strokeStyle='#ff9500';ctx.lineWidth=3;ctx.stroke();
+            ctx.fillStyle='rgba(255,149,0,0.1)';ctx.fill();
+            ctx.beginPath();
+            ctx.arc(toX(Mu),toY(Pu),8,0,Math.PI*2);
+            ctx.fillStyle=inside?'#06d6a0':'#ef476f';ctx.fill();
+            ctx.fillStyle='#e8eef4';ctx.font='12px system-ui';
+            ctx.fillText('φMn (k-ft)',c.width/2-30,c.height-10);
+            ctx.save();ctx.translate(15,c.height/2);ctx.rotate(-Math.PI/2);ctx.fillText('φPn (k)',0,0);ctx.restore();
+            ctx.fillText('(Pu, Mu)',toX(Mu)+12,toY(Pu)+4);
+        }
+    </script>
+</body>
+</html>

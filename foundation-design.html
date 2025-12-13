@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foundation Design | ACI 318-19</title>
+    <style>
+        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--orange:#ff9500;--yellow:#ffd166;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:1.2rem;color:var(--orange)}
+        .back{color:var(--orange);text-decoration:none}
+        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+        .panel-title{font-size:0.85rem;font-weight:600;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .form-group{margin-bottom:10px}
+        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
+        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--orange),var(--yellow));color:#000}
+        .viz{background:var(--bg);border-radius:8px;height:280px}
+        #canvas{width:100%;height:100%}
+        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--orange)}
+        .result-card.pass{border-left-color:var(--green)}
+        .result-card.fail{border-left-color:var(--red)}
+        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
+        .result-value{font-size:1.1rem;font-weight:600}
+        .checks{display:flex;flex-direction:column;gap:6px}
+        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
+        .check.pass{border-left-color:var(--green)}
+        .check.fail{border-left-color:var(--red)}
+        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
+        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
+        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
+        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="back">← Back</a>
+        <div style="text-align:center"><h1>⬛ Foundation Design</h1><span style="font-size:0.75rem;color:var(--text2)">ACI 318-19</span></div>
+        <div></div>
+    </header>
+    <div class="main">
+        <div class="panel">
+            <div class="panel-title">Footing Geometry</div>
+            <div class="form-row">
+                <div class="form-group"><label>B (ft)</label><input type="number" id="B" value="8" onchange="draw();calculate()"></div>
+                <div class="form-group"><label>L (ft)</label><input type="number" id="L" value="8" onchange="draw();calculate()"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>h (in)</label><input type="number" id="h" value="24" onchange="calculate()"></div>
+                <div class="form-group"><label>Cover (in)</label><input type="number" id="cover" value="3" onchange="calculate()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Column</div>
+            <div class="form-row">
+                <div class="form-group"><label>bc (in)</label><input type="number" id="bc" value="18" onchange="draw();calculate()"></div>
+                <div class="form-group"><label>dc (in)</label><input type="number" id="dc" value="18" onchange="draw();calculate()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Materials</div>
+            <div class="form-row">
+                <div class="form-group"><label>f'c (psi)</label><input type="number" id="fc" value="4000" onchange="calculate()"></div>
+                <div class="form-group"><label>fy (ksi)</label><input type="number" id="fy" value="60" onchange="calculate()"></div>
+            </div>
+            <div class="form-group"><label>qa (ksf)</label><input type="number" id="qa" value="4" step="0.5" onchange="calculate()"></div>
+            <div class="panel-title" style="margin-top:16px">Loads (Service)</div>
+            <div class="form-row">
+                <div class="form-group"><label>P (kips)</label><input type="number" id="P" value="350" onchange="calculate()"></div>
+                <div class="form-group"><label>M (k-ft)</label><input type="number" id="M" value="60" onchange="calculate()"></div>
+            </div>
+            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Footing Plan</div>
+            <div class="viz"><canvas id="canvas"></canvas></div>
+            <div class="panel-title" style="margin-top:16px">Reinforcement</div>
+            <div class="result-grid">
+                <div class="result-card"><div class="result-label">As,req</div><div class="result-value" id="AsReq">--</div></div>
+                <div class="result-card"><div class="result-label">Bars</div><div class="result-value" id="bars">--</div></div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
+            <div class="result-grid">
+                <div class="result-card pass" id="bearCard"><div class="result-label">q,max</div><div class="result-value" id="qMax">--</div></div>
+                <div class="result-card pass" id="punchCard"><div class="result-label">φVc (punch)</div><div class="result-value" id="phiVcPunch">--</div></div>
+                <div class="result-card pass" id="owCard"><div class="result-label">φVc (1-way)</div><div class="result-value" id="phiVc1">--</div></div>
+                <div class="result-card pass" id="flexCard"><div class="result-label">φMn</div><div class="result-value" id="phiMn">--</div></div>
+            </div>
+            <div class="panel-title">Design Checks</div>
+            <div class="checks" id="checks"></div>
+        </div>
+    </div>
+    <script>
+        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
+        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;draw()}
+        document.addEventListener('DOMContentLoaded',()=>{resize();calculate()});
+        window.addEventListener('resize',resize);
+        function draw(){
+            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
+            const B=+document.getElementById('B').value;
+            const L=+document.getElementById('L').value;
+            const bc=+document.getElementById('bc').value/12;
+            const dc=+document.getElementById('dc').value/12;
+            const sc=25,cx=c.width/2,cy=c.height/2;
+            ctx.fillStyle='rgba(255,149,0,0.3)';
+            ctx.fillRect(cx-B*sc/2,cy-L*sc/2,B*sc,L*sc);
+            ctx.strokeStyle='#ff9500';ctx.lineWidth=2;
+            ctx.strokeRect(cx-B*sc/2,cy-L*sc/2,B*sc,L*sc);
+            ctx.fillStyle='#48cae4';
+            ctx.fillRect(cx-bc*sc/2,cy-dc*sc/2,bc*sc,dc*sc);
+            ctx.strokeStyle='#ffd166';ctx.setLineDash([4,4]);
+            const h=+document.getElementById('h').value/12;
+            const d=h-3/12-0.5/12;
+            ctx.strokeRect(cx-(bc/2+d)*sc,cy-(dc/2+d)*sc,(bc+2*d)*sc,(dc+2*d)*sc);
+            ctx.setLineDash([]);
+            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
+            ctx.fillText(B+' ft',cx-12,cy+L*sc/2+18);
+            ctx.fillText('Critical Section',cx+20,cy-(dc/2+d)*sc-5);
+        }
+        function calculate(){
+            const B=+document.getElementById('B').value;
+            const L=+document.getElementById('L').value;
+            const h=+document.getElementById('h').value;
+            const cover=+document.getElementById('cover').value;
+            const bc=+document.getElementById('bc').value;
+            const dc=+document.getElementById('dc').value;
+            const fc=+document.getElementById('fc').value;
+            const fy=+document.getElementById('fy').value*1000;
+            const qa=+document.getElementById('qa').value;
+            const P=+document.getElementById('P').value;
+            const M=+document.getElementById('M').value;
+            const A=B*L;
+            const qMax=P/A+6*M/(B*L*L);
+            const qMin=P/A-6*M/(B*L*L);
+            const d=h-cover-0.5;
+            const b0=2*((bc+d)+(dc+d));
+            const VuPunch=1.4*P-1.4*qMax*(bc+d)*(dc+d)/144;
+            const VcPunch1=4*Math.sqrt(fc)*b0*d/1000;
+            const VcPunch2=(2+4/(bc/dc))*Math.sqrt(fc)*b0*d/1000;
+            const VcPunch3=(2+40*d/b0)*Math.sqrt(fc)*b0*d/1000;
+            const VcPunch=Math.min(VcPunch1,VcPunch2,VcPunch3);
+            const phiVcPunch=0.75*VcPunch;
+            const cantilever=(B*12-bc)/2-d;
+            const Vu1Way=1.4*qMax*B*cantilever/144;
+            const Vc1Way=2*Math.sqrt(fc)*B*12*d/1000;
+            const phiVc1=0.75*Vc1Way;
+            const Mu=1.4*qMax*L*(B*12/2-bc/2)**2/(2*144*12);
+            const Rn=Mu*12000/(0.9*L*12*d*d);
+            const rho=0.85*fc/fy*(1-Math.sqrt(1-2*Rn/(0.85*fc)));
+            const AsMin=0.0018*L*12*h;
+            const As=Math.max(rho*L*12*d,AsMin);
+            const a=As*fy/(0.85*fc*L*12);
+            const phiMn=0.9*As*fy*(d-a/2)/(12*1000);
+            const nBars=Math.ceil(As/0.79);
+            const checks=[
+                {name:'Bearing Pressure',dcr:qMax/qa,pass:qMax<=qa},
+                {name:'Punching Shear',dcr:VuPunch/phiVcPunch,pass:phiVcPunch>=VuPunch},
+                {name:'One-Way Shear',dcr:Vu1Way/phiVc1,pass:phiVc1>=Vu1Way},
+                {name:'Flexure',dcr:Mu/phiMn,pass:phiMn>=Mu}
+            ];
+            const allPass=checks.every(c=>c.pass);
+            document.getElementById('qMax').textContent=qMax.toFixed(2)+' ksf';
+            document.getElementById('phiVcPunch').textContent=phiVcPunch.toFixed(0)+' k';
+            document.getElementById('phiVc1').textContent=phiVc1.toFixed(0)+' k';
+            document.getElementById('phiMn').textContent=phiMn.toFixed(1)+' k-ft';
+            document.getElementById('AsReq').textContent=As.toFixed(2)+' in²';
+            document.getElementById('bars').textContent=nBars+'-#8 EW';
+            document.getElementById('status').className='status '+(allPass?'pass':'fail');
+            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
+            document.getElementById('bearCard').className='result-card '+(checks[0].pass?'pass':'fail');
+            document.getElementById('punchCard').className='result-card '+(checks[1].pass?'pass':'fail');
+            document.getElementById('owCard').className='result-card '+(checks[2].pass?'pass':'fail');
+            document.getElementById('flexCard').className='result-card '+(checks[3].pass?'pass':'fail');
+            document.getElementById('checks').innerHTML=checks.map(c=>
+                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
+            ).join('');
+            draw();
+        }
+    </script>
+</body>
+</html>

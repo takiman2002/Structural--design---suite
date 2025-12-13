@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Design | ACI 318-19</title>
+    <style>
+        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--orange:#ff9500;--yellow:#ffd166;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:1.2rem;color:var(--orange)}
+        .back{color:var(--orange);text-decoration:none}
+        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+        .panel-title{font-size:0.85rem;font-weight:600;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .form-group{margin-bottom:10px}
+        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
+        .btn{padding:10px;border:none;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--orange),var(--yellow));color:#000}
+        .viz{background:var(--bg);border-radius:8px;height:280px}
+        #canvas{width:100%;height:100%}
+        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--orange)}
+        .result-card.pass{border-left-color:var(--green)}
+        .result-card.fail{border-left-color:var(--red)}
+        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
+        .result-value{font-size:1.1rem;font-weight:600}
+        .checks{display:flex;flex-direction:column;gap:6px}
+        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
+        .check.pass{border-left-color:var(--green)}
+        .check.fail{border-left-color:var(--red)}
+        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
+        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
+        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
+        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <header class="header"><a href="index.html" class="back">← Back</a><div style="text-align:center"><h1>🧱 Wall Design</h1><span style="font-size:0.75rem;color:var(--text2)">ACI 318-19</span></div><div></div></header>
+    <div class="main">
+        <div class="panel">
+            <div class="panel-title">Wall Geometry</div>
+            <div class="form-row">
+                <div class="form-group"><label>Lw (ft)</label><input type="number" id="Lw" value="20" onchange="draw();calc()"></div>
+                <div class="form-group"><label>hw (ft)</label><input type="number" id="hw" value="12" onchange="draw();calc()"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>tw (in)</label><input type="number" id="tw" value="12" onchange="calc()"></div>
+                <div class="form-group"><label>Cover (in)</label><input type="number" id="cover" value="1.5" onchange="calc()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Materials</div>
+            <div class="form-row">
+                <div class="form-group"><label>f'c (psi)</label><input type="number" id="fc" value="4000" onchange="calc()"></div>
+                <div class="form-group"><label>fy (ksi)</label><input type="number" id="fy" value="60" onchange="calc()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Reinforcement</div>
+            <div class="form-row">
+                <div class="form-group"><label>Horiz #</label><select id="hBar" onchange="calc()"><option value="4">#4</option><option value="5" selected>#5</option><option value="6">#6</option></select></div>
+                <div class="form-group"><label>@ (in)</label><input type="number" id="hs" value="12" onchange="calc()"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Vert #</label><select id="vBar" onchange="calc()"><option value="4">#4</option><option value="5" selected>#5</option><option value="6">#6</option></select></div>
+                <div class="form-group"><label>@ (in)</label><input type="number" id="vs" value="12" onchange="calc()"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Design Forces</div>
+            <div class="form-row">
+                <div class="form-group"><label>Vu (k)</label><input type="number" id="Vu" value="180" onchange="calc()"></div>
+                <div class="form-group"><label>Mu (k-ft)</label><input type="number" id="Mu" value="1200" onchange="calc()"></div>
+            </div>
+            <button class="btn" onclick="calc()">⚙️ Calculate</button>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Wall Elevation</div>
+            <div class="viz"><canvas id="canvas"></canvas></div>
+            <div class="panel-title" style="margin-top:16px">Reinforcement Ratios</div>
+            <div class="result-grid">
+                <div class="result-card"><div class="result-label">ρh</div><div class="result-value" id="rhoH">--</div></div>
+                <div class="result-card"><div class="result-label">ρv</div><div class="result-value" id="rhoV">--</div></div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
+            <div class="result-grid">
+                <div class="result-card pass" id="sCard"><div class="result-label">φVn</div><div class="result-value" id="phiVn">--</div></div>
+                <div class="result-card pass" id="fCard"><div class="result-label">φMn</div><div class="result-value" id="phiMn">--</div></div>
+                <div class="result-card"><div class="result-label">Vc</div><div class="result-value" id="Vc">--</div></div>
+                <div class="result-card"><div class="result-label">Vs</div><div class="result-value" id="Vs">--</div></div>
+            </div>
+            <div class="panel-title">Design Checks</div>
+            <div class="checks" id="checks"></div>
+        </div>
+    </div>
+    <script>
+        const Ab={4:0.20,5:0.31,6:0.44};
+        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
+        function resize(){const b=c.parentElement;c.width=b.clientWidth;c.height=b.clientHeight;draw()}
+        document.addEventListener('DOMContentLoaded',()=>{resize();calc()});
+        window.addEventListener('resize',resize);
+        function draw(){
+            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
+            const Lw=+document.getElementById('Lw').value,hw=+document.getElementById('hw').value;
+            const sc=10,cx=c.width/2,cy=c.height/2;
+            ctx.fillStyle='rgba(255,149,0,0.3)';ctx.fillRect(cx-Lw*sc/2,cy-hw*sc/2,Lw*sc,hw*sc);
+            ctx.strokeStyle='#ff9500';ctx.lineWidth=2;ctx.strokeRect(cx-Lw*sc/2,cy-hw*sc/2,Lw*sc,hw*sc);
+            ctx.strokeStyle='#ffd166';ctx.setLineDash([4,4]);
+            for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(cx-Lw*sc/2,cy-hw*sc/2+i*hw*sc/4);ctx.lineTo(cx+Lw*sc/2,cy-hw*sc/2+i*hw*sc/4);ctx.stroke();}
+            for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(cx-Lw*sc/2+i*Lw*sc/5,cy-hw*sc/2);ctx.lineTo(cx-Lw*sc/2+i*Lw*sc/5,cy+hw*sc/2);ctx.stroke();}
+            ctx.setLineDash([]);ctx.fillStyle='#48cae4';
+            ctx.fillRect(cx-Lw*sc/2,cy-hw*sc/2,Lw*sc*0.1,hw*sc);
+            ctx.fillRect(cx+Lw*sc/2-Lw*sc*0.1,cy-hw*sc/2,Lw*sc*0.1,hw*sc);
+            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
+            ctx.fillText(Lw+' ft',cx-15,cy+hw*sc/2+18);ctx.fillText('BE',cx-Lw*sc/2+5,cy);
+        }
+        function calc(){
+            const Lw=+document.getElementById('Lw').value*12,hw=+document.getElementById('hw').value*12;
+            const tw=+document.getElementById('tw').value,fc=+document.getElementById('fc').value;
+            const fy=+document.getElementById('fy').value*1000;
+            const hs=+document.getElementById('hs').value,vs=+document.getElementById('vs').value;
+            const Vu=+document.getElementById('Vu').value,Mu=+document.getElementById('Mu').value;
+            const rhoH=Ab[+document.getElementById('hBar').value]*2/(tw*hs);
+            const rhoV=Ab[+document.getElementById('vBar').value]*2/(tw*vs);
+            const Acv=Lw*tw,hwLw=hw/Lw;
+            const alphaC=hwLw<=1.5?3:hwLw>=2?2:3-(hwLw-1.5)*2;
+            const Vc=alphaC*Math.sqrt(fc)*Acv/1000;
+            const d=0.8*Lw;
+            const Av=Ab[+document.getElementById('hBar').value]*2;
+            const Vs=Av*fy*d/(hs*1000);
+            const VnMax=8*Math.sqrt(fc)*Acv/1000;
+            const Vn=Math.min(Vc+Vs,VnMax);
+            const phiVn=0.75*Vn;
+            const As=Ab[+document.getElementById('vBar').value]*2*Lw/vs;
+            const a=As*fy/(0.85*fc*tw);
+            const phiMn=0.9*As*fy*(d-a/2)/(12*1000);
+            const checks=[{name:'Shear',dcr:Vu/phiVn,pass:phiVn>=Vu},{name:'Flexure',dcr:Mu/phiMn,pass:phiMn>=Mu},{name:'ρh≥0.25%',dcr:0.0025/rhoH,pass:rhoH>=0.0025},{name:'ρv≥0.25%',dcr:0.0025/rhoV,pass:rhoV>=0.0025}];
+            const ok=checks.every(c=>c.pass);
+            document.getElementById('phiVn').textContent=phiVn.toFixed(0)+' k';
+            document.getElementById('phiMn').textContent=phiMn.toFixed(0)+' k-ft';
+            document.getElementById('Vc').textContent=Vc.toFixed(0)+' k';
+            document.getElementById('Vs').textContent=Vs.toFixed(0)+' k';
+            document.getElementById('rhoH').textContent=(rhoH*100).toFixed(3)+'%';
+            document.getElementById('rhoV').textContent=(rhoV*100).toFixed(3)+'%';
+            document.getElementById('status').className='status '+(ok?'pass':'fail');
+            document.getElementById('status').textContent='● '+(ok?'PASS':'FAIL');
+            document.getElementById('sCard').className='result-card '+(checks[0].pass?'pass':'fail');
+            document.getElementById('fCard').className='result-card '+(checks[1].pass?'pass':'fail');
+            document.getElementById('checks').innerHTML=checks.map(c=>`<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`).join('');
+            draw();
+        }
+    </script>
+</body>
+</html>

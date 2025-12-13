@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steel Member Design | AISC 360-22</title>
+    <style>
+        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--blue:#00b4d8;--cyan:#48cae4;--green:#06d6a0;--red:#ef476f;--yellow:#ffd166;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:1.2rem;color:var(--cyan)}
+        .header span{font-size:0.75rem;color:var(--text2)}
+        .back{color:var(--cyan);text-decoration:none;font-size:0.85rem}
+        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:320px 1fr 320px;gap:20px}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+        .panel-title{font-size:0.85rem;font-weight:600;color:var(--cyan);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .form-group{margin-bottom:10px}
+        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        input,select{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
+        input:focus,select:focus{outline:none;border-color:var(--blue)}
+        .btn{padding:10px 16px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600}
+        .btn-primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#000}
+        .btn-block{width:100%;margin-top:12px}
+        .viz{background:var(--bg);border-radius:8px;height:300px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+        .viz canvas{max-width:100%;max-height:100%}
+        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--blue)}
+        .result-card.pass{border-left-color:var(--green)}
+        .result-card.fail{border-left-color:var(--red)}
+        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
+        .result-value{font-size:1.1rem;font-weight:600}
+        .checks{margin-top:16px}
+        .check{display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg);border-radius:6px;margin-bottom:6px;border-left:3px solid var(--border)}
+        .check.pass{border-left-color:var(--green)}
+        .check.fail{border-left-color:var(--red)}
+        .check-name{font-size:0.8rem}
+        .check-dcr{font-weight:600;font-size:0.85rem}
+        .dcr-pass{color:var(--green)}
+        .dcr-fail{color:var(--red)}
+        .status{padding:4px 10px;border-radius:12px;font-size:0.7rem;font-weight:600}
+        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
+        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
+        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div><a href="index.html" class="back">← Back</a></div>
+        <div style="text-align:center"><h1>📐 Steel Member Design</h1><span>AISC 360-22</span></div>
+        <div></div>
+    </header>
+    <div class="main">
+        <div class="panel">
+            <div class="panel-title">Member Input</div>
+            <div class="form-group">
+                <label>Section Type</label>
+                <select id="sectionType" onchange="updateSections()">
+                    <option value="W">W-Shape</option>
+                    <option value="HSS-SQ">HSS Square</option>
+                    <option value="HSS-RECT">HSS Rectangular</option>
+                    <option value="C">Channel</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Section</label>
+                <select id="section">
+                    <option value="W14x30">W14×30</option>
+                    <option value="W14x48">W14×48</option>
+                    <option value="W16x36">W16×36</option>
+                    <option value="W18x50">W18×50</option>
+                    <option value="W21x62">W21×62</option>
+                    <option value="W24x76">W24×76</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Steel Grade</label>
+                <select id="grade">
+                    <option value="50">A992 Gr. 50 (Fy=50 ksi)</option>
+                    <option value="36">A36 (Fy=36 ksi)</option>
+                    <option value="46">A500 Gr. C (Fy=46 ksi)</option>
+                </select>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Unbraced Lengths</div>
+            <div class="form-row">
+                <div class="form-group"><label>Lx (ft)</label><input type="number" id="Lx" value="12"></div>
+                <div class="form-group"><label>Ly (ft)</label><input type="number" id="Ly" value="12"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Lb (ft)</label><input type="number" id="Lb" value="6"></div>
+                <div class="form-group"><label>Cb</label><input type="number" id="Cb" value="1.0" step="0.1"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Kx</label><input type="number" id="Kx" value="1.0" step="0.1"></div>
+                <div class="form-group"><label>Ky</label><input type="number" id="Ky" value="1.0" step="0.1"></div>
+            </div>
+            <div class="panel-title" style="margin-top:16px">Design Forces (Factored)</div>
+            <div class="form-row">
+                <div class="form-group"><label>Pu (kips)</label><input type="number" id="Pu" value="150"></div>
+                <div class="form-group"><label>Mu (k-ft)</label><input type="number" id="Mu" value="120"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Vu (kips)</label><input type="number" id="Vu" value="30"></div>
+                <div class="form-group"><label>Load Type</label>
+                    <select id="loadType"><option value="comp">Compression</option><option value="tension">Tension</option></select>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="calculate()">⚙️ Calculate</button>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Section Visualization</div>
+            <div class="viz"><canvas id="canvas" width="400" height="280"></canvas></div>
+            <div class="panel-title">Section Properties</div>
+            <div class="result-grid" id="props">
+                <div class="result-card"><div class="result-label">Area (A)</div><div class="result-value">8.85 in²</div></div>
+                <div class="result-card"><div class="result-label">Ix</div><div class="result-value">291 in⁴</div></div>
+                <div class="result-card"><div class="result-label">Sx</div><div class="result-value">42.0 in³</div></div>
+                <div class="result-card"><div class="result-label">Zx</div><div class="result-value">47.3 in³</div></div>
+                <div class="result-card"><div class="result-label">rx</div><div class="result-value">5.73 in</div></div>
+                <div class="result-card"><div class="result-label">ry</div><div class="result-value">1.49 in</div></div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Design Results</span>
+                <span class="status pass" id="overallStatus">● PASS</span>
+            </div>
+            <div class="result-grid">
+                <div class="result-card pass" id="pnCard"><div class="result-label">φPn</div><div class="result-value" id="phiPn">--</div></div>
+                <div class="result-card pass" id="mnCard"><div class="result-label">φMn</div><div class="result-value" id="phiMn">--</div></div>
+                <div class="result-card pass" id="vnCard"><div class="result-label">φVn</div><div class="result-value" id="phiVn">--</div></div>
+                <div class="result-card" id="pmCard"><div class="result-label">P-M Interaction</div><div class="result-value" id="pmRatio">--</div></div>
+            </div>
+            <div class="checks" id="checks">
+                <div class="check pass"><span class="check-name">Axial Capacity</span><span class="check-dcr dcr-pass">0.000</span></div>
+                <div class="check pass"><span class="check-name">Flexural Capacity</span><span class="check-dcr dcr-pass">0.000</span></div>
+                <div class="check pass"><span class="check-name">Shear Capacity</span><span class="check-dcr dcr-pass">0.000</span></div>
+                <div class="check pass"><span class="check-name">P-M Interaction (H1-1)</span><span class="check-dcr dcr-pass">0.000</span></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const sections = {
+            'W14x30': {d:13.84,bf:6.73,tf:0.385,tw:0.27,A:8.85,Ix:291,Sx:42.0,Zx:47.3,Iy:19.6,ry:1.49,rx:5.73,J:0.38,Cw:887},
+            'W14x48': {d:13.79,bf:8.03,tf:0.595,tw:0.34,A:14.1,Ix:485,Sx:70.3,Zx:78.4,Iy:51.4,ry:1.91,rx:5.85,J:1.45,Cw:2240},
+            'W16x36': {d:15.86,bf:6.985,tf:0.43,tw:0.295,A:10.6,Ix:448,Sx:56.5,Zx:64.0,Iy:24.5,ry:1.52,rx:6.51,J:0.545,Cw:1460},
+            'W18x50': {d:17.99,bf:7.495,tf:0.57,tw:0.355,A:14.7,Ix:800,Sx:88.9,Zx:101,Iy:40.1,ry:1.65,rx:7.38,J:1.24,Cw:3040},
+            'W21x62': {d:20.99,bf:8.24,tf:0.615,tw:0.40,A:18.3,Ix:1330,Sx:127,Zx:144,Iy:57.5,ry:1.77,rx:8.54,J:1.83,Cw:5960},
+            'W24x76': {d:23.92,bf:8.99,tf:0.68,tw:0.44,A:22.4,Ix:2100,Sx:176,Zx:200,Iy:82.5,ry:1.92,rx:9.69,J:2.68,Cw:9430}
+        };
+        function drawSection(){
+            const c=document.getElementById('canvas'),ctx=c.getContext('2d');
+            const sec=sections[document.getElementById('section').value];
+            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
+            const sc=8,cx=c.width/2,cy=c.height/2;
+            const d=sec.d*sc,bf=sec.bf*sc,tf=sec.tf*sc,tw=sec.tw*sc;
+            ctx.fillStyle='#00b4d8';ctx.strokeStyle='#48cae4';ctx.lineWidth=2;
+            ctx.fillRect(cx-bf/2,cy-d/2,bf,tf);
+            ctx.fillRect(cx-bf/2,cy+d/2-tf,bf,tf);
+            ctx.fillRect(cx-tw/2,cy-d/2+tf,tw,d-2*tf);
+            ctx.strokeRect(cx-bf/2,cy-d/2,bf,tf);
+            ctx.strokeRect(cx-bf/2,cy+d/2-tf,bf,tf);
+            ctx.strokeRect(cx-tw/2,cy-d/2+tf,tw,d-2*tf);
+            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
+            ctx.fillText('d = '+sec.d+'"',cx+bf/2+10,cy);
+            ctx.fillText('bf = '+sec.bf+'"',cx-20,cy-d/2-8);
+        }
+        function calculate(){
+            const sec=sections[document.getElementById('section').value];
+            const Fy=+document.getElementById('grade').value;
+            const Lx=+document.getElementById('Lx').value*12;
+            const Ly=+document.getElementById('Ly').value*12;
+            const Lb=+document.getElementById('Lb').value*12;
+            const Cb=+document.getElementById('Cb').value;
+            const Kx=+document.getElementById('Kx').value;
+            const Ky=+document.getElementById('Ky').value;
+            const Pu=+document.getElementById('Pu').value;
+            const Mu=+document.getElementById('Mu').value;
+            const Vu=+document.getElementById('Vu').value;
+            const E=29000,phi=0.9,phiV=1.0;
+            const KLrx=Kx*Lx/sec.rx,KLry=Ky*Ly/sec.ry;
+            const KLr=Math.max(KLrx,KLry);
+            const Fe=Math.PI*Math.PI*E/(KLr*KLr);
+            let Fcr;
+            if(KLr<=4.71*Math.sqrt(E/Fy)){Fcr=Math.pow(0.658,Fy/Fe)*Fy}
+            else{Fcr=0.877*Fe}
+            const Pn=Fcr*sec.A;
+            const phiPn=phi*Pn;
+            const Mp=Fy*sec.Zx/12;
+            const Lp=1.76*sec.ry*Math.sqrt(E/Fy);
+            const c=1;const rts=Math.sqrt(Math.sqrt(sec.Iy*sec.Cw)/sec.Sx);
+            const Lr=1.95*rts*E/(0.7*Fy)*Math.sqrt(sec.J*c/(sec.Sx*0.7*Fy/E)+6.76*Math.pow(0.7*Fy*sec.Sx/(E*sec.J*c),2));
+            let Mn;
+            if(Lb<=Lp){Mn=Mp}
+            else if(Lb<=Lr){Mn=Cb*(Mp-(Mp-0.7*Fy*sec.Sx/12)*(Lb-Lp)/(Lr-Lp));Mn=Math.min(Mn,Mp)}
+            else{const Fcr2=Cb*Math.PI*Math.PI*E/(Lb/rts)**2*Math.sqrt(1+0.078*sec.J*c/(sec.Sx*0.7*Fy/E)*(Lb/rts)**2);Mn=Fcr2*sec.Sx/12;Mn=Math.min(Mn,Mp)}
+            const phiMn=phi*Mn;
+            const Aw=sec.d*sec.tw;
+            const Vn=0.6*Fy*Aw;
+            const phiVn=phiV*Vn;
+            const Pr=Pu,Pc=phiPn,Mr=Mu,Mc=phiMn;
+            let pmRatio;
+            if(Pr/Pc>=0.2){pmRatio=Pr/Pc+8/9*(Mr/Mc)}
+            else{pmRatio=Pr/(2*Pc)+Mr/Mc}
+            const dcrP=Pu/phiPn,dcrM=Mu/phiMn,dcrV=Vu/phiVn;
+            document.getElementById('phiPn').textContent=phiPn.toFixed(1)+' k';
+            document.getElementById('phiMn').textContent=phiMn.toFixed(1)+' k-ft';
+            document.getElementById('phiVn').textContent=phiVn.toFixed(1)+' k';
+            document.getElementById('pmRatio').textContent=pmRatio.toFixed(3);
+            const allPass=dcrP<=1&&dcrM<=1&&dcrV<=1&&pmRatio<=1;
+            document.getElementById('overallStatus').className='status '+(allPass?'pass':'fail');
+            document.getElementById('overallStatus').textContent='● '+(allPass?'PASS':'FAIL');
+            const checks=[
+                {name:'Axial Capacity',dcr:dcrP},
+                {name:'Flexural Capacity',dcr:dcrM},
+                {name:'Shear Capacity',dcr:dcrV},
+                {name:'P-M Interaction (H1-1)',dcr:pmRatio}
+            ];
+            document.getElementById('checks').innerHTML=checks.map(c=>{
+                const pass=c.dcr<=1;
+                return '<div class="check '+(pass?'pass':'fail')+'"><span class="check-name">'+c.name+'</span><span class="check-dcr '+(pass?'dcr-pass':'dcr-fail')+'">'+c.dcr.toFixed(3)+'</span></div>';
+            }).join('');
+            ['pnCard','mnCard','vnCard'].forEach((id,i)=>{
+                const dcrs=[dcrP,dcrM,dcrV];
+                document.getElementById(id).className='result-card '+(dcrs[i]<=1?'pass':'fail');
+            });
+            document.getElementById('pmCard').className='result-card '+(pmRatio<=1?'pass':'fail');
+            document.getElementById('props').innerHTML=`
+                <div class="result-card"><div class="result-label">Area (A)</div><div class="result-value">${sec.A} in²</div></div>
+                <div class="result-card"><div class="result-label">Ix</div><div class="result-value">${sec.Ix} in⁴</div></div>
+                <div class="result-card"><div class="result-label">Sx</div><div class="result-value">${sec.Sx} in³</div></div>
+                <div class="result-card"><div class="result-label">Zx</div><div class="result-value">${sec.Zx} in³</div></div>
+                <div class="result-card"><div class="result-label">rx</div><div class="result-value">${sec.rx} in</div></div>
+                <div class="result-card"><div class="result-label">ry</div><div class="result-value">${sec.ry} in</div></div>
+            `;
+        }
+        document.addEventListener('DOMContentLoaded',()=>{drawSection();calculate()});
+        document.getElementById('section').addEventListener('change',()=>{drawSection();calculate()});
+    </script>
+</body>
+</html>
