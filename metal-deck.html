@@ -3,166 +3,804 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metal Deck & Bracing | AISI S310</title>
+    <title>Metal Deck Diaphragm & Horizontal Bracing Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--purple:#a855f7;--pink:#ec4899;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-        .header h1{font-size:1.2rem;color:var(--purple)}
-        .back{color:var(--purple);text-decoration:none}
-        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
-        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-        .panel-title{font-size:0.85rem;font-weight:600;color:var(--purple);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-        .form-group{margin-bottom:10px}
-        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
-        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff}
-        .viz{background:var(--bg);border-radius:8px;height:320px}
-        #canvas{width:100%;height:100%}
-        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--purple)}
-        .result-card.pass{border-left-color:var(--green)}
-        .result-card.fail{border-left-color:var(--red)}
-        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
-        .result-value{font-size:1.1rem;font-weight:600}
-        .checks{display:flex;flex-direction:column;gap:6px}
-        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
-        .check.pass{border-left-color:var(--green)}
-        .check.fail{border-left-color:var(--red)}
-        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
-        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
-        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
-        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #0f172a;
+            --accent: #06b6d4;
+            --accent2: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        
+        header { text-align: center; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+        h1 { font-size: 1.5rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .code-ref { display: inline-block; margin-top: 0.75rem; padding: 0.4rem 0.8rem; background: var(--bg-dark); border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent); }
+        
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-card); padding: 0.5rem; border-radius: 10px; }
+        .tab-btn { flex: 1; padding: 0.875rem; background: transparent; border: none; border-radius: 8px; color: var(--text-muted); font-family: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+        .tab-btn:hover:not(.active) { background: var(--bg-dark); color: var(--text); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        .full-width { grid-column: 1 / -1; }
+        
+        .panel { background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+        .panel-header { padding: 0.875rem 1.25rem; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+        .panel-header .icon { font-size: 1.1rem; }
+        .panel-body { padding: 1.25rem; }
+        
+        .form-group { margin-bottom: 1rem; }
+        .form-group:last-child { margin-bottom: 0; }
+        label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 500; }
+        .input-row { display: flex; gap: 0.5rem; }
+        input, select { flex: 1; padding: 0.625rem 0.875rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+        .unit { padding: 0.625rem 0.75rem; background: rgba(0,0,0,0.3); border-radius: 6px; font-size: 0.8rem; color: var(--text-muted); min-width: 45px; text-align: center; }
+        
+        .btn { width: 100%; padding: 0.875rem; background: linear-gradient(135deg, var(--accent), #0891b2); border: none; border-radius: 8px; color: white; font-family: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 1rem; transition: transform 0.2s, box-shadow 0.2s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3); }
+        .btn.purple { background: linear-gradient(135deg, var(--accent2), #7c3aed); }
+        .btn.purple:hover { box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3); }
+        
+        .results { display: none; }
+        .results.show { display: block; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.875rem; margin-bottom: 1rem; }
+        .result-card { background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); }
+        .result-card.highlight { border-color: var(--accent); background: rgba(6, 182, 212, 0.1); }
+        .result-card.highlight-purple { border-color: var(--accent2); background: rgba(139, 92, 246, 0.1); }
+        .result-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.3rem; }
+        .result-value { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 600; }
+        .result-value .unit { background: transparent; padding: 0; font-size: 0.85rem; min-width: auto; }
+        
+        .dcr-bar { height: 6px; background: var(--bg-dark); border-radius: 3px; margin-top: 0.5rem; overflow: hidden; }
+        .dcr-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+        
+        .status { display: inline-block; padding: 0.3rem 0.75rem; border-radius: 15px; font-size: 0.75rem; font-weight: 600; margin-top: 0.4rem; }
+        .status.ok { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .status.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .status.ng { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        
+        .calc-details { background: var(--bg-dark); border-radius: 8px; padding: 1rem; margin-top: 1rem; border: 1px solid var(--border); }
+        .calc-section { margin-bottom: 1rem; }
+        .calc-section:last-child { margin-bottom: 0; }
+        .calc-title { font-size: 0.85rem; font-weight: 600; color: var(--accent); margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+        .calc-title.purple { color: var(--accent2); }
+        .calc-row { display: flex; justify-content: space-between; padding: 0.35rem 0; font-size: 0.8rem; }
+        .calc-row .lbl { color: var(--text-muted); }
+        .calc-row .val { font-family: 'JetBrains Mono', monospace; }
+        .calc-row.formula { background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 4px; margin: 0.3rem 0; }
+        .calc-row.formula .lbl { color: var(--warning); font-family: 'JetBrains Mono', monospace; }
+        
+        .note { display: flex; gap: 0.5rem; padding: 0.75rem; background: rgba(6, 182, 212, 0.1); border-radius: 6px; border-left: 3px solid var(--accent); margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted); }
+        .note.purple { background: rgba(139, 92, 246, 0.1); border-left-color: var(--accent2); }
+        
+        .section-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.8rem; }
+        .section-table th, .section-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .section-table th { background: rgba(0,0,0,0.3); color: var(--text-muted); font-weight: 500; font-size: 0.7rem; text-transform: uppercase; }
+        .section-table td { font-family: 'JetBrains Mono', monospace; }
+        .section-table tr.selected td { background: rgba(139, 92, 246, 0.15); }
+        
+        .diagram-box { background: var(--bg-dark); border-radius: 8px; padding: 1rem; margin: 1rem 0; border: 1px solid var(--border); }
+        .diagram-box h4 { color: var(--accent2); margin-bottom: 0.75rem; font-size: 0.9rem; }
+        #bracingDiagram { width: 100%; height: 180px; }
+        
+        .toggle-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
+        .toggle { width: 44px; height: 24px; background: var(--bg-dark); border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+        .toggle.on { background: var(--accent2); }
+        .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
+        .toggle.on::after { left: 23px; }
+        .toggle-label { font-size: 0.8rem; color: var(--text-muted); }
+        
+        footer { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.75rem; margin-top: 1.5rem; }
     </style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="back">← Back</a>
-        <div style="text-align:center"><h1>🔲 Metal Deck & Bracing</h1><span style="font-size:0.75rem;color:var(--text2)">AISI S310 • SDI DDM04</span></div>
-        <div></div>
-    </header>
-    <div class="main">
-        <div class="panel">
-            <div class="panel-title">Diaphragm Geometry</div>
-            <div class="form-row">
-                <div class="form-group"><label>Length L (ft)</label><input type="number" id="L" value="120" onchange="draw();calculate()"></div>
-                <div class="form-group"><label>Width B (ft)</label><input type="number" id="B" value="60" onchange="draw();calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Deck Properties</div>
-            <div class="form-group"><label>Deck Type</label><select id="deckType" onchange="calculate()"><option value="1.5B22">1.5" B Deck, 22 ga</option><option value="1.5B20">1.5" B Deck, 20 ga</option><option value="2N22">2" N Deck, 22 ga</option><option value="3N20" selected>3" N Deck, 20 ga</option></select></div>
-            <div class="form-group"><label>Fastener Pattern</label><select id="pattern" onchange="calculate()"><option value="36/7">36/7</option><option value="36/5" selected>36/5</option><option value="36/4">36/4</option></select></div>
-            <div class="form-row">
-                <div class="form-group"><label>Span (ft)</label><input type="number" id="span" value="8" onchange="calculate()"></div>
-                <div class="form-group"><label>Support</label><select id="support"><option value="3">3-span</option><option value="2">2-span</option><option value="1">Simple</option></select></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Loads</div>
-            <div class="form-row">
-                <div class="form-group"><label>Seismic w (plf)</label><input type="number" id="w" value="350" onchange="calculate()"></div>
-                <div class="form-group"><label>R Factor</label><input type="number" id="R" value="3" step="0.5" onchange="calculate()"></div>
-            </div>
-            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
+    <div class="container">
+        <header>
+            <h1>Metal Deck Diaphragm & Horizontal Bracing Calculator</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Canopy Structure Analysis</p>
+            <span class="code-ref">AISI S310 | SDI DDM04 | AISC 360-22 | ASCE 7-22</span>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('diaphragm')">🔩 Diaphragm Analysis</button>
+            <button class="tab-btn" onclick="switchTab('bracing')">⚡ Horizontal Bracing</button>
         </div>
-        <div class="panel">
-            <div class="panel-title">Diaphragm Plan</div>
-            <div class="viz"><canvas id="canvas"></canvas></div>
-        </div>
-        <div class="panel">
-            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
-            <div class="result-grid">
-                <div class="result-card pass" id="shearCard"><div class="result-label">φSn (Deck)</div><div class="result-value" id="phiSn">--</div></div>
-                <div class="result-card"><div class="result-label">vu (Demand)</div><div class="result-value" id="vu">--</div></div>
-                <div class="result-card"><div class="result-label">Chord Force</div><div class="result-value" id="chord">--</div></div>
-                <div class="result-card"><div class="result-label">Collector</div><div class="result-value" id="collector">--</div></div>
+
+        <!-- DIAPHRAGM TAB -->
+        <div id="diaphragmTab" class="tab-content active">
+            <div class="grid">
+                <div class="panel">
+                    <div class="panel-header"><span class="icon">📐</span> Geometry</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Diaphragm Span (L) - Perpendicular to Ribs</label>
+                            <div class="input-row">
+                                <input type="number" id="spanL" value="72" step="0.5">
+                                <span class="unit">ft</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Diaphragm Depth (W) - Parallel to Ribs</label>
+                            <div class="input-row">
+                                <input type="number" id="depthW" value="9.5" step="0.5">
+                                <span class="unit">ft</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Number of Frames / Frame Spacing</label>
+                            <div class="input-row">
+                                <input type="number" id="numFrames" value="10" step="1" style="max-width: 80px;">
+                                <span class="unit">ea</span>
+                                <input type="number" id="frameSpacing" value="8" step="0.5">
+                                <span class="unit">ft</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header"><span class="icon">🔩</span> Deck Properties</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Deck Type / Gage</label>
+                            <div class="input-row">
+                                <select id="deckType">
+                                    <option value="1.5B" selected>1.5B</option>
+                                    <option value="1.5A">1.5A</option>
+                                    <option value="2.0N">2.0N</option>
+                                    <option value="3.0N">3.0N</option>
+                                </select>
+                                <select id="deckGage">
+                                    <option value="22" selected>22 ga</option>
+                                    <option value="20">20 ga</option>
+                                    <option value="18">18 ga</option>
+                                    <option value="16">16 ga</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Support Fastener Pattern / Type</label>
+                            <div class="input-row">
+                                <select id="fastenerPattern">
+                                    <option value="36/4">36/4</option>
+                                    <option value="36/5">36/5</option>
+                                    <option value="36/7" selected>36/7</option>
+                                    <option value="36/9">36/9</option>
+                                </select>
+                                <select id="fastenerType">
+                                    <option value="puddle" selected>Puddle Weld</option>
+                                    <option value="screw">Screw</option>
+                                    <option value="paf">PAF</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Sidelap Connection / Spacing</label>
+                            <div class="input-row">
+                                <select id="sidelapType">
+                                    <option value="screw" selected>Screws</option>
+                                    <option value="weld">Welds</option>
+                                    <option value="none">None</option>
+                                </select>
+                                <input type="number" id="sidelapSpacing" value="24" step="6" style="max-width: 70px;">
+                                <span class="unit">in</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header"><span class="icon">💨</span> Wind Load (Canopy)</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Wind Speed (V) / Exposure</label>
+                            <div class="input-row">
+                                <input type="number" id="windSpeed" value="115" step="5">
+                                <span class="unit">mph</span>
+                                <select id="exposure">
+                                    <option value="B">B</option>
+                                    <option value="C" selected>C</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Mean Roof Height / GCpn (Net Pressure Coef.)</label>
+                            <div class="input-row">
+                                <input type="number" id="roofHeight" value="15" step="1">
+                                <span class="unit">ft</span>
+                                <input type="number" id="gcpn" value="1.2" step="0.1" style="max-width: 70px;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Direct Input Shear (Optional Override)</label>
+                            <div class="input-row">
+                                <input type="number" id="directShear" placeholder="Auto-calc if blank">
+                                <span class="unit">plf</span>
+                            </div>
+                        </div>
+                        <div class="note">
+                            <span>ℹ️</span>
+                            <span>Open canopy per ASCE 7-22 §27.3. GCpn = 0.8~1.8 typical.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header"><span class="icon">⚙️</span> Design Method</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Design Method</label>
+                            <select id="designMethod">
+                                <option value="ASD" selected>ASD (Ω = 2.50)</option>
+                                <option value="LRFD">LRFD (φ = 0.65)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Deck Steel (Fy / Fu)</label>
+                            <div class="input-row">
+                                <input type="number" id="fy" value="33" step="1">
+                                <span class="unit">ksi</span>
+                                <input type="number" id="fu" value="45" step="1">
+                                <span class="unit">ksi</span>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="calcDiaphragm()">Calculate Diaphragm</button>
+                    </div>
+                </div>
+
+                <!-- Diaphragm Results -->
+                <div class="panel full-width results" id="diaphragmResults">
+                    <div class="panel-header"><span class="icon">📊</span> Diaphragm Results</div>
+                    <div class="panel-body">
+                        <div class="result-grid">
+                            <div class="result-card highlight">
+                                <div class="result-label">DCR</div>
+                                <div class="result-value" id="resDCR">-</div>
+                                <div class="dcr-bar"><div class="dcr-fill" id="resDCRBar"></div></div>
+                                <div id="resDCRStatus"></div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Required (vu)</div>
+                                <div class="result-value" id="resVu">-</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Capacity</div>
+                                <div class="result-value" id="resCapacity">-</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Aspect Ratio</div>
+                                <div class="result-value" id="resAspect">-</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Total Force</div>
+                                <div class="result-value" id="resTotalV">-</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Nominal Sn</div>
+                                <div class="result-value" id="resSn">-</div>
+                            </div>
+                        </div>
+                        <div id="aspectWarning" style="padding: 0.75rem; border-radius: 6px; font-size: 0.8rem; margin-bottom: 1rem;"></div>
+                        <div class="calc-details" id="diaphragmCalcDetails"></div>
+                    </div>
+                </div>
             </div>
-            <div class="panel-title">Design Checks</div>
-            <div class="checks" id="checks"></div>
-            <div class="panel-title" style="margin-top:16px">Chord/Collector Design</div>
-            <div class="result-grid">
-                <div class="result-card"><div class="result-label">Chord Size</div><div class="result-value" id="chordSize">--</div></div>
-                <div class="result-card"><div class="result-label">Collector Size</div><div class="result-value" id="collSize">--</div></div>
+        </div>
+
+        <!-- BRACING TAB -->
+        <div id="bracingTab" class="tab-content">
+            <div class="grid">
+                <div class="panel">
+                    <div class="panel-header"><span class="icon">📐</span> Bracing Geometry</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Bay Width / Bay Depth</label>
+                            <div class="input-row">
+                                <input type="number" id="bayWidth" value="8" step="0.5">
+                                <span class="unit">ft</span>
+                                <input type="number" id="bayDepth" value="9.5" step="0.5">
+                                <span class="unit">ft</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Total Bays / # Braced Bays</label>
+                            <div class="input-row">
+                                <input type="number" id="totalBays" value="9" step="1">
+                                <select id="numBracedBays">
+                                    <option value="1">1</option>
+                                    <option value="2" selected>2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Bracing Configuration</label>
+                            <select id="bracingConfig">
+                                <option value="single" selected>Single Diagonal (Tension Only)</option>
+                                <option value="X">X-Bracing</option>
+                                <option value="chevron">Chevron</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header"><span class="icon">⚡</span> Design Parameters</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Total Lateral Force</label>
+                            <div class="input-row">
+                                <input type="number" id="braceForceInput" value="10" step="0.5">
+                                <span class="unit">kips</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Design Method / Steel Grade</label>
+                            <div class="input-row">
+                                <select id="braceDesignMethod">
+                                    <option value="ASD" selected>ASD</option>
+                                    <option value="LRFD">LRFD</option>
+                                </select>
+                                <select id="steelGrade">
+                                    <option value="A36">A36</option>
+                                    <option value="A572-50" selected>A572-50</option>
+                                    <option value="A500B">A500B</option>
+                                    <option value="A500C">A500C</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Member Type</label>
+                            <select id="memberType">
+                                <option value="angle" selected>Single Angle</option>
+                                <option value="rod">Tension Rod</option>
+                                <option value="HSS">Round HSS</option>
+                                <option value="HSSRect">Square HSS</option>
+                            </select>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle on" id="tensionOnlyToggle" onclick="toggleTensionOnly()"></div>
+                            <span class="toggle-label">Tension-only design (neglect compression)</span>
+                        </div>
+                        <div class="note purple">
+                            <span>ℹ️</span>
+                            <span>For light canopies, tension-only diagonal bracing is economical.</span>
+                        </div>
+                        <button class="btn purple" onclick="calcBracing()">Design Bracing</button>
+                    </div>
+                </div>
+
+                <!-- Bracing Results -->
+                <div class="panel full-width results" id="bracingResults">
+                    <div class="panel-header"><span class="icon">📊</span> Bracing Design Results</div>
+                    <div class="panel-body">
+                        <div class="result-grid">
+                            <div class="result-card highlight-purple">
+                                <div class="result-label">Diagonal Force</div>
+                                <div class="result-value" id="resBraceForce">-</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Diagonal Length</div>
+                                <div class="result-value" id="resDiagLen">-</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Angle θ</div>
+                                <div class="result-value" id="resAngle">-</div>
+                            </div>
+                            <div class="result-card highlight-purple">
+                                <div class="result-label">Selected Member</div>
+                                <div class="result-value" id="resSelectedMember" style="font-size: 1rem;">-</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Brace DCR</div>
+                                <div class="result-value" id="resBraceDCR">-</div>
+                                <div class="dcr-bar"><div class="dcr-fill" id="resBraceDCRBar"></div></div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Slenderness L/r</div>
+                                <div class="result-value" id="resSlenderness">-</div>
+                            </div>
+                        </div>
+
+                        <div class="diagram-box">
+                            <h4>Bracing Layout Plan</h4>
+                            <svg id="bracingDiagram" viewBox="0 0 700 160"></svg>
+                        </div>
+
+                        <div class="calc-details">
+                            <div class="calc-section">
+                                <div class="calc-title purple">📐 Geometry</div>
+                                <div id="braceGeomDetails"></div>
+                            </div>
+                            <div class="calc-section">
+                                <div class="calc-title purple">⚡ Force Analysis</div>
+                                <div id="braceForceDetails"></div>
+                            </div>
+                            <div class="calc-section">
+                                <div class="calc-title purple">🔩 Member Design (AISC 360-22)</div>
+                                <div id="braceMemberDetails"></div>
+                            </div>
+                            <div class="calc-section">
+                                <div class="calc-title purple">📋 Available Sections</div>
+                                <table class="section-table">
+                                    <thead>
+                                        <tr><th>Section</th><th>Area (in²)</th><th>r min</th><th>L/r</th><th>Capacity</th><th>DCR</th><th>Status</th></tr>
+                                    </thead>
+                                    <tbody id="sectionTableBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="calc-section">
+                                <div class="calc-title purple">🔗 Connection Requirements</div>
+                                <div id="connectionDetails"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <footer>
+            Metal Deck Diaphragm & Horizontal Bracing Calculator | AISI S310, SDI DDM04, AISC 360-22, ASCE 7-22<br>
+            For engineering verification only.
+        </footer>
     </div>
+
     <script>
-        const deckData={
-            '1.5B22':{Sn:450,t:0.0295},
-            '1.5B20':{Sn:580,t:0.0358},
-            '2N22':{Sn:420,t:0.0295},
-            '3N20':{Sn:650,t:0.0358}
+        // Data tables
+        const deckCapacity = {
+            '1.5B': { '22': { '36/4': 220, '36/5': 260, '36/7': 320, '36/9': 380 }, '20': { '36/4': 300, '36/5': 360, '36/7': 440, '36/9': 520 }, '18': { '36/4': 430, '36/5': 510, '36/7': 620, '36/9': 730 }, '16': { '36/4': 580, '36/5': 680, '36/7': 820, '36/9': 970 } },
+            '1.5A': { '22': { '36/4': 200, '36/5': 240, '36/7': 300, '36/9': 360 }, '20': { '36/4': 280, '36/5': 340, '36/7': 420, '36/9': 500 }, '18': { '36/4': 410, '36/5': 490, '36/7': 600, '36/9': 710 }, '16': { '36/4': 560, '36/5': 660, '36/7': 800, '36/9': 950 } },
+            '2.0N': { '22': { '36/4': 240, '36/5': 280, '36/7': 340, '36/9': 400 }, '20': { '36/4': 330, '36/5': 390, '36/7': 470, '36/9': 560 }, '18': { '36/4': 470, '36/5': 550, '36/7': 670, '36/9': 790 }, '16': { '36/4': 630, '36/5': 740, '36/7': 890, '36/9': 1050 } },
+            '3.0N': { '22': { '36/4': 260, '36/5': 310, '36/7': 380, '36/9': 450 }, '20': { '36/4': 360, '36/5': 430, '36/7': 520, '36/9': 620 }, '18': { '36/4': 510, '36/5': 610, '36/7': 740, '36/9': 870 }, '16': { '36/4': 690, '36/5': 820, '36/7': 980, '36/9': 1160 } }
         };
-        const patternFactor={'36/7':1.0,'36/5':0.85,'36/4':0.75};
-        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
-        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;draw()}
-        document.addEventListener('DOMContentLoaded',()=>{resize();calculate()});
-        window.addEventListener('resize',resize);
-        function draw(){
-            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
-            const L=+document.getElementById('L').value;
-            const B=+document.getElementById('B').value;
-            const sc=3,cx=c.width/2,cy=c.height/2;
-            ctx.fillStyle='rgba(168,85,247,0.2)';
-            ctx.fillRect(cx-L*sc/2,cy-B*sc/2,L*sc,B*sc);
-            ctx.strokeStyle='#a855f7';ctx.lineWidth=2;
-            ctx.strokeRect(cx-L*sc/2,cy-B*sc/2,L*sc,B*sc);
-            ctx.strokeStyle='#ec4899';ctx.setLineDash([6,4]);
-            const span=+document.getElementById('span').value;
-            const nSpans=Math.floor(L/span);
-            for(let i=1;i<nSpans;i++){
-                ctx.beginPath();
-                ctx.moveTo(cx-L*sc/2+i*span*sc,cy-B*sc/2);
-                ctx.lineTo(cx-L*sc/2+i*span*sc,cy+B*sc/2);
-                ctx.stroke();
-            }
-            ctx.setLineDash([]);
-            ctx.strokeStyle='#06d6a0';ctx.lineWidth=4;
-            ctx.strokeRect(cx-L*sc/2+2,cy-B*sc/2+2,L*sc-4,B*sc-4);
-            ctx.fillStyle='#ffd166';
-            ctx.beginPath();ctx.moveTo(cx-L*sc/2-15,cy);ctx.lineTo(cx-L*sc/2-5,cy-10);ctx.lineTo(cx-L*sc/2-5,cy+10);ctx.closePath();ctx.fill();
-            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
-            ctx.fillText('Seismic',cx-L*sc/2-45,cy+4);
-            ctx.fillText(L+' ft',cx-15,cy+B*sc/2+18);
-            ctx.fillText('Chord',cx+L*sc/2-30,cy-B*sc/2+15);
+        const sidelapMult = { screw: 1.0, weld: 1.1, none: 0.7 };
+        const fastenerMult = { puddle: 1.0, screw: 0.9, paf: 0.85 };
+        const gageThk = { '22': 0.0295, '20': 0.0358, '18': 0.0474, '16': 0.0598 };
+        const Kz = { B: { 15: 0.57, 20: 0.62, 30: 0.70 }, C: { 15: 0.85, 20: 0.90, 30: 0.98 }, D: { 15: 1.03, 20: 1.08, 30: 1.16 } };
+        
+        const steelGrades = { 'A36': { Fy: 36, Fu: 58 }, 'A572-50': { Fy: 50, Fu: 65 }, 'A500B': { Fy: 46, Fu: 58 }, 'A500C': { Fy: 50, Fu: 62 } };
+        
+        const sections = {
+            angle: [
+                { name: 'L2x2x1/8', A: 0.484, r: 0.391 }, { name: 'L2x2x3/16', A: 0.715, r: 0.385 }, { name: 'L2x2x1/4', A: 0.938, r: 0.380 },
+                { name: 'L2.5x2.5x3/16', A: 0.902, r: 0.487 }, { name: 'L2.5x2.5x1/4', A: 1.19, r: 0.481 }, { name: 'L2.5x2.5x5/16', A: 1.46, r: 0.475 },
+                { name: 'L3x3x3/16', A: 1.09, r: 0.589 }, { name: 'L3x3x1/4', A: 1.44, r: 0.584 }, { name: 'L3x3x5/16', A: 1.78, r: 0.578 }, { name: 'L3x3x3/8', A: 2.11, r: 0.572 },
+                { name: 'L3.5x3.5x1/4', A: 1.69, r: 0.683 }, { name: 'L3.5x3.5x5/16', A: 2.09, r: 0.677 }, { name: 'L3.5x3.5x3/8', A: 2.48, r: 0.671 },
+                { name: 'L4x4x1/4', A: 1.94, r: 0.783 }, { name: 'L4x4x5/16', A: 2.40, r: 0.776 }, { name: 'L4x4x3/8', A: 2.86, r: 0.770 }, { name: 'L4x4x1/2', A: 3.75, r: 0.759 },
+                { name: 'L5x5x5/16', A: 3.03, r: 0.975 }, { name: 'L5x5x3/8', A: 3.61, r: 0.968 }, { name: 'L5x5x1/2', A: 4.75, r: 0.956 },
+                { name: 'L6x6x3/8', A: 4.36, r: 1.17 }, { name: 'L6x6x1/2', A: 5.75, r: 1.16 }
+            ],
+            rod: [
+                { name: '1/2" Rod', A: 0.196, r: 0.125 }, { name: '5/8" Rod', A: 0.307, r: 0.156 }, { name: '3/4" Rod', A: 0.442, r: 0.188 },
+                { name: '7/8" Rod', A: 0.601, r: 0.219 }, { name: '1" Rod', A: 0.785, r: 0.250 }, { name: '1-1/8" Rod', A: 0.994, r: 0.281 },
+                { name: '1-1/4" Rod', A: 1.227, r: 0.313 }, { name: '1-1/2" Rod', A: 1.767, r: 0.375 }
+            ],
+            HSS: [
+                { name: 'HSS2.375x0.154', A: 1.07, r: 0.787 }, { name: 'HSS2.875x0.203', A: 1.70, r: 0.946 }, { name: 'HSS3.5x0.216', A: 2.23, r: 1.16 },
+                { name: 'HSS3.5x0.300', A: 3.02, r: 1.13 }, { name: 'HSS4.0x0.226', A: 2.68, r: 1.34 }, { name: 'HSS4.0x0.318', A: 3.68, r: 1.30 },
+                { name: 'HSS4.5x0.237', A: 3.17, r: 1.51 }, { name: 'HSS5.0x0.258', A: 3.84, r: 1.68 }
+            ],
+            HSSRect: [
+                { name: 'HSS2x2x1/8', A: 0.840, r: 0.761 }, { name: 'HSS2x2x3/16', A: 1.19, r: 0.727 }, { name: 'HSS2.5x2.5x3/16', A: 1.54, r: 0.929 },
+                { name: 'HSS3x3x3/16', A: 1.89, r: 1.13 }, { name: 'HSS3x3x1/4', A: 2.44, r: 1.10 }, { name: 'HSS3.5x3.5x1/4', A: 2.91, r: 1.30 },
+                { name: 'HSS4x4x3/16', A: 2.59, r: 1.54 }, { name: 'HSS4x4x1/4', A: 3.37, r: 1.51 }, { name: 'HSS4x4x5/16', A: 4.10, r: 1.47 },
+                { name: 'HSS5x5x1/4', A: 4.30, r: 1.92 }, { name: 'HSS5x5x5/16', A: 5.26, r: 1.88 }
+            ]
+        };
+
+        let tensionOnly = true;
+        let lastTotalForce = 10;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
         }
-        function calculate(){
-            const L=+document.getElementById('L').value;
-            const B=+document.getElementById('B').value;
-            const w=+document.getElementById('w').value;
-            const R=+document.getElementById('R').value;
-            const deck=document.getElementById('deckType').value;
-            const pattern=document.getElementById('pattern').value;
-            const V=w*L/2/1000;
-            const vu=V*1000/B;
-            const M=w*L*L/8/1000;
-            const chordForce=M/B*12;
-            const collectorForce=V;
-            const Sn=deckData[deck].Sn*patternFactor[pattern];
-            const phiSn=0.65*Sn;
-            const chordArea=chordForce/(0.9*50);
-            const chordSize=chordArea<2?'L4x4x1/4':chordArea<4?'L5x5x3/8':'L6x6x1/2';
-            const collArea=collectorForce/(0.9*50);
-            const collSize=collArea<1?'L3x3x1/4':collArea<2?'L4x4x1/4':'L5x5x3/8';
-            const checks=[
-                {name:'Deck Shear Strength',dcr:vu/phiSn,pass:vu<=phiSn},
-                {name:'Aspect Ratio (L/B ≤ 3)',dcr:(L/B)/3,pass:L/B<=3},
-                {name:'Chord Force',dcr:0.7,pass:true},
-                {name:'Collector Force',dcr:0.65,pass:true}
-            ];
-            const allPass=checks.every(c=>c.pass);
-            document.getElementById('phiSn').textContent=phiSn.toFixed(0)+' plf';
-            document.getElementById('vu').textContent=vu.toFixed(0)+' plf';
-            document.getElementById('chord').textContent=chordForce.toFixed(1)+' k';
-            document.getElementById('collector').textContent=collectorForce.toFixed(1)+' k';
-            document.getElementById('chordSize').textContent=chordSize;
-            document.getElementById('collSize').textContent=collSize;
-            document.getElementById('status').className='status '+(allPass?'pass':'fail');
-            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
-            document.getElementById('shearCard').className='result-card '+(checks[0].pass?'pass':'fail');
-            document.getElementById('checks').innerHTML=checks.map(c=>
-                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
-            ).join('');
-            draw();
+
+        function toggleTensionOnly() {
+            tensionOnly = !tensionOnly;
+            document.getElementById('tensionOnlyToggle').classList.toggle('on', tensionOnly);
+        }
+
+        function getKz(exp, h) {
+            const hh = [15, 20, 30];
+            const vals = [Kz[exp][15], Kz[exp][20], Kz[exp][30]];
+            if (h <= 15) return vals[0];
+            if (h >= 30) return vals[2];
+            if (h <= 20) return vals[0] + (vals[1] - vals[0]) * (h - 15) / 5;
+            return vals[1] + (vals[2] - vals[1]) * (h - 20) / 10;
+        }
+
+        function calcDiaphragm() {
+            const L = +document.getElementById('spanL').value;
+            const W = +document.getElementById('depthW').value;
+            const deckType = document.getElementById('deckType').value;
+            const gage = document.getElementById('deckGage').value;
+            const pattern = document.getElementById('fastenerPattern').value;
+            const fType = document.getElementById('fastenerType').value;
+            const sType = document.getElementById('sidelapType').value;
+            const sSpace = +document.getElementById('sidelapSpacing').value;
+            const method = document.getElementById('designMethod').value;
+            const directV = +document.getElementById('directShear').value;
+
+            const aspectRatio = L / W;
+
+            // Load calculation
+            let vu, totalForce, loadHTML = '';
+            if (directV > 0) {
+                vu = directV;
+                totalForce = vu * 2 * W / 1000;
+                loadHTML = `<div class="calc-row"><span class="lbl">Direct input shear</span><span class="val">${vu.toFixed(0)} plf</span></div>`;
+            } else {
+                const V = +document.getElementById('windSpeed').value;
+                const exp = document.getElementById('exposure').value;
+                const h = +document.getElementById('roofHeight').value;
+                const GCpn = +document.getElementById('gcpn').value;
+                const kz = getKz(exp, h);
+                const qh = 0.00256 * kz * 1.0 * 0.85 * 1.0 * V * V;
+                const pNet = qh * GCpn;
+                const area = L * W;
+                totalForce = pNet * area / 1000;
+                vu = (totalForce * 1000) / (2 * W);
+                loadHTML = `
+                    <div class="calc-row"><span class="lbl">Wind Speed</span><span class="val">${V} mph, Exp ${exp}</span></div>
+                    <div class="calc-row"><span class="lbl">Kz</span><span class="val">${kz.toFixed(3)}</span></div>
+                    <div class="calc-row formula"><span class="lbl">qh = 0.00256·Kz·Kzt·Kd·V²</span><span class="val">${qh.toFixed(2)} psf</span></div>
+                    <div class="calc-row formula"><span class="lbl">p = qh × GCpn</span><span class="val">${pNet.toFixed(2)} psf</span></div>
+                    <div class="calc-row"><span class="lbl">Canopy Area</span><span class="val">${area.toFixed(0)} sf</span></div>
+                    <div class="calc-row"><span class="lbl">Total Force</span><span class="val">${totalForce.toFixed(2)} kips</span></div>
+                    <div class="calc-row formula"><span class="lbl">vu = V/(2W)</span><span class="val">${vu.toFixed(0)} plf</span></div>
+                `;
+            }
+
+            lastTotalForce = totalForce;
+            document.getElementById('braceForceInput').value = totalForce.toFixed(2);
+
+            // Capacity
+            let Sn = deckCapacity[deckType][gage][pattern];
+            Sn *= sidelapMult[sType] * fastenerMult[fType];
+            if (sType === 'screw') Sn *= Math.min(1.2, 36 / sSpace);
+
+            const omega = 2.50, phi = 0.65;
+            const capacity = method === 'ASD' ? Sn / omega : phi * Sn;
+            const dcr = vu / capacity;
+
+            // Status
+            let status, statusClass, color;
+            if (dcr <= 0.9) { status = '✓ OK'; statusClass = 'ok'; color = 'var(--success)'; }
+            else if (dcr <= 1.0) { status = '⚠ Marginal'; statusClass = 'warning'; color = 'var(--warning)'; }
+            else { status = '✗ NG'; statusClass = 'ng'; color = 'var(--danger)'; }
+
+            let aspectClass, aspectMsg;
+            if (aspectRatio <= 3.0) { aspectClass = 'ok'; aspectMsg = `✓ Aspect ratio ${aspectRatio.toFixed(2)}:1 ≤ 3:1 limit. OK per AISI S310.`; }
+            else if (aspectRatio <= 4.0) { aspectClass = 'warning'; aspectMsg = `⚠ Aspect ratio ${aspectRatio.toFixed(2)}:1 exceeds 3:1. Consider horizontal bracing.`; }
+            else { aspectClass = 'ng'; aspectMsg = `✗ Aspect ratio ${aspectRatio.toFixed(2)}:1 >> 3:1. Horizontal bracing required.`; }
+
+            // Update UI
+            document.getElementById('diaphragmResults').classList.add('show');
+            document.getElementById('resDCR').textContent = dcr.toFixed(3);
+            document.getElementById('resDCRBar').style.width = `${Math.min(dcr * 100, 100)}%`;
+            document.getElementById('resDCRBar').style.background = color;
+            document.getElementById('resDCRStatus').innerHTML = `<span class="status ${statusClass}">${status}</span>`;
+            document.getElementById('resVu').innerHTML = `${vu.toFixed(0)} <span class="unit">plf</span>`;
+            document.getElementById('resCapacity').innerHTML = `${capacity.toFixed(0)} <span class="unit">plf</span>`;
+            document.getElementById('resAspect').textContent = `${aspectRatio.toFixed(2)}:1`;
+            document.getElementById('resTotalV').innerHTML = `${totalForce.toFixed(2)} <span class="unit">k</span>`;
+            document.getElementById('resSn').innerHTML = `${Sn.toFixed(0)} <span class="unit">plf</span>`;
+
+            const warn = document.getElementById('aspectWarning');
+            warn.style.background = aspectClass === 'ok' ? 'rgba(16,185,129,0.1)' : aspectClass === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)';
+            warn.style.border = `1px solid ${aspectClass === 'ok' ? 'var(--success)' : aspectClass === 'warning' ? 'var(--warning)' : 'var(--danger)'}`;
+            warn.style.color = aspectClass === 'ok' ? 'var(--success)' : aspectClass === 'warning' ? 'var(--warning)' : 'var(--danger)';
+            warn.textContent = aspectMsg;
+
+            document.getElementById('diaphragmCalcDetails').innerHTML = `
+                <div class="calc-section">
+                    <div class="calc-title">📐 Geometry</div>
+                    <div class="calc-row"><span class="lbl">Span (L)</span><span class="val">${L} ft</span></div>
+                    <div class="calc-row"><span class="lbl">Depth (W)</span><span class="val">${W} ft</span></div>
+                    <div class="calc-row"><span class="lbl">Aspect Ratio</span><span class="val">${aspectRatio.toFixed(2)} : 1 (Limit: 3:1)</span></div>
+                </div>
+                <div class="calc-section">
+                    <div class="calc-title">💨 Load</div>
+                    ${loadHTML}
+                </div>
+                <div class="calc-section">
+                    <div class="calc-title">🔩 Deck Capacity (SDI DDM)</div>
+                    <div class="calc-row"><span class="lbl">Deck</span><span class="val">${deckType}, ${gage} ga (${gageThk[gage]}")</span></div>
+                    <div class="calc-row"><span class="lbl">Pattern / Fastener</span><span class="val">${pattern}, ${fType}</span></div>
+                    <div class="calc-row"><span class="lbl">Sidelap</span><span class="val">${sType}${sType === 'screw' ? ` @ ${sSpace}" o.c.` : ''}</span></div>
+                    <div class="calc-row formula"><span class="lbl">Sn (nominal)</span><span class="val">${Sn.toFixed(0)} plf</span></div>
+                    <div class="calc-row formula"><span class="lbl">${method === 'ASD' ? 'Sn/Ω = ' + Sn.toFixed(0) + '/2.50' : 'φSn = 0.65×' + Sn.toFixed(0)}</span><span class="val">${capacity.toFixed(0)} plf</span></div>
+                </div>
+            `;
+        }
+
+        function calcBracing() {
+            const bw = +document.getElementById('bayWidth').value;
+            const bd = +document.getElementById('bayDepth').value;
+            const totalBays = +document.getElementById('totalBays').value;
+            const nBraced = +document.getElementById('numBracedBays').value;
+            const config = document.getElementById('bracingConfig').value;
+            const totalV = +document.getElementById('braceForceInput').value;
+            const method = document.getElementById('braceDesignMethod').value;
+            const grade = document.getElementById('steelGrade').value;
+            const memType = document.getElementById('memberType').value;
+
+            const Fy = steelGrades[grade].Fy;
+            const Fu = steelGrades[grade].Fu;
+
+            // Geometry
+            const diagLen = Math.sqrt(bw * bw + bd * bd);
+            const theta = Math.atan(bd / bw) * 180 / Math.PI;
+            const cosT = bw / diagLen;
+            const L_in = diagLen * 12;
+
+            // Forces
+            let horizPerBay = totalV / nBraced;
+            let diagForce;
+            if (config === 'X') diagForce = tensionOnly ? horizPerBay / cosT : (horizPerBay / 2) / cosT;
+            else if (config === 'single') diagForce = horizPerBay / cosT;
+            else diagForce = (horizPerBay / 2) / cosT;
+
+            // Member analysis
+            const secs = sections[memType];
+            const maxLr = 300;
+            const phiT = method === 'LRFD' ? 0.90 : null;
+            const omegaT = method === 'ASD' ? 1.67 : null;
+
+            const results = secs.map(s => {
+                const Lr = L_in / s.r;
+                const Ae = s.A * (memType === 'angle' ? 0.85 : memType === 'rod' ? 0.75 : 1.0);
+                const Pn = Math.min(Fy * s.A, Fu * Ae);
+                const cap = method === 'LRFD' ? phiT * Pn : Pn / omegaT;
+                const dcr = diagForce / cap;
+                return { ...s, Lr, Pn, cap, dcr, ok: Lr <= maxLr && dcr <= 1.0 };
+            });
+
+            const adequate = results.filter(r => r.ok);
+            const selected = adequate.length > 0 ? adequate.reduce((m, r) => r.A < m.A ? r : m) : results.reduce((m, r) => r.dcr < m.dcr ? r : m);
+
+            // Connection
+            const connForce = diagForce;
+            const weldLen = (connForce / (0.928 * 3/16 * 70 * 0.6 / 1000) / 2).toFixed(1);
+            const numBolts = Math.ceil(connForce / 17.9);
+            const gusset = Math.max(0.25, connForce / (0.6 * Fy * 4)).toFixed(2);
+
+            // Update UI
+            document.getElementById('bracingResults').classList.add('show');
+            document.getElementById('resBraceForce').innerHTML = `${diagForce.toFixed(2)} <span class="unit">k</span>`;
+            document.getElementById('resDiagLen').innerHTML = `${diagLen.toFixed(2)} <span class="unit">ft</span>`;
+            document.getElementById('resAngle').innerHTML = `${theta.toFixed(1)}°`;
+            document.getElementById('resSelectedMember').textContent = selected.name;
+            document.getElementById('resBraceDCR').textContent = selected.dcr.toFixed(3);
+            document.getElementById('resSlenderness').textContent = selected.Lr.toFixed(0);
+
+            const dcrColor = selected.dcr <= 0.9 ? 'var(--success)' : selected.dcr <= 1.0 ? 'var(--warning)' : 'var(--danger)';
+            document.getElementById('resBraceDCRBar').style.width = `${Math.min(selected.dcr * 100, 100)}%`;
+            document.getElementById('resBraceDCRBar').style.background = dcrColor;
+
+            // Details
+            document.getElementById('braceGeomDetails').innerHTML = `
+                <div class="calc-row"><span class="lbl">Bay Width × Depth</span><span class="val">${bw} ft × ${bd} ft</span></div>
+                <div class="calc-row formula"><span class="lbl">Diagonal = √(b² + d²)</span><span class="val">${diagLen.toFixed(2)} ft (${L_in.toFixed(0)} in)</span></div>
+                <div class="calc-row"><span class="lbl">Angle θ</span><span class="val">${theta.toFixed(1)}°</span></div>
+            `;
+
+            document.getElementById('braceForceDetails').innerHTML = `
+                <div class="calc-row"><span class="lbl">Total Lateral Force</span><span class="val">${totalV.toFixed(2)} kips</span></div>
+                <div class="calc-row"><span class="lbl"># Braced Bays</span><span class="val">${nBraced}</span></div>
+                <div class="calc-row"><span class="lbl">Configuration</span><span class="val">${config === 'X' ? 'X-Bracing' : config === 'single' ? 'Single Diagonal' : 'Chevron'}</span></div>
+                <div class="calc-row formula"><span class="lbl">Horiz/Bay = V/n</span><span class="val">${horizPerBay.toFixed(2)} kips</span></div>
+                <div class="calc-row formula"><span class="lbl">Diagonal = H/cos(θ)</span><span class="val">${diagForce.toFixed(2)} kips</span></div>
+            `;
+
+            document.getElementById('braceMemberDetails').innerHTML = `
+                <div class="calc-row"><span class="lbl">Steel Grade</span><span class="val">${grade} (Fy=${Fy}, Fu=${Fu} ksi)</span></div>
+                <div class="calc-row"><span class="lbl">Member Type</span><span class="val">${memType === 'angle' ? 'Single Angle' : memType === 'rod' ? 'Tension Rod' : memType}</span></div>
+                <div class="calc-row"><span class="lbl">Design Method</span><span class="val">${method} (${method === 'LRFD' ? 'φ=0.90' : 'Ω=1.67'})</span></div>
+                <div class="calc-row"><span class="lbl">Max L/r (tension)</span><span class="val">300</span></div>
+                <div class="calc-row formula"><span class="lbl">Selected: ${selected.name}</span><span class="val">A=${selected.A.toFixed(2)} in², r=${selected.r.toFixed(3)} in</span></div>
+                <div class="calc-row"><span class="lbl">L/r = ${L_in.toFixed(0)}/${selected.r.toFixed(3)}</span><span class="val">${selected.Lr.toFixed(0)} ${selected.Lr <= maxLr ? '✓' : '✗'}</span></div>
+                <div class="calc-row"><span class="lbl">Pn (nominal)</span><span class="val">${selected.Pn.toFixed(1)} kips</span></div>
+                <div class="calc-row formula"><span class="lbl">Capacity</span><span class="val">${selected.cap.toFixed(1)} kips</span></div>
+                <div class="calc-row"><span class="lbl">DCR</span><span class="val" style="color: ${dcrColor}">${selected.dcr.toFixed(3)} ${selected.dcr <= 1.0 ? '✓ OK' : '✗ NG'}</span></div>
+            `;
+
+            // Section table
+            let tableHTML = '';
+            results.forEach(r => {
+                const rowClass = r.name === selected.name ? 'selected' : '';
+                const statusIcon = r.ok ? '<span style="color:var(--success)">✓</span>' : '<span style="color:var(--danger)">✗</span>';
+                tableHTML += `<tr class="${rowClass}"><td>${r.name}</td><td>${r.A.toFixed(2)}</td><td>${r.r.toFixed(3)}</td><td>${r.Lr.toFixed(0)}</td><td>${r.cap.toFixed(1)}</td><td>${r.dcr.toFixed(3)}</td><td>${statusIcon}</td></tr>`;
+            });
+            document.getElementById('sectionTableBody').innerHTML = tableHTML;
+
+            document.getElementById('connectionDetails').innerHTML = `
+                <div class="calc-row"><span class="lbl">Required Connection Capacity</span><span class="val">${connForce.toFixed(2)} kips</span></div>
+                <div class="calc-row"><span class="lbl">Min Fillet Weld (E70, 3/16")</span><span class="val">${weldLen}" each side</span></div>
+                <div class="calc-row"><span class="lbl">Min Bolts (3/4" A325-N)</span><span class="val">${numBolts} ea</span></div>
+                <div class="calc-row"><span class="lbl">Gusset Plate (min)</span><span class="val">${gusset}" thick</span></div>
+            `;
+
+            // Draw diagram
+            drawBracingDiagram(totalBays, nBraced, config);
+        }
+
+        function drawBracingDiagram(totalBays, nBraced, config) {
+            const svg = document.getElementById('bracingDiagram');
+            const w = 700, h = 160;
+            const margin = 30;
+            const bayW = (w - 2 * margin) / totalBays;
+            const bayH = h - 2 * margin;
+
+            let html = '';
+            
+            // Grid lines
+            for (let i = 0; i <= totalBays; i++) {
+                const x = margin + i * bayW;
+                html += `<line x1="${x}" y1="${margin}" x2="${x}" y2="${h - margin}" stroke="#334155" stroke-width="2"/>`;
+            }
+            html += `<line x1="${margin}" y1="${margin}" x2="${w - margin}" y2="${margin}" stroke="#334155" stroke-width="2"/>`;
+            html += `<line x1="${margin}" y1="${h - margin}" x2="${w - margin}" y2="${h - margin}" stroke="#334155" stroke-width="2"/>`;
+
+            // Determine braced bay indices
+            let bracedIndices = [];
+            if (nBraced === 1) bracedIndices = [Math.floor(totalBays / 2)];
+            else if (nBraced === 2) bracedIndices = [0, totalBays - 1];
+            else if (nBraced === 3) bracedIndices = [0, Math.floor(totalBays / 2), totalBays - 1];
+            else bracedIndices = [0, 1, totalBays - 2, totalBays - 1];
+
+            // Draw bracing
+            bracedIndices.forEach(idx => {
+                if (idx >= totalBays) return;
+                const x1 = margin + idx * bayW;
+                const x2 = margin + (idx + 1) * bayW;
+                const y1 = margin, y2 = h - margin;
+
+                if (config === 'X') {
+                    html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#8b5cf6" stroke-width="3"/>`;
+                    html += `<line x1="${x2}" y1="${y1}" x2="${x1}" y2="${y2}" stroke="#8b5cf6" stroke-width="3"/>`;
+                } else if (config === 'single') {
+                    html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#8b5cf6" stroke-width="3"/>`;
+                } else {
+                    const xm = (x1 + x2) / 2;
+                    html += `<line x1="${x1}" y1="${y1}" x2="${xm}" y2="${y2}" stroke="#8b5cf6" stroke-width="3"/>`;
+                    html += `<line x1="${x2}" y1="${y1}" x2="${xm}" y2="${y2}" stroke="#8b5cf6" stroke-width="3"/>`;
+                }
+            });
+
+            // Frame labels
+            for (let i = 0; i <= totalBays; i++) {
+                const x = margin + i * bayW;
+                html += `<circle cx="${x}" cy="${margin}" r="4" fill="#06b6d4"/>`;
+                html += `<circle cx="${x}" cy="${h - margin}" r="4" fill="#06b6d4"/>`;
+            }
+
+            // Labels
+            html += `<text x="${margin}" y="${h - 5}" fill="#64748b" font-size="11">Frame 1</text>`;
+            html += `<text x="${w - margin - 50}" y="${h - 5}" fill="#64748b" font-size="11">Frame ${totalBays + 1}</text>`;
+            html += `<text x="${w/2}" y="15" fill="#8b5cf6" font-size="12" text-anchor="middle">← Diaphragm Span →</text>`;
+
+            svg.innerHTML = html;
         }
     </script>
 </body>

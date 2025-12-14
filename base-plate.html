@@ -1,158 +1,1201 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base Plate Design | AISC DG1</title>
+    <title>Base Plate Designer Pro v5</title>
     <style>
-        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--blue:#00b4d8;--cyan:#48cae4;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-        .header h1{font-size:1.2rem;color:var(--cyan)}
-        .back{color:var(--cyan);text-decoration:none}
-        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
-        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-        .panel-title{font-size:0.85rem;font-weight:600;color:var(--cyan);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-        .form-group{margin-bottom:10px}
-        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
-        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#000}
-        .viz{background:var(--bg);border-radius:8px;height:350px}
-        #canvas{width:100%;height:100%}
-        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--blue)}
-        .result-card.pass{border-left-color:var(--green)}
-        .result-card.fail{border-left-color:var(--red)}
-        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
-        .result-value{font-size:1.1rem;font-weight:600}
-        .checks{display:flex;flex-direction:column;gap:6px}
-        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
-        .check.pass{border-left-color:var(--green)}
-        .check.fail{border-left-color:var(--red)}
-        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
-        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
-        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
-        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+        body{font-family:-apple-system,sans-serif;background:#0a0a12;color:#e2e8f0;padding:12px;font-size:14px;line-height:1.4}
+        h1{font-size:18px;color:#60a5fa;margin-bottom:2px}
+        .sub{font-size:11px;color:#64748b;margin-bottom:12px}
+        .card{background:#1a1a2e;border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid #2d2d44}
+        .title{font-size:13px;color:#60a5fa;margin-bottom:10px;font-weight:600}
+        .row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+        .field{flex:1;min-width:80px}
+        .field label{display:block;font-size:10px;color:#94a3b8;margin-bottom:3px}
+        .field input,.field select{width:100%;padding:8px;background:#0f0f1a;border:1px solid #2d2d44;border-radius:6px;color:#e2e8f0;font-size:13px}
+        .field input:focus,.field select:focus{outline:none;border-color:#60a5fa}
+        .field input[readonly]{color:#64748b}
+        .btn{padding:10px 16px;border-radius:6px;border:none;font-size:13px;font-weight:600;cursor:pointer}
+        .btn-blue{background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff}
+        .btn-green{background:#22c55e;color:#fff}
+        .btn-gray{background:#2d2d44;color:#e2e8f0}
+        .btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+        .chk{display:flex;align-items:center;gap:6px;padding:8px;background:#0f0f1a;border-radius:6px;cursor:pointer;font-size:11px;border:1px solid #2d2d44}
+        .chk input{width:14px;height:14px;accent-color:#22c55e}
+        .chk.on{border-color:#22c55e;background:rgba(34,197,94,0.1)}
+        .result{display:flex;justify-content:space-between;padding:8px 10px;background:#0f0f1a;border-radius:6px;margin-bottom:4px;font-size:11px}
+        .result .lbl{color:#94a3b8}
+        .result .val{color:#22d3ee;font-weight:600;font-family:monospace}
+        .result.ok{border:1px solid #22c55e}.result.ok .val{color:#22c55e}
+        .result.ng{border:1px solid #ef4444}.result.ng .val{color:#ef4444}
+        .status{padding:10px;border-radius:6px;text-align:center;font-weight:600;margin-bottom:10px;font-size:13px}
+        .status.ok{background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid #22c55e}
+        .status.ng{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid #ef4444}
+        .summary{background:linear-gradient(135deg,#3b82f6,#06b6d4);padding:12px;border-radius:8px;text-align:center;margin:10px 0}
+        .summary .lbl{font-size:10px;color:rgba(255,255,255,0.7)}
+        .summary .val{font-size:16px;color:#fff;font-weight:700}
+        .sec{font-size:10px;color:#64748b;margin:12px 0 6px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #2d2d44;padding-bottom:4px}
+        .note{font-size:10px;color:#f59e0b;margin-top:6px;padding:6px;background:rgba(245,158,11,0.1);border-radius:4px;border-left:3px solid #f59e0b}
+        .note.info{color:#60a5fa;background:rgba(96,165,250,0.1);border-left-color:#60a5fa}
+        .hidden{display:none}
+        .tabs{display:flex;gap:4px;margin-bottom:10px}
+        .tab{flex:1;padding:8px;text-align:center;background:#0f0f1a;border:1px solid #2d2d44;border-radius:6px;cursor:pointer;font-size:11px;color:#94a3b8}
+        .tab.on{background:#3b82f6;color:#fff;border-color:#3b82f6}
+        .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .drawing-container{background:#fff;border-radius:8px;padding:10px;margin-top:10px}
+        .drawing-container svg{width:100%;height:auto}
     </style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="back">← Back</a>
-        <div style="text-align:center"><h1>🔧 Base Plate Design</h1><span style="font-size:0.75rem;color:var(--text2)">AISC DG1 + ACI 318</span></div>
-        <div></div>
-    </header>
-    <div class="main">
-        <div class="panel">
-            <div class="panel-title">Column</div>
-            <div class="form-group"><label>Section</label><select id="colSection"><option>W14x48</option><option>W14x68</option><option>W14x90</option></select></div>
-            <div class="form-row">
-                <div class="form-group"><label>d (in)</label><input type="number" id="colD" value="13.79"></div>
-                <div class="form-group"><label>bf (in)</label><input type="number" id="colBf" value="8.03"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Base Plate</div>
-            <div class="form-row">
-                <div class="form-group"><label>N (in)</label><input type="number" id="plateN" value="18" onchange="draw();calculate()"></div>
-                <div class="form-group"><label>B (in)</label><input type="number" id="plateB" value="18" onchange="draw();calculate()"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>tp (in)</label><input type="number" id="plateTp" value="1.5" step="0.125" onchange="calculate()"></div>
-                <div class="form-group"><label>Fy (ksi)</label><input type="number" id="plateFy" value="36" onchange="calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Concrete</div>
-            <div class="form-row">
-                <div class="form-group"><label>f'c (psi)</label><input type="number" id="fc" value="4000" onchange="calculate()"></div>
-                <div class="form-group"><label>A2/A1</label><input type="number" id="A2A1" value="2" step="0.5" onchange="calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Loads</div>
-            <div class="form-row">
-                <div class="form-group"><label>Pu (kips)</label><input type="number" id="Pu" value="250" onchange="calculate()"></div>
-                <div class="form-group"><label>Mu (k-ft)</label><input type="number" id="Mu" value="80" onchange="calculate()"></div>
-            </div>
-            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
-        </div>
-        <div class="panel">
-            <div class="panel-title">Base Plate Layout</div>
-            <div class="viz"><canvas id="canvas"></canvas></div>
-        </div>
-        <div class="panel">
-            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
-            <div class="result-grid">
-                <div class="result-card pass" id="bearCard"><div class="result-label">φPp</div><div class="result-value" id="phiPp">--</div></div>
-                <div class="result-card pass" id="tpCard"><div class="result-label">tp,req</div><div class="result-value" id="tpReq">--</div></div>
-                <div class="result-card"><div class="result-label">fp,max</div><div class="result-value" id="fpMax">--</div></div>
-                <div class="result-card"><div class="result-label">e</div><div class="result-value" id="eccen">--</div></div>
-            </div>
-            <div class="panel-title">Design Checks</div>
-            <div class="checks" id="checks"></div>
+    <h1>Base Plate Designer Pro v5</h1>
+    <div class="sub">AISC Design Guide 1 + ACI 318-19 Chapter 17</div>
+
+    <!-- Design Method -->
+    <div class="card">
+        <div class="title">Design Method</div>
+        <div class="tabs">
+            <div class="tab on" onclick="setMethod('lrfd',this)">LRFD</div>
+            <div class="tab" onclick="setMethod('asd',this)">ASD</div>
         </div>
     </div>
-    <script>
-        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
-        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;draw()}
-        document.addEventListener('DOMContentLoaded',()=>{resize();calculate()});
-        window.addEventListener('resize',resize);
-        function draw(){
-            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
-            const N=+document.getElementById('plateN').value;
-            const B=+document.getElementById('plateB').value;
-            const d=+document.getElementById('colD').value;
-            const bf=+document.getElementById('colBf').value;
-            const sc=10,cx=c.width/2,cy=c.height/2;
-            ctx.fillStyle='#2a3a4a';ctx.fillRect(cx-N*sc/2,cy-B*sc/2,N*sc,B*sc);
-            ctx.strokeStyle='#48cae4';ctx.lineWidth=2;ctx.strokeRect(cx-N*sc/2,cy-B*sc/2,N*sc,B*sc);
-            ctx.fillStyle='#00b4d8';
-            ctx.fillRect(cx-d*sc/2,cy-bf*sc/2,d*sc,bf*sc);
-            const ab=2;
-            [[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([sx,sy])=>{
-                ctx.beginPath();
-                ctx.arc(cx+sx*(N/2-ab)*sc,cy+sy*(B/2-ab)*sc,6,0,Math.PI*2);
-                ctx.fillStyle='#ffd166';ctx.fill();
-            });
-            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
-            ctx.fillText(N+'" x '+B+'"',cx-25,cy+B*sc/2+20);
+
+    <!-- Materials -->
+    <div class="card">
+        <div class="title">Materials</div>
+        <div class="row">
+            <div class="field"><label>f'c (ksi)</label><input type="number" id="fc" value="4" step="0.5" onchange="calc()"></div>
+            <div class="field"><label>Plate Fy</label><select id="fy" onchange="calc()"><option value="36">36ksi</option><option value="50" selected>50ksi</option></select></div>
+        </div>
+    </div>
+
+    <!-- Column -->
+    <div class="card">
+        <div class="title">Column</div>
+        <div class="row">
+            <div class="field"><label>Type</label><select id="col-type" onchange="loadCols()"><option value="W">W-Shape</option><option value="HSS-SQ">HSS Square</option><option value="HSS-RECT">HSS Rect</option></select></div>
+            <div class="field"><label>Section</label><select id="col-sec" onchange="setCol()"></select></div>
+        </div>
+        <div class="row">
+            <div class="field"><label>d (in)</label><input type="text" id="col-d" readonly></div>
+            <div class="field"><label>bf (in)</label><input type="text" id="col-bf" readonly></div>
+        </div>
+    </div>
+
+    <!-- Loads -->
+    <div class="card">
+        <div class="title">Loads (Service)</div>
+        <div class="note info" style="margin-bottom:8px;font-size:9px">Axial: D=Dead, L=Live, W=Wind Uplift | Lateral: W=Wind/Seismic</div>
+        <div class="row">
+            <div class="field"><label>P_D (k)</label><input type="number" id="pd" value="30" onchange="calc()"></div>
+            <div class="field"><label>P_L (k)</label><input type="number" id="pl" value="50" onchange="calc()"></div>
+            <div class="field"><label>P_W↑ (k)</label><input type="number" id="pw" value="0" onchange="calc()"></div>
+        </div>
+        <div class="row">
+            <div class="field"><label>M_W (k-ft)</label><input type="number" id="mom" value="0" onchange="calc()"></div>
+            <div class="field"><label>V_W (k)</label><input type="number" id="shear" value="5" onchange="calc()"></div>
+        </div>
+        <div class="note" style="margin-top:4px;font-size:8px;color:#888">M_W, V_W = Moment & Shear from Wind/Seismic (factored by 1.0W in LRFD)</div>
+    </div>
+
+    <!-- Geometry -->
+    <div class="card">
+        <div class="title">Geometry</div>
+        <div class="row">
+            <div class="field"><label>Plate N (in)</label><input type="number" id="pN" value="12" onchange="calc()"></div>
+            <div class="field"><label>Plate B (in)</label><input type="number" id="pB" value="12" onchange="calc()"></div>
+            <div class="field"><label>Grout (in)</label><input type="number" id="grout" value="1" step="0.5" onchange="calc()"></div>
+        </div>
+        <div class="row">
+            <div class="field"><label>Ped L (in)</label><input type="number" id="pedL" value="18" onchange="calc()"></div>
+            <div class="field"><label>Ped W (in)</label><input type="number" id="pedW" value="18" onchange="calc()"></div>
+        </div>
+        <div class="btns">
+            <button class="btn btn-blue" onclick="calc()">Calculate</button>
+            <button class="btn btn-gray" onclick="optim()">Optimize</button>
+        </div>
+    </div>
+
+    <!-- Anchors -->
+    <div class="card">
+        <div class="title">Anchor Bolts (F1554)</div>
+        <div class="row">
+            <div class="field"><label>Grade</label><select id="bolt-grade" onchange="calc()"><option value="36">Gr.36</option><option value="55">Gr.55</option><option value="105" selected>Gr.105</option></select></div>
+            <div class="field"><label>Dia</label><select id="bolt-dia" onchange="calc()"><option value="0.5">1/2"</option><option value="0.625">5/8"</option><option value="0.75" selected>3/4"</option><option value="0.875">7/8"</option><option value="1">1"</option><option value="1.25">1-1/4"</option><option value="1.5">1-1/2"</option></select></div>
+            <div class="field"><label>Qty</label><select id="bolt-qty" onchange="calc()"><option value="4" selected>4</option><option value="6">6</option><option value="8">8</option></select></div>
+        </div>
+        <div class="row">
+            <div class="field"><label>Plate Edge f</label><input type="number" id="bolt-f" value="2" step="0.25" onchange="calc()"></div>
+            <div class="field"><label>Conc Edge ca</label><input type="number" id="bolt-ca" value="5" step="0.5" onchange="calc()"></div>
+            <div class="field"><label>Embed hef</label><input type="number" id="bolt-hef" value="9" step="1" onchange="calc()"></div>
+        </div>
+    </div>
+
+    <!-- Shear -->
+    <div class="card">
+        <div class="title">Shear Transfer</div>
+        <div class="grid2" style="margin-bottom:8px">
+            <label class="chk on" id="chk-friction"><input type="checkbox" checked onchange="toggleChk('friction')"> Friction (μ=0.40)</label>
+            <label class="chk" id="chk-weld-washer"><input type="checkbox" onchange="toggleChk('weld-washer')"> Welded Washer</label>
+        </div>
+        <label class="chk" id="chk-shear-key"><input type="checkbox" onchange="toggleChk('shear-key')"> Shear Key (Lug)</label>
+        <div id="shear-key-opts" class="hidden" style="margin-top:8px">
+            <div class="note info" style="margin-bottom:6px">Shear lug plate welded to bottom of base plate (AISC DG1 Sec 4.9)</div>
+            <div class="row">
+                <div class="field"><label>Plate Thick, t (in)</label><input type="number" id="key-thick" value="0.5" step="0.125" onchange="calc()"></div>
+                <div class="field"><label>Plate Width, W (in)</label><input type="number" id="key-width" value="6" onchange="calc()"></div>
+            </div>
+            <div class="row">
+                <div class="field"><label>Embed Depth, d (in)</label><input type="number" id="key-depth" value="2" onchange="calc()"></div>
+                <div class="field"><label>Plate Length, L (in)</label><input type="number" id="key-length" value="6" onchange="calc()"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplementary Reinforcement -->
+    <div class="card">
+        <div class="title">Supplementary Reinf. (Hairpin)</div>
+        <div class="grid2">
+            <label class="chk" id="chk-supp-tension"><input type="checkbox" onchange="toggleChk('supp-tension')"> Tension Hairpin</label>
+            <label class="chk" id="chk-supp-shear"><input type="checkbox" onchange="toggleChk('supp-shear')"> Shear Hairpin</label>
+        </div>
+        <div id="supp-tension-opts" class="hidden" style="margin-top:8px">
+            <div class="note info" style="margin-bottom:6px">ACI 17.5.2.1 - 1 hairpin wraps both anchors (2 legs total)</div>
+            <div class="row">
+                <div class="field"><label>Bar Size</label><select id="supp-tn-bar" onchange="calc()"><option value="4">#4</option><option value="5" selected>#5</option><option value="6">#6</option></select></div>
+                <div class="field"><label># of Hairpins</label><input type="number" id="supp-tn-legs" value="1" min="1" max="4" onchange="calc()"></div>
+            </div>
+        </div>
+        <div id="supp-shear-opts" class="hidden" style="margin-top:8px">
+            <div class="note info" style="margin-bottom:6px">ACI 17.7.2.1 - 1 hairpin wraps both anchors (2 legs total)</div>
+            <div class="row">
+                <div class="field"><label>Bar Size</label><select id="supp-vn-bar" onchange="calc()"><option value="4">#4</option><option value="5" selected>#5</option><option value="6">#6</option></select></div>
+                <div class="field"><label># of Hairpins</label><input type="number" id="supp-vn-legs" value="1" min="1" max="4" onchange="calc()"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="title">Results Summary</div>
+        <div class="status ok" id="status">Design OK</div>
+        
+        <div class="result" id="r-br-row"><span class="lbl">1. Bearing</span><span class="val" id="r-br">-</span></div>
+        <div class="result" id="r-steel-tn-row"><span class="lbl">2. Steel Tension</span><span class="val" id="r-steel-tn">-</span></div>
+        <div class="result" id="r-pullout-row"><span class="lbl">3. Pullout</span><span class="val" id="r-pullout">-</span></div>
+        <div class="result" id="r-brk-row"><span class="lbl">4. Breakout-Tension</span><span class="val" id="r-brk">-</span></div>
+        <div class="result" id="r-bolt-bend-row"><span class="lbl">5. Bolt Bending</span><span class="val" id="r-bolt-bend">-</span></div>
+        <div class="result" id="r-comb-row"><span class="lbl">6. Combined Stress</span><span class="val" id="r-comb">-</span></div>
+        <div class="result" id="r-shear-row"><span class="lbl">7. Shear Transfer</span><span class="val" id="r-shear">-</span></div>
+        <div class="result" id="r-shear-brk-row"><span class="lbl">8. Breakout-Shear</span><span class="val" id="r-shear-brk">-</span></div>
+
+        <div class="summary">
+            <div class="lbl">Base Plate</div>
+            <div class="val" id="r-plate">-</div>
+        </div>
+
+        <div class="btns">
+            <button class="btn btn-blue" style="flex:1" onclick="showCalc()">📄 Calculation</button>
+            <button class="btn btn-green" style="flex:1" onclick="showDrawing()">📐 Drawing</button>
+        </div>
+    </div>
+
+<script>
+var W_DATA=[["W14x257",16.38,15.995],["W14x211",15.72,15.8],["W14x176",15.22,15.65],["W14x145",14.78,15.5],["W14x132",14.66,14.725],["W14x109",14.32,14.605],["W14x99",14.16,14.565],["W14x90",14.02,14.52],["W14x82",14.31,10.13],["W14x74",14.17,10.07],["W14x68",14.04,10.035],["W14x61",13.89,9.995],["W12x152",13.71,12.48],["W12x120",13.12,12.32],["W12x106",12.89,12.22],["W12x96",12.71,12.16],["W12x87",12.53,12.125],["W12x79",12.38,12.08],["W12x72",12.25,12.04],["W12x65",12.12,12],["W12x58",12.19,10.01],["W12x53",12.06,9.995],["W10x112",11.36,10.415],["W10x100",11.1,10.34],["W10x88",10.84,10.265],["W10x77",10.6,10.19],["W10x68",10.4,10.13],["W10x60",10.22,10.08],["W10x54",10.09,10.03],["W10x49",9.98,10],["W8x67",9,8.28],["W8x58",8.75,8.22],["W8x48",8.5,8.11],["W8x40",8.25,8.07],["W8x35",8.12,8.02],["W8x31",8,7.995],["W6x25",6.38,6.08],["W6x20",6.2,6.02],["W6x15",5.99,5.99]];
+var HSS_SQ_DATA=[["HSS12x12x1/2",12,12],["HSS10x10x1/2",10,10],["HSS8x8x1/2",8,8],["HSS8x8x3/8",8,8],["HSS6x6x1/2",6,6],["HSS6x6x3/8",6,6],["HSS6x6x1/4",6,6],["HSS5x5x3/8",5,5],["HSS4x4x3/8",4,4],["HSS4x4x1/4",4,4]];
+var HSS_RECT_DATA=[["HSS12x6x1/2",12,6],["HSS10x6x1/2",10,6],["HSS8x6x1/2",8,6],["HSS8x4x1/2",8,4],["HSS6x4x3/8",6,4]];
+var BOLT_DATA={0.5:[0.196,0.291],0.625:[0.307,0.454],0.75:[0.442,0.654],0.875:[0.601,0.891],1:[0.785,1.16],1.25:[1.23,1.81],1.5:[1.77,2.62]};
+var BOLT_ASE={0.5:0.142,0.625:0.226,0.75:0.334,0.875:0.462,1:0.606,1.25:0.969,1.5:1.41};
+// AISC DG1 Table 3.2 - Bearing Area, in² (for heavy hex head)
+// Rod Area (Ar) and Bearing Area from Table 3.2
+var BOLT_AR={0.5:0.196,0.625:0.307,0.75:0.442,0.875:0.601,1:0.785,1.125:0.994,1.25:1.23,1.5:1.77,1.75:2.41,2:3.14};
+var BOLT_ABRG={0.5:0.433,0.625:0.689,0.75:0.906,0.875:1.22,1:1.50,1.125:1.81,1.25:2.24,1.5:3.13,1.75:4.17,2:5.35};
+// Verification: φNp for 3/4" @ 4ksi = 0.70 × 8 × 0.906 × 4 = 20.3 kips ✓ (matches Table 3.2 Grade 55)
+// Wait - Grade 55 shows 20.3 but formula uses f'c not grade... checking Grade 36 column
+// φNp for 3/4" @ 3ksi = 0.70 × 8 × 0.906 × 3 = 15.2 kips ✓ (matches Table 3.2)
+var BOLT_FU={"36":58,"55":75,"105":125};
+var BOLT_FY={"36":36,"55":55,"105":105};
+var REBAR_A={4:0.20,5:0.31,6:0.44};
+var method="lrfd",D={};
+
+function setMethod(m,el){method=m;document.querySelectorAll(".tabs .tab").forEach(function(t){t.className="tab"});el.className="tab on";calc();}
+function loadCols(){var type=document.getElementById("col-type").value;var list=type==="W"?W_DATA:(type==="HSS-SQ"?HSS_SQ_DATA:HSS_RECT_DATA);var sel=document.getElementById("col-sec");sel.innerHTML="";for(var i=0;i<list.length;i++){var o=document.createElement("option");o.value=i;o.text=list[i][0];sel.appendChild(o);}setCol();}
+function setCol(){var type=document.getElementById("col-type").value;var list=type==="W"?W_DATA:(type==="HSS-SQ"?HSS_SQ_DATA:HSS_RECT_DATA);var idx=parseInt(document.getElementById("col-sec").value)||0;document.getElementById("col-d").value=list[idx][1];document.getElementById("col-bf").value=list[idx][2];calc();}
+function toggleChk(id){
+    var el=document.getElementById("chk-"+id);
+    var inp=el.querySelector("input");
+    el.className=inp.checked?"chk on":"chk";
+    var opts=document.getElementById(id+"-opts");
+    if(opts)opts.className=inp.checked?"":"hidden";
+    calc();
+}
+function frac(d){var m={0.375:'3/8"',0.5:'1/2"',0.625:'5/8"',0.75:'3/4"',0.875:'7/8"',1:'1"',1.125:'1-1/8"',1.25:'1-1/4"',1.5:'1-1/2"',1.75:'1-3/4"',2:'2"'};return m[d]||d+'"';}
+
+function calc(){
+    var fc=parseFloat(document.getElementById("fc").value)||4;
+    var fy=parseFloat(document.getElementById("fy").value)||50;
+    var type=document.getElementById("col-type").value;
+    var list=type==="W"?W_DATA:(type==="HSS-SQ"?HSS_SQ_DATA:HSS_RECT_DATA);
+    var idx=parseInt(document.getElementById("col-sec").value)||0;
+    var section=list[idx][0],d_col=list[idx][1],bf=list[idx][2];
+    var N=parseFloat(document.getElementById("pN").value)||12;
+    var B=parseFloat(document.getElementById("pB").value)||12;
+    var tg=parseFloat(document.getElementById("grout").value)||1;
+    var pedL=parseFloat(document.getElementById("pedL").value)||18;
+    var pedW=parseFloat(document.getElementById("pedW").value)||18;
+    var PD=parseFloat(document.getElementById("pd").value)||0;
+    var PL=parseFloat(document.getElementById("pl").value)||0;
+    var PW=parseFloat(document.getElementById("pw").value)||0;
+    var M=parseFloat(document.getElementById("mom").value)||0;
+    var V=parseFloat(document.getElementById("shear").value)||0;
+    var boltGrade=document.getElementById("bolt-grade").value;
+    var dBolt=parseFloat(document.getElementById("bolt-dia").value);
+    var nBolt=parseInt(document.getElementById("bolt-qty").value);
+    var f_edge=parseFloat(document.getElementById("bolt-f").value)||2;
+    var ca=parseFloat(document.getElementById("bolt-ca").value)||5;
+    var hef=parseFloat(document.getElementById("bolt-hef").value)||9;
+    var Fu=BOLT_FU[boltGrade],Fy_bolt=BOLT_FY[boltGrade];
+    var Ase=BOLT_ASE[dBolt],boltInfo=BOLT_DATA[dBolt];
+    var Ar=boltInfo[0];
+    var Abrg=BOLT_ABRG[dBolt];  // DG1 Table 3.2 values
+    var S_bolt=Math.PI*Math.pow(dBolt,3)/32;
+    var Z_bolt=Math.pow(dBolt,3)/6;
+    
+    // Load Combinations per ASCE 7
+    // M and V are from Wind/Seismic (lateral loads)
+    var Pu,Mu,Vu,Pu_uplift,Pu_for_brg,loadCase;
+    if(method==="lrfd"){
+        // LRFD Load Combinations
+        var LC1=1.4*PD;                           // LC1: 1.4D
+        var LC2=1.2*PD+1.6*PL;                    // LC2: 1.2D+1.6L
+        var LC3=1.2*PD+1.0*PW+0.5*PL;             // LC3: 1.2D+1.0W+0.5L (or 1.0L for storage)
+        var LC4=Math.abs(0.9*PD-1.0*PW);          // LC4: 0.9D-1.0W (uplift check)
+        
+        Pu_for_brg=Math.max(LC1,LC2,LC3);         // Max compression for bearing
+        Pu_uplift=0.9*PD-1.0*PW;                   // Net uplift (negative = tension)
+        Mu=1.0*M;                                  // M_W factored by 1.0W
+        Vu=1.0*V;                                  // V_W factored by 1.0W
+        Pu=Pu_for_brg;
+    }else{
+        // ASD Load Combinations
+        Pu_for_brg=PD+PL;
+        Pu_uplift=0.6*PD-0.6*PW;
+        Mu=0.6*M;   // 0.6W for ASD
+        Vu=0.6*V;   // 0.6W for ASD
+        Pu=Pu_for_brg;
+    }
+
+    // 1. Bearing
+    var A1=N*B,A2=pedL*pedW;
+    var sqrtR=Math.min(Math.sqrt(A2/A1),2.0);
+    var phiPp=0.65*0.85*fc*A1*sqrtR;
+    var brRatio=Pu_for_brg>0?Pu_for_brg/phiPp:0;
+    
+    // 2. Plate thickness
+    var m_val=type.indexOf("HSS")>=0?(N-d_col)/2:(N-0.95*d_col)/2;
+    var n_val=type.indexOf("HSS")>=0?(B-bf)/2:(B-0.80*bf)/2;
+    var ln_val=0;
+    if(type==="W"){var lam=Math.min(1.0,2*Math.sqrt(d_col*bf)/(d_col+bf));ln_val=lam*Math.sqrt(d_col*bf)/4;}
+    var ell=Math.max(m_val,n_val,ln_val,0.1);
+    var tp_req=ell*Math.sqrt(2*Math.max(Pu_for_brg,1)/(0.9*fy*B*N));
+    var stdT=[0.375,0.5,0.625,0.75,0.875,1,1.125,1.25,1.375,1.5,1.75,2];
+    var tp=tp_req;for(var i=0;i<stdT.length;i++){if(stdT[i]>=tp_req){tp=stdT[i];break;}}
+
+    // ============ ANCHOR DEMAND CALCULATION ============
+    // Per AISC Design Guide 1, Section 3.3 and 3.4
+    // Bolt layout: assume 2 rows (tension side / compression side)
+    var nTensionBolts=nBolt/2;  // bolts on tension side
+    var nShearBolts=2;          // typically 2 bolts effective for shear (DG1)
+    
+    // Geometry per DG1 Figure 3.3.1 and 3.4.1
+    var f=f_edge;               // distance from plate edge to bolt centerline
+    var A1=N*B;                 // base plate area
+    var qmax=0.65*0.85*fc*B;    // max bearing pressure per unit length (kip/in)
+    
+    // Eccentricity 
+    var e=(Mu>0&&Pu_for_brg>0)?(Mu*12)/Pu_for_brg:0;  // e in inches
+    var e_crit=N/2-Pu_for_brg/(2*qmax);  // critical eccentricity (DG1 Eq 3.3.14a)
+    
+    // TENSION DEMAND per anchor (Tu)
+    // Case 1: Pure uplift (0.9D - 1.0W < 0)
+    var Tu_uplift=Pu_uplift<0?Math.abs(Pu_uplift)/nTensionBolts:0;
+    
+    // Case 2: Small Moment (e ≤ e_crit) - DG1 Section 3.3
+    // Entire base plate in compression, no anchor tension from moment
+    // Bearing length Y = N - 2e (Eq 3.3.13)
+    
+    // Case 3: Large Moment (e > e_crit) - DG1 Section 3.4
+    // Partial compression, anchors in tension
+    // Taking moment about point A (compression resultant):
+    // T*(f + N/2 - Y/2) = Pr*e - Pr*(N/2 - Y/2)
+    // From equilibrium: T + Pr = qmax * Y * B... need to solve quadratic
+    
+    var Tu_moment=0;
+    var Y=0;  // bearing length
+    var isLargeMoment=false;
+    
+    if(Mu>0 && Pu_for_brg>0){
+        if(e <= e_crit){
+            // Small moment case - DG1 Section 3.3
+            // Full compression, no tension in anchors
+            Y = N - 2*e;  // bearing length per DG1 Eq 3.3.13
+            Tu_moment = 0;
+            isLargeMoment = false;
+        } else {
+            // Large moment case - DG1 Section 3.4
+            // Solve for Y using quadratic: (f + N/2)*qmax*Y - qmax*Y²/2 = Pr*(e + f)
+            // Rearranging: Y² - 2*(f + N/2)*Y + 2*Pr*(e + f)/(qmax) = 0
+            isLargeMoment = true;
+            var fprime = f + N/2;  // f' = f + N/2 per DG1
+            var A_coef = 1;
+            var B_coef = -2 * fprime;
+            var C_coef = 2 * Pu_for_brg * (e + f) / qmax;
+            
+            var discriminant = B_coef*B_coef - 4*A_coef*C_coef;
+            if(discriminant >= 0){
+                Y = (-B_coef - Math.sqrt(discriminant)) / (2*A_coef);  // smaller root
+                Y = Math.max(Y, 0);
+                
+                // Tension from equilibrium: T = qmax*Y - Pr
+                var T_total = qmax * Y - Pu_for_brg;
+                Tu_moment = Math.max(T_total / nTensionBolts, 0);
+            }
         }
-        function calculate(){
-            const N=+document.getElementById('plateN').value;
-            const B=+document.getElementById('plateB').value;
-            const tp=+document.getElementById('plateTp').value;
-            const Fy=+document.getElementById('plateFy').value;
-            const fc=+document.getElementById('fc').value;
-            const A2A1=+document.getElementById('A2A1').value;
-            const Pu=+document.getElementById('Pu').value;
-            const Mu=+document.getElementById('Mu').value;
-            const d=+document.getElementById('colD').value;
-            const bf=+document.getElementById('colBf').value;
-            const A1=N*B;
-            const phi=0.65;
-            const fpMax=phi*0.85*fc/1000*Math.min(Math.sqrt(A2A1),2);
-            const Pp=fpMax*A1;
-            const e=Mu*12/Pu;
-            const fp=Pu/A1+6*Mu*12/(B*N*N);
-            const m=(N-0.95*d)/2;
-            const n=(B-0.8*bf)/2;
-            const l=Math.max(m,n);
-            const tpReq=l*Math.sqrt(2*fp/(0.9*Fy));
-            const checks=[
-                {name:'Bearing Capacity',dcr:Pu/Pp,pass:Pu<=Pp},
-                {name:'Plate Thickness',dcr:tpReq/tp,pass:tp>=tpReq},
-                {name:'Eccentricity (e < N/6)',dcr:e/(N/6),pass:e<=N/6}
-            ];
-            const allPass=checks.every(c=>c.pass);
-            document.getElementById('phiPp').textContent=Pp.toFixed(0)+' k';
-            document.getElementById('tpReq').textContent=tpReq.toFixed(2)+'"';
-            document.getElementById('fpMax').textContent=fpMax.toFixed(2)+' ksi';
-            document.getElementById('eccen').textContent=e.toFixed(2)+'"';
-            document.getElementById('status').className='status '+(allPass?'pass':'fail');
-            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
-            document.getElementById('bearCard').className='result-card '+(checks[0].pass?'pass':'fail');
-            document.getElementById('tpCard').className='result-card '+(checks[1].pass?'pass':'fail');
-            document.getElementById('checks').innerHTML=checks.map(c=>
-                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
-            ).join('');
-            draw();
+    }
+    
+    // Governing tension demand
+    var Tu=Math.max(Tu_uplift,Tu_moment);
+    var lever = f + N/2 - Y/2;  // lever arm from tension bolt to compression resultant
+    
+    // SHEAR DEMAND per anchor (Vu_anchor)
+    var Vu_per_bolt=Vu/nShearBolts;
+    
+    // ============ ANCHOR CAPACITY CALCULATION ============
+    // 3. Steel tensile strength
+    var Fnt=0.75*Fu;
+    var phiNsa=0.75*Ase*Fnt;  // per anchor
+    var steelRatio=Tu>0?Tu/phiNsa:0;
+    
+    // 4. Pullout
+    var phiNp=0.70*8*Abrg*fc;  // per anchor
+    var pulloutRatio=Tu>0?Tu/phiNp:0;
+    
+    // 5. Breakout
+    var kc=24,lambda=1.0,fc_psi=fc*1000;
+    var Nb=kc*lambda*Math.sqrt(fc_psi)*Math.pow(hef,1.5)/1000;
+    var ANco=9*hef*hef;
+    var s=N-2*f_edge;
+    var proj_N=Math.min(1.5*hef,ca)+s+Math.min(1.5*hef,ca);
+    var proj_B=Math.min(1.5*hef,ca)*2;
+    var ANc=Math.min(proj_N*proj_B,nTensionBolts*ANco);
+    var psi_ed_N=(ca<1.5*hef)?(0.7+0.3*ca/(1.5*hef)):1.0;
+    var phiNcb=0.70*(ANc/ANco)*psi_ed_N*Nb*nTensionBolts;  // group capacity
+    var phiNcb_per_anchor=phiNcb/nTensionBolts;
+    var brkRatio=Tu>0?Tu/phiNcb_per_anchor:0;
+    
+    // 6. Bolt bending (shear creates moment in grout gap)
+    var Mu_bolt=Vu_per_bolt*tg;
+    var fb=Mu_bolt/S_bolt;
+    var phiMn_bolt=0.90*Fy_bolt*Z_bolt;
+    var boltBendRatio=Mu_bolt/phiMn_bolt;
+    
+    // 7. Combined Tension + Shear per AISC 360-22 J3.7 (Eq. J3-3a)
+    // Fnt = 0.75*Fu (nominal tensile stress)
+    // Fnv = 0.45*Fu (nominal shear stress, threads in shear plane)
+    // F'nt = 1.3*Fnt - (Fnt/φFnv)*frv ≤ Fnt (reduced tensile stress due to shear)
+    var Fnt_nom = 0.75 * Fu;  // ksi
+    var Fnv_nom = 0.45 * Fu;  // ksi (threads not excluded)
+    var phi_bolt = 0.75;
+    
+    var ft = Tu > 0 ? Tu / Ase : 0;  // required tensile stress, ksi
+    var fv = Vu_per_bolt / Ase;       // required shear stress, ksi
+    
+    // Shear stress ratio
+    var shearStressRatio = fv / (phi_bolt * Fnv_nom);
+    
+    // Calculate reduced tensile strength F'nt per J3-3a
+    var Fnt_prime = 1.3 * Fnt_nom - (Fnt_nom / (phi_bolt * Fnv_nom)) * fv;
+    Fnt_prime = Math.max(Math.min(Fnt_prime, Fnt_nom), 0);  // 0 ≤ F'nt ≤ Fnt
+    
+    // Tension ratio using reduced strength
+    var tensionRatio = Fnt_prime > 0 ? ft / (phi_bolt * Fnt_prime) : (ft > 0 ? 999 : 0);
+    
+    // Bending ratio from grout cantilever
+    var bn_ratio = fb / (0.90 * Fy_bolt);
+    
+    // Combined ratio: max of tension or shear ratio + bending
+    var combRatio = Math.max(tensionRatio, shearStressRatio) + bn_ratio;
+    
+    // 8. Shear Transfer Mechanisms
+    var useFric=document.getElementById("chk-friction").querySelector("input").checked;
+    var useWasher=document.getElementById("chk-weld-washer").querySelector("input").checked;
+    var useKey=document.getElementById("chk-shear-key").querySelector("input").checked;
+    var Vfric=useFric&&Pu_for_brg>0?0.40*Pu_for_brg:0;
+    
+    // Welded Washer: transfers shear to anchors
+    // Per DG1: only 2 of 4 anchors effective for shear (front bolts only)
+    // Anchor bolt shear capacity per AISC 360-22 J3.6
+    // Fnv = 0.45*Fu (threads in shear plane, N-type)
+    var Vwasher=0;
+    var Fnv_bolt=0.45*Fu;  // nominal shear stress
+    var phi_v=0.75;
+    var nEffBolts=2;  // only 2 bolts effective for shear per DG1
+    var phiVn_bolt=phi_v*Fnv_bolt*Ase;  // per bolt
+    if(useWasher){
+        Vwasher=phiVn_bolt*nEffBolts;  // 2 bolts × capacity per bolt
+    }
+    
+    // Shear Key (Lug) per AISC DG1 Section 4.9
+    var Vkey=0,Vkey_brg=0,Vkey_brk=0,Vkey_bend=0;
+    var keyT=0,keyW=0,keyD=0,keyL=0,key_Abrg=0,key_Aeff=0,key_Mn=0;
+    if(useKey){
+        keyT=parseFloat(document.getElementById("key-thick").value)||0.5;
+        keyW=parseFloat(document.getElementById("key-width").value)||6;
+        keyD=parseFloat(document.getElementById("key-depth").value)||2;
+        keyL=parseFloat(document.getElementById("key-length").value)||6;
+        
+        // 1. Concrete Bearing: Vbrg = φ(0.85f'c)(Abrg)
+        // Abrg = (d - tg) * L, where G=grout thickness is already above key
+        var d_eff = Math.max(keyD - tg, 0.5);  // effective depth in concrete
+        key_Abrg = d_eff * keyL;
+        Vkey_brg = 0.65 * 0.85 * fc * key_Abrg;
+        
+        // 2. Concrete Breakout: Vcb = φ(4λ√f'c)(Aeff) per ACI 349 / DG1 Eq 4-22
+        // Aeff = (W + 2*d_eff) * (1.5*d_eff + L)  - failure plane area
+        key_Aeff = (keyW + 2*d_eff) * (1.5*d_eff + keyL);
+        var lambda = 1.0;  // normal weight concrete
+        Vkey_brk = 0.70 * 4 * lambda * Math.sqrt(fc * 1000) * key_Aeff / 1000;
+        
+        // 3. Shear Lug Bending: Mu = Vu * (G + d/2)
+        // φMn = φ * Fy * Z, Z = L*t²/4 for rectangular section
+        var key_Z = keyL * keyT * keyT / 4;
+        key_Mn = 0.90 * fy * key_Z;  // using base plate Fy
+        // Vkey_bend = φMn / lever arm
+        var lever_key = tg + d_eff/2;
+        Vkey_bend = lever_key > 0 ? key_Mn / lever_key : 999;
+        
+        // Governing shear key capacity
+        Vkey = Math.min(Vkey_brg, Vkey_brk, Vkey_bend);
+    }
+    var Vcap=Vfric+Vwasher+Vkey;
+    var shearRatio=Vu>0&&Vcap>0?Vu/Vcap:0;
+    
+    // 9. Supplementary reinforcement for tension (ACI 318-19 §17.5.2.1)
+    // Per ACI R17.5.2.1a - ONE hairpin wraps BOTH anchors (2 legs per hairpin)
+    // Hairpin must be within 0.5hef from anchor and develop ld beyond breakout
+    var useSuppTn=document.getElementById("chk-supp-tension").querySelector("input").checked;
+    var tnBar=0,tnNumHairpins=0,tnAs=0,tnAse_total=0,phiNsa_supp=0,tnLegs=0;
+    var phiNcb_supp=phiNcb;
+    if(useSuppTn){
+        tnBar=parseInt(document.getElementById("supp-tn-bar").value);
+        tnNumHairpins=parseInt(document.getElementById("supp-tn-legs").value)||1;
+        tnAs=REBAR_A[tnBar];
+        tnLegs=tnNumHairpins*2;  // each hairpin has 2 legs
+        // Total steel area = number of hairpins × 2 legs × bar area
+        tnAse_total=tnLegs*tnAs;
+        // φNsa = φ × Ase × fy (fy=60ksi for Grade 60 rebar)
+        phiNsa_supp=0.75*tnAse_total*60;
+    }
+    var brkRatioFinal=Tu>0?Tu/(useSuppTn?phiNsa_supp:phiNcb):0;
+    
+    // 10. Supplementary reinforcement for shear (ACI 318-19 §17.7.2.1)
+    // Per ACI R17.7.2.1a - ONE hairpin wraps BOTH anchors (2 legs per hairpin)
+    var useSuppVn=document.getElementById("chk-supp-shear").querySelector("input").checked;
+    var vnBar=0,vnNumHairpins=0,vnAs=0,vnAse_total=0,phiVsa_supp=0,vnLegs=0;
+    var Vb=0,phiVcb=0,shearBrkRatio=0;
+    // Calculate concrete breakout in shear regardless of mechanism
+    if(Vu>0){
+        var le=Math.min(hef,8*dBolt);
+        Vb=7*Math.pow(le/dBolt,0.2)*Math.sqrt(dBolt)*1.0*Math.sqrt(fc*1000)*Math.pow(ca,1.5)/1000;
+        var AVco=4.5*ca*ca;
+        var AVc=Math.min(2*1.5*ca,pedW)*Math.min(1.5*ca,hef);
+        var psi_ed_V=ca<1.5*hef?(0.7+0.3*ca/(1.5*hef)):1.0;
+        phiVcb=0.70*(AVc/AVco)*psi_ed_V*Vb*2;  // 2 anchors in shear
+        
+        if(useSuppVn){
+            vnBar=parseInt(document.getElementById("supp-vn-bar").value);
+            vnNumHairpins=parseInt(document.getElementById("supp-vn-legs").value)||1;
+            vnAs=REBAR_A[vnBar];
+            vnLegs=vnNumHairpins*2;  // each hairpin has 2 legs
+            // Total steel area = number of hairpins × 2 legs × bar area
+            vnAse_total=vnLegs*vnAs;
+            phiVsa_supp=0.75*vnAse_total*60;
         }
-    </script>
+        shearBrkRatio=Vu/(useSuppVn?phiVsa_supp:phiVcb);
+    }
+
+    // Update UI
+    document.getElementById("r-br").textContent=brRatio.toFixed(3);
+    document.getElementById("r-br-row").className=brRatio<=1?"result ok":"result ng";
+    document.getElementById("r-steel-tn").textContent=steelRatio.toFixed(3);
+    document.getElementById("r-steel-tn-row").className=steelRatio<=1?"result ok":"result ng";
+    document.getElementById("r-pullout").textContent=pulloutRatio.toFixed(3);
+    document.getElementById("r-pullout-row").className=pulloutRatio<=1?"result ok":"result ng";
+    document.getElementById("r-brk").textContent=brkRatioFinal.toFixed(3);
+    document.getElementById("r-brk-row").className=brkRatioFinal<=1?"result ok":"result ng";
+    document.getElementById("r-bolt-bend").textContent=boltBendRatio.toFixed(3);
+    document.getElementById("r-bolt-bend-row").className=boltBendRatio<=1?"result ok":"result ng";
+    document.getElementById("r-comb").textContent=combRatio.toFixed(3);
+    document.getElementById("r-comb-row").className=combRatio<=1?"result ok":"result ng";
+    document.getElementById("r-shear").textContent=shearRatio.toFixed(3);
+    document.getElementById("r-shear-row").className=(Vu===0||shearRatio<=1)?"result ok":"result ng";
+    document.getElementById("r-shear-brk").textContent=shearBrkRatio.toFixed(3);
+    document.getElementById("r-shear-brk-row").className=(Vu===0||shearBrkRatio<=1)?"result ok":"result ng";
+    document.getElementById("r-plate").textContent=N+'" × '+B+'" × '+frac(tp);
+
+    var allOK=brRatio<=1&&steelRatio<=1&&pulloutRatio<=1&&brkRatioFinal<=1&&boltBendRatio<=1&&combRatio<=1&&(Vu===0||shearRatio<=1)&&shearBrkRatio<=1;
+    document.getElementById("status").textContent=allOK?"Design OK":"Design NG";
+    document.getElementById("status").className=allOK?"status ok":"status ng";
+
+    // Store all data
+    D={method:method,fc:fc,fy:fy,section:section,type:type,d_col:d_col,bf:bf,
+       N:N,B:B,tg:tg,tp:tp,tp_req:tp_req,pedL:pedL,pedW:pedW,
+       m:m_val,n:n_val,ln:ln_val,ell:ell,
+       PD:PD,PL:PL,PW:PW,M:M,V:V,
+       Pu_for_brg:Pu_for_brg,Pu_uplift:Pu_uplift,Mu:Mu,Vu:Vu,
+       e:e,e_crit:e_crit,Y:Y,qmax:qmax,lever:lever,isLargeMoment:isLargeMoment,
+       Tu_uplift:Tu_uplift,Tu_moment:Tu_moment,
+       A1:A1,A2:A2,sqrtR:sqrtR,phiPp:phiPp,brRatio:brRatio,
+       boltGrade:boltGrade,Fu:Fu,Fy_bolt:Fy_bolt,dBolt:dBolt,nBolt:nBolt,
+       Ase:Ase,Ar:Ar,Abrg:Abrg,f_edge:f_edge,ca:ca,hef:hef,
+       nTensionBolts:nTensionBolts,nShearBolts:nShearBolts,
+       Tu:Tu,phiNsa:phiNsa,steelRatio:steelRatio,
+       phiNp:phiNp,pulloutRatio:pulloutRatio,
+       Nb:Nb,ANco:ANco,ANc:ANc,psi_ed_N:psi_ed_N,phiNcb:phiNcb,phiNcb_per_anchor:phiNcb_per_anchor,
+       useSuppTn:useSuppTn,tnBar:tnBar,tnNumHairpins:tnNumHairpins,tnLegs:tnLegs,tnAs:tnAs,tnAse_total:tnAse_total,phiNsa_supp:phiNsa_supp,brkRatio:brkRatioFinal,
+       S_bolt:S_bolt,Z_bolt:Z_bolt,Vu_per_bolt:Vu_per_bolt,Mu_bolt:Mu_bolt,
+       fb:fb,phiMn_bolt:phiMn_bolt,boltBendRatio:boltBendRatio,
+       ft:ft,fv:fv,Fnt_nom:Fnt_nom,Fnv_nom:Fnv_nom,Fnt_prime:Fnt_prime,Fnv_bolt:Fnv_bolt,phiVn_bolt:phiVn_bolt,nEffBolts:nEffBolts,
+       tensionRatio:tensionRatio,shearStressRatio:shearStressRatio,bn_ratio:bn_ratio,combRatio:combRatio,
+       useFric:useFric,useWasher:useWasher,useKey:useKey,
+       Vfric:Vfric,Vwasher:Vwasher,Vkey:Vkey,Vcap:Vcap,shearRatio:shearRatio,
+       keyT:keyT,keyW:keyW,keyD:keyD,keyL:keyL,
+       key_Abrg:key_Abrg,key_Aeff:key_Aeff,key_Mn:key_Mn,
+       Vkey_brg:Vkey_brg,Vkey_brk:Vkey_brk,Vkey_bend:Vkey_bend,
+       Vb:Vb,phiVcb:phiVcb,useSuppVn:useSuppVn,vnBar:vnBar,vnNumHairpins:vnNumHairpins,vnLegs:vnLegs,vnAs:vnAs,vnAse_total:vnAse_total,phiVsa_supp:phiVsa_supp,shearBrkRatio:shearBrkRatio,
+       allOK:allOK};
+}
+
+function optim(){
+    var fc=parseFloat(document.getElementById("fc").value);
+    var d=parseFloat(document.getElementById("col-d").value);
+    var bf=parseFloat(document.getElementById("col-bf").value);
+    var PD=parseFloat(document.getElementById("pd").value);
+    var PL=parseFloat(document.getElementById("pl").value);
+    var Pu=1.2*PD+1.6*PL;
+    var A1min=Pu/(0.65*0.85*fc*2);
+    document.getElementById("pN").value=Math.ceil(Math.max(Math.sqrt(A1min),d+4));
+    document.getElementById("pB").value=Math.ceil(Math.max(A1min/Math.ceil(Math.sqrt(A1min)),bf+4));
+    calc();
+}
+
+function showCalc(){
+    var r=D;
+    var old=document.getElementById('modal-overlay');
+    if(old)old.remove();
+    var overlay=document.createElement('div');
+    overlay.id='modal-overlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:9999;overflow-y:auto;';
+    var h='<div style="font-family:Arial,sans-serif;font-size:10pt;padding:20px;max-width:800px;margin:0 auto;line-height:1.5;color:#000;background:#fff">';
+    
+    // Buttons
+    h+='<div style="text-align:center;margin-bottom:15px">';
+    h+='<button onclick="downloadCalc()" style="background:#22c55e;color:#fff;border:none;padding:12px 30px;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;margin-right:10px">⬇️ Download HTML</button>';
+    h+='<button onclick="document.getElementById(\'modal-overlay\').remove()" style="background:#ef4444;color:#fff;border:none;padding:12px 24px;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer">✕ Close</button>';
+    h+='</div>';
+    
+    h+='<div id="calc-content">';
+    h+='<h1 style="font-size:14pt;text-align:center;margin:0 0 4px;border-bottom:2px solid #000;padding-bottom:4px">BASE PLATE DESIGN CALCULATION</h1>';
+    h+='<div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">AISC Design Guide 1 + ACI 318-19 Chapter 17<br>Method: '+r.method.toUpperCase()+' | Date: '+new Date().toLocaleDateString()+'</div>';
+    
+    // Input
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">1. DESIGN INPUT</h2>';
+    h+='<table style="border-collapse:collapse;width:100%;margin:8px 0"><tr><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5" colspan="4">Materials & Geometry</th></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Concrete f\'c</td><td style="border:1px solid #999;padding:4px 8px">'+r.fc+' ksi</td><td style="border:1px solid #999;padding:4px 8px">Plate Fy</td><td style="border:1px solid #999;padding:4px 8px">'+r.fy+' ksi</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Column</td><td style="border:1px solid #999;padding:4px 8px">'+r.section+'</td><td style="border:1px solid #999;padding:4px 8px">d × bf</td><td style="border:1px solid #999;padding:4px 8px">'+r.d_col+'" × '+r.bf+'"</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Base Plate</td><td style="border:1px solid #999;padding:4px 8px">'+r.N+'" × '+r.B+'"</td><td style="border:1px solid #999;padding:4px 8px">Grout</td><td style="border:1px solid #999;padding:4px 8px">'+r.tg+'"</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Pedestal</td><td style="border:1px solid #999;padding:4px 8px">'+r.pedL+'" × '+r.pedW+'"</td><td style="border:1px solid #999;padding:4px 8px"></td><td style="border:1px solid #999;padding:4px 8px"></td></tr></table>';
+    
+    h+='<table style="border-collapse:collapse;width:100%;margin:8px 0"><tr><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5" colspan="4">Anchor Bolts</th></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Size</td><td style="border:1px solid #999;padding:4px 8px">('+r.nBolt+') '+frac(r.dBolt)+'φ</td><td style="border:1px solid #999;padding:4px 8px">Grade</td><td style="border:1px solid #999;padding:4px 8px">F1554 Gr.'+r.boltGrade+'</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Fu</td><td style="border:1px solid #999;padding:4px 8px">'+r.Fu+' ksi</td><td style="border:1px solid #999;padding:4px 8px">Fy</td><td style="border:1px solid #999;padding:4px 8px">'+r.Fy_bolt+' ksi</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Embed hef</td><td style="border:1px solid #999;padding:4px 8px">'+r.hef+'"</td><td style="border:1px solid #999;padding:4px 8px">Edge ca</td><td style="border:1px solid #999;padding:4px 8px">'+r.ca+'"</td></tr></table>';
+    
+    h+='<table style="border-collapse:collapse;width:100%;margin:8px 0"><tr><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5" colspan="6">Loads (Service → Factored)</th></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">P_D</td><td style="border:1px solid #999;padding:4px 8px">'+r.PD+' k</td><td style="border:1px solid #999;padding:4px 8px">P_L</td><td style="border:1px solid #999;padding:4px 8px">'+r.PL+' k</td><td style="border:1px solid #999;padding:4px 8px">P_W (uplift)</td><td style="border:1px solid #999;padding:4px 8px">'+r.PW+' k</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">M_W</td><td style="border:1px solid #999;padding:4px 8px">'+r.M+' k-ft</td><td style="border:1px solid #999;padding:4px 8px">V_W</td><td style="border:1px solid #999;padding:4px 8px">'+r.V+' k</td><td style="border:1px solid #999;padding:4px 8px" colspan="2" style="font-size:8px;color:#666">(Wind/Seismic)</td></tr>';
+    var lcText=r.method==='lrfd'?'LRFD: 1.2D+1.6L (bearing), 0.9D-1.0W (uplift), 1.0W (lateral)':'ASD: D+L (bearing), 0.6D-0.6W (uplift), 0.6W (lateral)';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px;background:#e3f2fd;font-size:8px" colspan="6">Load Combos: '+lcText+'</td></tr>';
+    h+='<tr><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5">Pu (brg)</th><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5">'+r.Pu_for_brg.toFixed(1)+' k</th><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5">Mu</th><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5">'+r.Mu.toFixed(1)+' k-ft</th><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5">Vu</th><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5">'+r.Vu.toFixed(1)+' k</th></tr></table>';
+    
+    // ============ ANCHOR DEMAND per DG1 Section 3.3/3.4 ============
+    h+='<h2 style="font-size:11pt;background:#fff3cd;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #ffc107">2. ANCHOR DEMAND - DG1 Section 3.3/3.4</h2>';
+    h+='<div style="margin:2px 0 2px 12px;background:#fff3cd;padding:6px 8px;border-radius:4px">';
+    h+='<b>Bolt Layout:</b> '+r.nBolt+' bolts total, '+r.nTensionBolts+' on tension side, '+r.nShearBolts+' effective for shear<br>';
+    h+='<b>Edge distance:</b> f = '+r.f_edge+'"';
+    h+='</div>';
+    
+    // Tension Demand - DG1 Method
+    h+='<div style="margin:8px 0 4px 12px"><u>Tension Demand (Tu per anchor) - DG1 Method</u></div>';
+    h+='<div style="margin:2px 0 2px 12px">Max bearing pressure: q_max = φ(0.85f\'c)B = 0.65×0.85×'+r.fc+'×'+r.B+' = '+r.qmax.toFixed(2)+' k/in</div>';
+    h+='<div style="margin:2px 0 2px 12px">Eccentricity: e = Mu×12/Pu = '+r.Mu.toFixed(1)+'×12/'+r.Pu_for_brg.toFixed(1)+' = '+r.e.toFixed(2)+'"</div>';
+    h+='<div style="margin:2px 0 2px 12px">Critical eccentricity: e_crit = N/2 - Pu/(2×q_max) = '+r.N+'/2 - '+r.Pu_for_brg.toFixed(1)+'/(2×'+r.qmax.toFixed(2)+') = '+r.e_crit.toFixed(2)+'"</div>';
+    
+    if(r.Tu_uplift>0){
+        h+='<div style="margin:8px 0 4px 12px;background:#f8d7da;padding:6px;border-radius:4px;border:1px solid #dc3545">';
+        h+='<b>Case: Net Uplift (DG1 Section 3.2)</b><br>';
+        h+='Pu_uplift = 0.9×'+r.PD+' - 1.0×'+r.PW+' = '+r.Pu_uplift.toFixed(1)+' k (negative = tension)<br>';
+        h+='Tu_uplift = |'+r.Pu_uplift.toFixed(1)+'| / '+r.nTensionBolts+' = <b>'+r.Tu_uplift.toFixed(2)+' kips/anchor</b>';
+        h+='</div>';
+    }
+    
+    if(r.e <= r.e_crit && r.Mu > 0){
+        h+='<div style="margin:8px 0 4px 12px;background:#d4edda;padding:6px;border-radius:4px;border:1px solid #28a745">';
+        h+='<b>Case: Small Moment (DG1 Section 3.3, Figure 3.3.1)</b><br>';
+        h+='e = '+r.e.toFixed(2)+'" ≤ e_crit = '+r.e_crit.toFixed(2)+'" → Full compression under plate<br>';
+        h+='Bearing length: Y = N - 2e = '+r.N+' - 2×'+r.e.toFixed(2)+' = '+r.Y.toFixed(2)+'"<br>';
+        h+='<b>No tension in anchors from moment</b>';
+        h+='</div>';
+    }
+    
+    if(r.isLargeMoment && r.Tu_moment>0){
+        h+='<div style="margin:8px 0 4px 12px;background:#f8d7da;padding:6px;border-radius:4px;border:1px solid #dc3545">';
+        h+='<b>Case: Large Moment (DG1 Section 3.4, Figure 3.4.1)</b><br>';
+        h+='e = '+r.e.toFixed(2)+'" > e_crit = '+r.e_crit.toFixed(2)+'" → Partial compression, anchors in tension<br>';
+        h+='Bearing length: Y = '+r.Y.toFixed(2)+'" (from quadratic solution)<br>';
+        h+='Lever arm: f\' = f + N/2 - Y/2 = '+r.f_edge+' + '+r.N+'/2 - '+r.Y.toFixed(2)+'/2 = '+r.lever.toFixed(2)+'"<br>';
+        h+='Total tension: T = q_max × Y - Pu = '+r.qmax.toFixed(2)+' × '+r.Y.toFixed(2)+' - '+r.Pu_for_brg.toFixed(1)+' = '+(r.qmax*r.Y-r.Pu_for_brg).toFixed(2)+' k<br>';
+        h+='<b>Tu per anchor = '+(r.qmax*r.Y-r.Pu_for_brg).toFixed(2)+' / '+r.nTensionBolts+' = '+r.Tu_moment.toFixed(2)+' kips/anchor</b>';
+        h+='</div>';
+    }
+    
+    if(r.Tu<=0 && r.Tu_uplift<=0){
+        h+='<div style="margin:2px 0 2px 12px;color:#28a745"><b>No net tension in anchors</b></div>';
+    }
+    h+='<div style="margin:6px 0 2px 12px;padding:4px 8px;background:#e3f2fd;border-radius:4px"><b>Governing Tu = '+r.Tu.toFixed(2)+' kips/anchor</b></div>';
+    
+    // Shear Demand
+    h+='<div style="margin:8px 0 4px 12px"><u>Shear Demand (Vu per anchor)</u></div>';
+    h+='<div style="margin:2px 0 2px 12px">Vu_total = '+r.Vu.toFixed(1)+' kips</div>';
+    h+='<div style="margin:2px 0 2px 12px">Vu per anchor = '+r.Vu.toFixed(1)+' / '+r.nShearBolts+' = <b>'+r.Vu_per_bolt.toFixed(2)+' kips/anchor</b></div>';
+    
+    // Bearing
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">3. CONCRETE BEARING (AISC DG1)</h2>';
+    h+='<div style="margin:2px 0 2px 12px">A1 = N × B = '+r.N+' × '+r.B+' = '+r.A1.toFixed(0)+' in²</div>';
+    h+='<div style="margin:2px 0 2px 12px">A2 = '+r.pedL+' × '+r.pedW+' = '+r.A2.toFixed(0)+' in²</div>';
+    h+='<div style="margin:2px 0 2px 12px">√(A2/A1) = √('+r.A2.toFixed(0)+'/'+r.A1.toFixed(0)+') = '+r.sqrtR.toFixed(3)+' ≤ 2.0 ✓</div>';
+    h+='<div style="margin:2px 0 2px 12px">φPp = 0.65 × 0.85 × f\'c × A1 × √(A2/A1)</div>';
+    h+='<div style="margin-left:24px;color:#444">= 0.65 × 0.85 × '+r.fc+' × '+r.A1.toFixed(0)+' × '+r.sqrtR.toFixed(3)+' = <b>'+r.phiPp.toFixed(1)+' kips</b></div>';
+    h+='<div style="margin:2px 0 2px 12px"><b style="color:'+(r.brRatio<=1?'#28a745':'#dc3545')+'">DCR = '+r.Pu_for_brg.toFixed(1)+'/'+r.phiPp.toFixed(1)+' = '+r.brRatio.toFixed(3)+(r.brRatio<=1?' ≤ 1.0 ✓':' > 1.0 ✗')+'</b></div>';
+    
+    // Plate thickness
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">4. PLATE THICKNESS (AISC DG1)</h2>';
+    h+='<div style="margin:2px 0 2px 12px">m = (N - 0.95d)/2 = ('+r.N+' - 0.95×'+r.d_col+')/2 = '+r.m.toFixed(3)+'"</div>';
+    h+='<div style="margin:2px 0 2px 12px">n = (B - 0.80bf)/2 = ('+r.B+' - 0.80×'+r.bf+')/2 = '+r.n.toFixed(3)+'"</div>';
+    h+='<div style="margin:2px 0 2px 12px">λn\' = '+r.ln.toFixed(3)+'"</div>';
+    h+='<div style="margin:2px 0 2px 12px">ℓ = max(m, n, λn\') = '+r.ell.toFixed(3)+'"</div>';
+    h+='<div style="margin:2px 0 2px 12px">t_p,req = ℓ × √(2Pu/φFyBN) = '+r.tp_req.toFixed(3)+'"</div>';
+    h+='<div style="margin:2px 0 2px 12px"><b>Use t_p = '+frac(r.tp)+'</b></div>';
+    
+    // Steel tension
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">5. ANCHOR STEEL TENSION (ACI 318-19 §17.6.1)</h2>';
+    h+='<div style="margin:2px 0 2px 12px;background:#e3f2fd;padding:4px 8px;border-radius:4px"><b>Demand: Tu = '+r.Tu.toFixed(2)+' kips/anchor</b></div>';
+    h+='<div style="margin:2px 0 2px 12px">Ase = '+r.Ase.toFixed(3)+' in² (tensile stress area)</div>';
+    h+='<div style="margin:2px 0 2px 12px">Fnt = 0.75 × Fu = 0.75 × '+r.Fu+' = '+(0.75*r.Fu).toFixed(1)+' ksi</div>';
+    h+='<div style="margin:2px 0 2px 12px"><b>Capacity: φNsa = '+r.phiNsa.toFixed(2)+' kips/anchor</b></div>';
+    h+='<div style="margin:2px 0 2px 12px"><b style="color:'+(r.steelRatio<=1?'#28a745':'#dc3545')+'">DCR = '+r.Tu.toFixed(2)+'/'+r.phiNsa.toFixed(2)+' = '+r.steelRatio.toFixed(3)+(r.steelRatio<=1?' ≤ 1.0 ✓':' > 1.0 ✗')+'</b></div>';
+    
+    // Pullout
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">6. CONCRETE PULLOUT (ACI 318-19 §17.6.3)</h2>';
+    h+='<div style="margin:2px 0 2px 12px;background:#e3f2fd;padding:4px 8px;border-radius:4px"><b>Demand: Tu = '+r.Tu.toFixed(2)+' kips/anchor</b></div>';
+    h+='<div style="margin:2px 0 2px 12px">Abrg per AISC DG1 Table 3.2 for '+frac(r.dBolt)+' dia. heavy hex bolt = '+r.Abrg.toFixed(3)+' in²</div>';
+    h+='<div style="margin:2px 0 2px 12px"><b>Capacity: φNp = φ × 8 × Abrg × f\'c = 0.70 × 8 × '+r.Abrg.toFixed(3)+' × '+r.fc+' = '+r.phiNp.toFixed(2)+' kips/anchor</b></div>';
+    h+='<div style="margin:2px 0 2px 12px"><b style="color:'+(r.pulloutRatio<=1?'#28a745':'#dc3545')+'">DCR = '+r.Tu.toFixed(2)+'/'+r.phiNp.toFixed(2)+' = '+r.pulloutRatio.toFixed(3)+(r.pulloutRatio<=1?' ≤ 1.0 ✓':' > 1.0 ✗')+'</b></div>';
+    
+    // Breakout
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">7. CONCRETE BREAKOUT - TENSION (ACI 318-19 §17.6.2)</h2>';
+    h+='<div style="margin:2px 0 2px 12px;background:#e3f2fd;padding:4px 8px;border-radius:4px"><b>Demand: Tu = '+r.Tu.toFixed(2)+' kips/anchor</b></div>';
+    h+='<div style="margin:2px 0 2px 12px">Nb = kc × λ × √f\'c × hef^1.5 = 24 × 1.0 × √'+(r.fc*1000).toFixed(0)+' × '+r.hef+'^1.5 = '+r.Nb.toFixed(2)+' kips</div>';
+    h+='<div style="margin:2px 0 2px 12px">ANco = 9 × hef² = 9 × '+r.hef+'² = '+r.ANco.toFixed(0)+' in²</div>';
+    h+='<div style="margin:2px 0 2px 12px">ANc = '+r.ANc.toFixed(0)+' in² (with edge effects)</div>';
+    h+='<div style="margin:2px 0 2px 12px">ψed,N = 0.7 + 0.3×(ca/1.5hef) = '+r.psi_ed_N.toFixed(3)+'</div>';
+    h+='<div style="margin:2px 0 2px 12px"><b>Capacity (group): φNcb = '+r.phiNcb.toFixed(2)+' kips</b></div>';
+    h+='<div style="margin:2px 0 2px 12px"><b>Capacity (per anchor): φNcb = '+r.phiNcb_per_anchor.toFixed(2)+' kips/anchor</b></div>';
+    
+    // Detailed tension hairpin calculation
+    if(r.useSuppTn){
+        h+='<div style="margin:8px 0 4px 12px;background:#d4edda;padding:8px;border-radius:4px;border:1px solid #28a745">';
+        h+='<b>SUPPLEMENTARY REINFORCEMENT - TENSION (ACI 318-19 §17.5.2.1)</b><br>';
+        h+='<div style="margin:4px 0;font-size:9pt;color:#666">Per R17.5.2.1a: Hairpin must be within 0.5hef ('+(0.5*r.hef).toFixed(1)+'") from anchor centerline</div>';
+        h+='<div style="margin:4px 0">Bar: #'+r.tnBar+' (As = '+r.tnAs.toFixed(3)+' in²)</div>';
+        h+='<div style="margin:4px 0">Number of hairpins: '+r.tnNumHairpins+' (each hairpin = 2 legs)</div>';
+        h+='<div style="margin:4px 0">Total legs: '+r.tnNumHairpins+' × 2 = '+r.tnLegs+'</div>';
+        h+='<div style="margin:4px 0">Total Ase = '+r.tnLegs+' legs × '+r.tnAs.toFixed(3)+' = '+r.tnAse_total.toFixed(3)+' in²</div>';
+        h+='<div style="margin:4px 0"><b>Capacity: φNsa = φ × Ase × fy = 0.75 × '+r.tnAse_total.toFixed(3)+' × 60 = '+r.phiNsa_supp.toFixed(2)+' kips</b></div>';
+        h+='</div>';
+    }
+    var brkCapacity=r.useSuppTn?r.phiNsa_supp:r.phiNcb_per_anchor;
+    h+='<div style="margin:2px 0 2px 12px"><b style="color:'+(r.brkRatio<=1?'#28a745':'#dc3545')+'">DCR = '+r.Tu.toFixed(2)+'/'+brkCapacity.toFixed(2)+' = '+r.brkRatio.toFixed(3)+(r.brkRatio<=1?' ≤ 1.0 ✓':' > 1.0 ✗')+'</b></div>';
+    
+    // Bolt bending
+    h+='<h2 style="font-size:11pt;background:#fff3cd;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #ffc107">8. ANCHOR BOLT BENDING (Grout Cantilever)</h2>';
+    h+='<div style="margin:2px 0 2px 12px;background:#e3f2fd;padding:4px 8px;border-radius:4px"><b>Demand: Vu = '+r.Vu_per_bolt.toFixed(2)+' kips/anchor</b></div>';
+    h+='<div style="margin:2px 0 2px 12px;background:#fff3cd;padding:6px;border-radius:4px"><b>Grout creates cantilever: </b>Anchor fixed at pedestal top, shear at base plate</div>';
+    h+='<div style="margin:2px 0 2px 12px">Cantilever length = grout thickness = '+r.tg+'"</div>';
+    h+='<div style="margin:2px 0 2px 12px">Mu,bolt = Vu × tg = '+r.Vu_per_bolt.toFixed(2)+' × '+r.tg+' = '+r.Mu_bolt.toFixed(3)+' k-in</div>';
+    h+='<div style="margin:2px 0 2px 12px">Z = d³/6 = '+r.Z_bolt.toFixed(4)+' in³</div>';
+    h+='<div style="margin:2px 0 2px 12px"><b>Capacity: φMn = 0.90 × Fy × Z = 0.90 × '+r.Fy_bolt+' × '+r.Z_bolt.toFixed(4)+' = '+r.phiMn_bolt.toFixed(3)+' k-in</b></div>';
+    h+='<div style="margin:2px 0 2px 12px"><b style="color:'+(r.boltBendRatio<=1?'#28a745':'#dc3545')+'">DCR = '+r.Mu_bolt.toFixed(3)+'/'+r.phiMn_bolt.toFixed(3)+' = '+r.boltBendRatio.toFixed(3)+(r.boltBendRatio<=1?' ≤ 1.0 ✓':' > 1.0 ✗')+'</b></div>';
+    
+    // Combined per AISC 360 J3-3a
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">9. COMBINED TENSION + SHEAR (AISC 360-22 J3.7)</h2>';
+    h+='<div style="margin:2px 0 2px 12px;background:#e3f2fd;padding:6px 8px;border-radius:4px"><b>Demand: Tu = '+r.Tu.toFixed(2)+' k, Vu = '+r.Vu_per_bolt.toFixed(2)+' k (per anchor)</b></div>';
+    h+='<div style="margin:2px 0 2px 12px">Fnt = 0.75×Fu = '+r.Fnt_nom.toFixed(1)+' ksi, Fnv = 0.45×Fu = '+r.Fnv_nom.toFixed(1)+' ksi</div>';
+    h+='<div style="margin:2px 0 2px 12px">ft = Tu/Ase = '+r.ft.toFixed(1)+' ksi, fv = Vu/Ase = '+r.fv.toFixed(1)+' ksi</div>';
+    h+='<div style="margin:2px 0 2px 12px">F\'nt = 1.3Fnt - (Fnt/φFnv)×fv = '+r.Fnt_prime.toFixed(1)+' ksi</div>';
+    h+='<div style="margin:2px 0 2px 12px">Tension DCR = ft/(φF\'nt) = '+r.tensionRatio.toFixed(3)+', Shear DCR = fv/(φFnv) = '+r.shearStressRatio.toFixed(3)+'</div>';
+    h+='<div style="margin:2px 0 2px 12px"><b style="color:'+(r.combRatio<=1?'#28a745':'#dc3545')+'">Combined DCR = '+r.combRatio.toFixed(3)+(r.combRatio<=1?' ≤ 1.0 ✓':' > 1.0 ✗')+'</b></div>';
+    
+    // Shear
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">10. SHEAR TRANSFER (AISC DG1)</h2>';
+    h+='<div style="margin:2px 0 2px 12px;background:#e3f2fd;padding:4px 8px;border-radius:4px"><b>Demand: Vu = '+r.Vu.toFixed(1)+' kips (total)</b></div>';
+    if(r.useFric)h+='<div style="margin:2px 0 2px 12px">Friction: μ × Pu = 0.40 × '+r.Pu_for_brg.toFixed(1)+' = '+r.Vfric.toFixed(1)+' kips</div>';
+    
+    // Detailed Welded Washer calculation
+    if(r.useWasher){
+        h+='<div style="margin:8px 0 4px 12px;background:#e3f2fd;padding:8px;border-radius:4px;border:1px solid #2196f3">';
+        h+='<b>WELDED WASHER - ANCHOR BOLT SHEAR (AISC 360-22 J3.6)</b><br>';
+        h+='<div style="margin:4px 0;font-size:9pt;color:#666">Purpose: Washer welded to base plate transfers shear to anchor bolts</div>';
+        h+='<div style="margin:4px 0;font-size:9pt;color:#666">Per DG1: Only 2 of 4 bolts effective for shear (front row only)</div>';
+        h+='<div style="margin:4px 0">Fnv = 0.45 × Fu = 0.45 × '+r.Fu+' = '+r.Fnv_bolt.toFixed(1)+' ksi (threads in shear plane)</div>';
+        h+='<div style="margin:4px 0">Ase = '+r.Ase.toFixed(3)+' in² (tensile stress area)</div>';
+        h+='<div style="margin:4px 0">φVn per bolt = φ × Fnv × Ase = 0.75 × '+r.Fnv_bolt.toFixed(1)+' × '+r.Ase.toFixed(3)+' = '+r.phiVn_bolt.toFixed(2)+' kips/bolt</div>';
+        h+='<div style="margin:4px 0"><b>φVn (2 bolts) = '+r.phiVn_bolt.toFixed(2)+' × 2 = '+r.Vwasher.toFixed(1)+' kips</b></div>';
+        h+='</div>';
+    }
+    
+    // Detailed Shear Key calculation
+    if(r.useKey){
+        h+='<div style="margin:8px 0 4px 12px;background:#fff3cd;padding:8px;border-radius:4px;border:1px solid #ffc107">';
+        h+='<b>SHEAR KEY (LUG) - AISC DG1 Section 4.9</b><br>';
+        h+='<div style="margin:4px 0">Plate: t='+r.keyT+'" × W='+r.keyW+'" × L='+r.keyL+'" (embed d='+r.keyD+'")</div>';
+        h+='<div style="margin:4px 0">Effective depth in concrete: d_eff = '+r.keyD+' - '+r.tg+' = '+(r.keyD-r.tg).toFixed(2)+'"</div>';
+        h+='<div style="margin:8px 0 4px 0"><u>1. Concrete Bearing (ACI 318)</u></div>';
+        h+='<div style="margin:2px 0 2px 12px">A_brg = d_eff × L = '+(r.keyD-r.tg).toFixed(2)+' × '+r.keyL+' = '+r.key_Abrg.toFixed(2)+' in²</div>';
+        h+='<div style="margin:2px 0 2px 12px">φV_brg = φ(0.85f\'c)(A_brg) = 0.65×0.85×'+r.fc+'×'+r.key_Abrg.toFixed(2)+' = <b>'+r.Vkey_brg.toFixed(1)+' kips</b></div>';
+        h+='<div style="margin:8px 0 4px 0"><u>2. Concrete Breakout (ACI 349 / DG1 Eq 4-22)</u></div>';
+        h+='<div style="margin:2px 0 2px 12px">A_eff = (W + 2d)(1.5d + L) = ('+r.keyW+'+2×'+(r.keyD-r.tg).toFixed(1)+')×(1.5×'+(r.keyD-r.tg).toFixed(1)+'+'+r.keyL+') = '+r.key_Aeff.toFixed(1)+' in²</div>';
+        h+='<div style="margin:2px 0 2px 12px">φV_brk = φ(4λ√f\'c)(A_eff) = 0.70×4×1.0×√'+r.fc*1000+'×'+r.key_Aeff.toFixed(1)+'/1000 = <b>'+r.Vkey_brk.toFixed(1)+' kips</b></div>';
+        h+='<div style="margin:8px 0 4px 0"><u>3. Shear Lug Bending</u></div>';
+        h+='<div style="margin:2px 0 2px 12px">Z = L×t²/4 = '+r.keyL+'×'+r.keyT+'²/4 = '+(r.keyL*r.keyT*r.keyT/4).toFixed(3)+' in³</div>';
+        h+='<div style="margin:2px 0 2px 12px">φM_n = 0.90×Fy×Z = 0.90×'+r.fy+'×'+(r.keyL*r.keyT*r.keyT/4).toFixed(3)+' = '+r.key_Mn.toFixed(2)+' k-in</div>';
+        h+='<div style="margin:2px 0 2px 12px">Lever = G + d_eff/2 = '+r.tg+' + '+(r.keyD-r.tg).toFixed(2)+'/2 = '+(r.tg+(r.keyD-r.tg)/2).toFixed(2)+'"</div>';
+        h+='<div style="margin:2px 0 2px 12px">φV_bend = φM_n / Lever = <b>'+r.Vkey_bend.toFixed(1)+' kips</b></div>';
+        h+='<div style="margin:8px 0 4px 0;background:#e3f2fd;padding:4px 8px;border-radius:4px"><b>Governing: V_key = min('+r.Vkey_brg.toFixed(1)+', '+r.Vkey_brk.toFixed(1)+', '+r.Vkey_bend.toFixed(1)+') = '+r.Vkey.toFixed(1)+' kips</b></div>';
+        h+='</div>';
+    }
+    
+    h+='<div style="margin:2px 0 2px 12px"><b>Total Capacity = '+r.Vcap.toFixed(1)+' kips</b></div>';
+    h+='<div style="margin:2px 0 2px 12px"><b style="color:'+(r.shearRatio<=1?'#28a745':'#dc3545')+'">DCR = '+r.Vu.toFixed(1)+'/'+r.Vcap.toFixed(1)+' = '+r.shearRatio.toFixed(3)+(r.shearRatio<=1?' ≤ 1.0 ✓':' > 1.0 ✗')+'</b></div>';
+    
+    // Shear Breakout (always show if shear exists)
+    if(r.Vu>0){
+        h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">11. CONCRETE BREAKOUT - SHEAR (ACI 318-19 §17.7.2)</h2>';
+        h+='<div style="margin:2px 0 2px 12px;background:#e3f2fd;padding:4px 8px;border-radius:4px"><b>Demand: Vu = '+r.Vu.toFixed(1)+' kips (total)</b></div>';
+        h+='<div style="margin:2px 0 2px 12px">Vb (single anchor) = '+r.Vb.toFixed(2)+' kips</div>';
+        h+='<div style="margin:2px 0 2px 12px"><b>Capacity: φVcb = '+r.phiVcb.toFixed(2)+' kips</b> (without suppl. reinf.)</div>';
+        
+        // Detailed shear hairpin calculation
+        if(r.useSuppVn){
+            h+='<div style="margin:8px 0 4px 12px;background:#d4edda;padding:8px;border-radius:4px;border:1px solid #28a745">';
+            h+='<b>SUPPLEMENTARY REINFORCEMENT - SHEAR (ACI 318-19 §17.7.2.1)</b><br>';
+            h+='<div style="margin:4px 0;font-size:9pt;color:#666">Per R17.7.2.1a: Hairpin perpendicular to shear, within 0.5ca ('+(0.5*r.ca).toFixed(1)+'") from anchor</div>';
+            h+='<div style="margin:4px 0">Bar: #'+r.vnBar+' (As = '+r.vnAs.toFixed(3)+' in²)</div>';
+            h+='<div style="margin:4px 0">Number of hairpins: '+r.vnNumHairpins+' (each hairpin = 2 legs)</div>';
+            h+='<div style="margin:4px 0">Total legs: '+r.vnNumHairpins+' × 2 = '+r.vnLegs+'</div>';
+            h+='<div style="margin:4px 0">Total Ase = '+r.vnLegs+' legs × '+r.vnAs.toFixed(3)+' = '+r.vnAse_total.toFixed(3)+' in²</div>';
+            h+='<div style="margin:4px 0"><b>Capacity: φVsa = φ × Ase × fy = 0.75 × '+r.vnAse_total.toFixed(3)+' × 60 = '+r.phiVsa_supp.toFixed(2)+' kips</b></div>';
+            h+='</div>';
+        }
+        var shearBrkCap=r.useSuppVn?r.phiVsa_supp:r.phiVcb;
+        h+='<div style="margin:2px 0 2px 12px"><b style="color:'+(r.shearBrkRatio<=1?'#28a745':'#dc3545')+'">DCR = '+r.Vu.toFixed(1)+'/'+shearBrkCap.toFixed(2)+' = '+r.shearBrkRatio.toFixed(3)+(r.shearBrkRatio<=1?' ≤ 1.0 ✓':' > 1.0 ✗')+'</b></div>';
+    }
+    
+    // Summary
+    h+='<h2 style="font-size:11pt;background:#e5e5e5;padding:4px 8px;margin:12px 0 6px;border-left:4px solid #333">DESIGN SUMMARY</h2>';
+    h+='<table style="border-collapse:collapse;width:100%;margin:8px 0"><tr><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5">Item</th><th style="border:1px solid #999;padding:4px 8px;background:#e5e5e5">Value</th></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Column</td><td style="border:1px solid #999;padding:4px 8px">'+r.section+'</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px"><b>Base Plate</b></td><td style="border:1px solid #999;padding:4px 8px"><b>'+r.N+'" × '+r.B+'" × '+frac(r.tp)+'</b></td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Anchor Bolts</td><td style="border:1px solid #999;padding:4px 8px">('+r.nBolt+') '+frac(r.dBolt)+'φ F1554 Gr.'+r.boltGrade+'</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Embedment</td><td style="border:1px solid #999;padding:4px 8px">hef = '+r.hef+'"</td></tr>';
+    h+='<tr><td style="border:1px solid #999;padding:4px 8px">Grout</td><td style="border:1px solid #999;padding:4px 8px">'+r.tg+'" non-shrink</td></tr></table>';
+    
+    var boxStyle=r.allOK?'background:#d4edda;border-color:#28a745;color:#155724':'background:#f8d7da;border-color:#dc3545;color:#721c24';
+    h+='<div style="margin:12px 0;padding:10px;text-align:center;font-weight:bold;font-size:12pt;border:3px solid;border-radius:6px;'+boxStyle+'">'+(r.allOK?'✓ DESIGN OK - ALL CHECKS PASS':'✗ DESIGN NG - REVISE REQUIRED')+'</div>';
+    
+    h+='<div style="text-align:center;font-size:8pt;color:#666;margin-top:10px">Base Plate Designer Pro v5</div>';
+    h+='</div>'; // end calc-content
+    h+='</div>';
+    
+    overlay.innerHTML=h;
+    document.body.appendChild(overlay);
+}
+
+function downloadCalc(){
+    var content=document.getElementById('calc-content').innerHTML;
+    var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Base Plate Calculation</title>';
+    html+='<style>@page{size:letter;margin:0.5in}body{font-family:Arial,sans-serif;font-size:10pt;padding:20px;max-width:7.5in;margin:0 auto;line-height:1.5}h1,h2{margin:0}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:4px 8px}</style>';
+    html+='</head><body>'+content+'</body></html>';
+    
+    var blob=new Blob([html],{type:'text/html'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='BasePlate_Calculation.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function showDrawing(){
+    var r=D;
+    var old=document.getElementById('modal-overlay');
+    if(old)old.remove();
+    var overlay=document.createElement('div');
+    overlay.id='modal-overlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:9999;overflow-y:auto;';
+    
+    var scale=7;
+    var margin=55;
+    
+    var N=r.N,B=r.B,pedL=r.pedL,pedW=r.pedW,ca=r.ca;
+    var d=r.d_col,bf=r.bf,hef=r.hef,tg=r.tg,tp=r.tp;
+    var dBolt=r.dBolt,nBolt=r.nBolt,f_edge=r.f_edge;
+    
+    var boltX=B/2-f_edge;
+    var boltY=N/2-f_edge;
+    
+    var planW=(Math.max(pedL,B)+6)*scale+2*margin;
+    var planH=(Math.max(pedW,N)+6)*scale+2*margin+30;
+    var sectW=planW;
+    var sectH=280;  // increased height for labels
+    
+    var h='<div style="font-family:Arial,sans-serif;padding:10px;background:#fff;max-width:750px;margin:0 auto">';
+    
+    // Buttons
+    h+='<div style="text-align:center;margin-bottom:15px">';
+    h+='<button onclick="downloadDrawing()" style="background:#22c55e;color:#fff;border:none;padding:12px 30px;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;margin-right:10px">⬇️ Download HTML</button>';
+    h+='<button onclick="document.getElementById(\'modal-overlay\').remove()" style="background:#ef4444;color:#fff;border:none;padding:12px 24px;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer">✕ Close</button>';
+    h+='</div>';
+    
+    h+='<div id="drawing-content">';
+    h+='<div style="font-size:14pt;font-weight:bold;text-align:center;margin-bottom:3px">BASE PLATE DETAIL</div>';
+    h+='<div style="font-size:9pt;text-align:center;color:#666;margin-bottom:8px">'+r.section+' | Plate: '+N+'" × '+B+'" × '+frac(tp)+' | Pedestal: '+pedL+'" × '+pedW+'" | Anchors: ('+nBolt+') '+frac(dBolt)+'φ F1554 Gr.'+r.boltGrade+'</div>';
+    
+    // ========== PLAN VIEW ==========
+    h+='<svg style="background:#fff;border:2px solid #000;margin:5px auto;display:block" width="'+planW+'" height="'+planH+'" viewBox="0 0 '+planW+' '+planH+'">';
+    h+='<defs><pattern id="hatch" patternUnits="userSpaceOnUse" width="8" height="8"><path d="M0,8 L8,0" stroke="#999" stroke-width="0.5"/></pattern></defs>';
+    
+    var cx=planW/2,cy=planH/2;
+    
+    // Pedestal (hatched)
+    var pedX=cx-pedL*scale/2,pedY=cy-pedW*scale/2;
+    h+='<rect x="'+pedX+'" y="'+pedY+'" width="'+(pedL*scale)+'" height="'+(pedW*scale)+'" fill="url(#hatch)" stroke="#000" stroke-width="1"/>';
+    
+    // Base plate
+    var plateX=cx-B*scale/2,plateY=cy-N*scale/2;
+    h+='<rect x="'+plateX+'" y="'+plateY+'" width="'+(B*scale)+'" height="'+(N*scale)+'" fill="#ddd" stroke="#000" stroke-width="2"/>';
+    
+    // Column
+    if(r.type==="W"){
+        var cw=bf*scale,ch=d*scale,tw=0.5*scale,tf=0.8*scale;
+        h+='<rect x="'+(cx-cw/2)+'" y="'+(cy-ch/2)+'" width="'+cw+'" height="'+tf+'" fill="#888" stroke="#000" stroke-width="1.5"/>';
+        h+='<rect x="'+(cx-cw/2)+'" y="'+(cy+ch/2-tf)+'" width="'+cw+'" height="'+tf+'" fill="#888" stroke="#000" stroke-width="1.5"/>';
+        h+='<rect x="'+(cx-tw/2)+'" y="'+(cy-ch/2)+'" width="'+tw+'" height="'+ch+'" fill="#888" stroke="#000" stroke-width="1.5"/>';
+    }else{
+        h+='<rect x="'+(cx-bf*scale/2)+'" y="'+(cy-d*scale/2)+'" width="'+(bf*scale)+'" height="'+(d*scale)+'" fill="none" stroke="#000" stroke-width="3"/>';
+    }
+    
+    // Anchor bolts
+    var boltR=dBolt*scale/2+2;
+    var holeR=boltR+3;
+    var positions=[];
+    if(nBolt===4){
+        positions=[[-boltX,-boltY],[boltX,-boltY],[-boltX,boltY],[boltX,boltY]];
+    }else if(nBolt===6){
+        positions=[[-boltX,-boltY],[0,-boltY],[boltX,-boltY],[-boltX,boltY],[0,boltY],[boltX,boltY]];
+    }else{
+        positions=[[-boltX,-boltY],[0,-boltY],[boltX,-boltY],[-boltX,0],[boltX,0],[-boltX,boltY],[0,boltY],[boltX,boltY]];
+    }
+    for(var i=0;i<positions.length;i++){
+        var bx=cx+positions[i][0]*scale;
+        var by=cy+positions[i][1]*scale;
+        h+='<circle cx="'+bx+'" cy="'+by+'" r="'+holeR+'" fill="#fff" stroke="#000" stroke-width="1"/>';
+        h+='<circle cx="'+bx+'" cy="'+by+'" r="'+boltR+'" fill="#000"/>';
+        h+='<line x1="'+(bx-holeR-2)+'" y1="'+by+'" x2="'+(bx+holeR+2)+'" y2="'+by+'" stroke="#000" stroke-width="0.5"/>';
+        h+='<line x1="'+bx+'" y1="'+(by-holeR-2)+'" x2="'+bx+'" y2="'+(by+holeR+2)+'" stroke="#000" stroke-width="0.5"/>';
+    }
+    
+    // ===== DIMENSIONS =====
+    var ds='font-size:9px;font-family:Arial';
+    
+    // Plate N (left side)
+    var dimX1=plateX-20;
+    h+='<line x1="'+dimX1+'" y1="'+plateY+'" x2="'+dimX1+'" y2="'+(plateY+N*scale)+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<line x1="'+(dimX1-4)+'" y1="'+plateY+'" x2="'+(dimX1+4)+'" y2="'+plateY+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<line x1="'+(dimX1-4)+'" y1="'+(plateY+N*scale)+'" x2="'+(dimX1+4)+'" y2="'+(plateY+N*scale)+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<text x="'+(dimX1-6)+'" y="'+cy+'" style="'+ds+'" text-anchor="middle" transform="rotate(-90 '+(dimX1-6)+' '+cy+')">N='+N+'"</text>';
+    
+    // Pedestal W (far left)
+    var dimX0=pedX-20;
+    h+='<line x1="'+dimX0+'" y1="'+pedY+'" x2="'+dimX0+'" y2="'+(pedY+pedW*scale)+'" stroke="#00f" stroke-width="0.5"/>';
+    h+='<line x1="'+(dimX0-4)+'" y1="'+pedY+'" x2="'+(dimX0+4)+'" y2="'+pedY+'" stroke="#00f" stroke-width="0.5"/>';
+    h+='<line x1="'+(dimX0-4)+'" y1="'+(pedY+pedW*scale)+'" x2="'+(dimX0+4)+'" y2="'+(pedY+pedW*scale)+'" stroke="#00f" stroke-width="0.5"/>';
+    h+='<text x="'+(dimX0-6)+'" y="'+cy+'" style="'+ds+';fill:#00f" text-anchor="middle" transform="rotate(-90 '+(dimX0-6)+' '+cy+')">PED W='+pedW+'"</text>';
+    
+    // Plate B (top)
+    var dimY1=plateY-20;
+    h+='<line x1="'+plateX+'" y1="'+dimY1+'" x2="'+(plateX+B*scale)+'" y2="'+dimY1+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<line x1="'+plateX+'" y1="'+(dimY1-4)+'" x2="'+plateX+'" y2="'+(dimY1+4)+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<line x1="'+(plateX+B*scale)+'" y1="'+(dimY1-4)+'" x2="'+(plateX+B*scale)+'" y2="'+(dimY1+4)+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<text x="'+cx+'" y="'+(dimY1-6)+'" style="'+ds+'" text-anchor="middle">B='+B+'"</text>';
+    
+    // Pedestal L (far top)
+    var dimY0=pedY-20;
+    h+='<line x1="'+pedX+'" y1="'+dimY0+'" x2="'+(pedX+pedL*scale)+'" y2="'+dimY0+'" stroke="#00f" stroke-width="0.5"/>';
+    h+='<line x1="'+pedX+'" y1="'+(dimY0-4)+'" x2="'+pedX+'" y2="'+(dimY0+4)+'" stroke="#00f" stroke-width="0.5"/>';
+    h+='<line x1="'+(pedX+pedL*scale)+'" y1="'+(dimY0-4)+'" x2="'+(pedX+pedL*scale)+'" y2="'+(dimY0+4)+'" stroke="#00f" stroke-width="0.5"/>';
+    h+='<text x="'+cx+'" y="'+(dimY0-6)+'" style="'+ds+';fill:#00f" text-anchor="middle">PED L='+pedL+'"</text>';
+    
+    // Bolt spacing (bottom)
+    var dimY2=plateY+N*scale+20;
+    h+='<line x1="'+(cx-boltX*scale)+'" y1="'+dimY2+'" x2="'+(cx+boltX*scale)+'" y2="'+dimY2+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<line x1="'+(cx-boltX*scale)+'" y1="'+(dimY2-4)+'" x2="'+(cx-boltX*scale)+'" y2="'+(dimY2+4)+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<line x1="'+(cx+boltX*scale)+'" y1="'+(dimY2-4)+'" x2="'+(cx+boltX*scale)+'" y2="'+(dimY2+4)+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<text x="'+cx+'" y="'+(dimY2+12)+'" style="'+ds+'" text-anchor="middle">'+(boltX*2).toFixed(0)+'"</text>';
+    
+    // Edge distance f (plate edge to bolt) - right side
+    var rightBoltX=cx+boltX*scale;
+    var dimX2=plateX+B*scale+15;
+    h+='<line x1="'+rightBoltX+'" y1="'+(cy-boltY*scale-15)+'" x2="'+(plateX+B*scale)+'" y2="'+(cy-boltY*scale-15)+'" stroke="#090" stroke-width="0.5"/>';
+    h+='<line x1="'+rightBoltX+'" y1="'+(cy-boltY*scale-19)+'" x2="'+rightBoltX+'" y2="'+(cy-boltY*scale-11)+'" stroke="#090" stroke-width="0.5"/>';
+    h+='<line x1="'+(plateX+B*scale)+'" y1="'+(cy-boltY*scale-19)+'" x2="'+(plateX+B*scale)+'" y2="'+(cy-boltY*scale-11)+'" stroke="#090" stroke-width="0.5"/>';
+    h+='<text x="'+((rightBoltX+plateX+B*scale)/2)+'" y="'+(cy-boltY*scale-20)+'" style="'+ds+';fill:#090" text-anchor="middle">f='+f_edge+'"</text>';
+    
+    // Edge distance ca (concrete edge to bolt) - right side
+    h+='<line x1="'+rightBoltX+'" y1="'+(cy+boltY*scale+15)+'" x2="'+(pedX+pedL*scale)+'" y2="'+(cy+boltY*scale+15)+'" stroke="#c00" stroke-width="0.5"/>';
+    h+='<line x1="'+rightBoltX+'" y1="'+(cy+boltY*scale+11)+'" x2="'+rightBoltX+'" y2="'+(cy+boltY*scale+19)+'" stroke="#c00" stroke-width="0.5"/>';
+    h+='<line x1="'+(pedX+pedL*scale)+'" y1="'+(cy+boltY*scale+11)+'" x2="'+(pedX+pedL*scale)+'" y2="'+(cy+boltY*scale+19)+'" stroke="#c00" stroke-width="0.5"/>';
+    h+='<text x="'+((rightBoltX+pedX+pedL*scale)/2)+'" y="'+(cy+boltY*scale+28)+'" style="'+ds+';fill:#c00" text-anchor="middle">ca='+ca+'"</text>';
+    
+    // Labels
+    h+='<text x="'+cx+'" y="'+(planH-15)+'" style="font-size:11px;font-family:Arial;font-weight:bold" text-anchor="middle">PLAN VIEW</text>';
+    
+    // Shear Key in plan (dashed rectangle at center)
+    if(r.useKey){
+        var keyPlanW=r.keyL*scale*0.7;
+        var keyPlanH=r.keyW*scale*0.7;
+        h+='<rect x="'+(cx-keyPlanW/2)+'" y="'+(cy-keyPlanH/2)+'" width="'+keyPlanW+'" height="'+keyPlanH+'" fill="none" stroke="#c00" stroke-width="1.5" stroke-dasharray="4,2"/>';
+        h+='<text x="'+cx+'" y="'+(cy+3)+'" style="font-size:7px;fill:#c00" text-anchor="middle">SHEAR KEY</text>';
+    }
+    
+    h+='</svg>';
+    
+    // ========== SECTION VIEW ==========
+    h+='<svg style="background:#fff;border:2px solid #000;margin:5px auto;display:block" width="'+sectW+'" height="'+sectH+'" viewBox="0 0 '+sectW+' '+sectH+'">';
+    
+    // Labels at TOP first
+    var labelY=15;
+    var labelSpacing=12;
+    var labelX=15;
+    
+    // Shear Key label
+    if(r.useKey){
+        var d_eff_val=(r.keyD-r.tg).toFixed(1);
+        h+='<rect x="'+(labelX-3)+'" y="'+(labelY-8)+'" width="10" height="10" fill="#555" stroke="#000" stroke-width="1"/>';
+        h+='<text x="'+(labelX+12)+'" y="'+labelY+'" style="font-size:8px;fill:#000">SHEAR KEY: PL'+r.keyT+'"×'+r.keyW+'"×'+r.keyL+'", d='+r.keyD+'" (d_eff='+d_eff_val+'")</text>';
+        labelY+=labelSpacing;
+    }
+    
+    // Tension Hairpin label
+    if(r.useSuppTn){
+        h+='<line x1="'+labelX+'" y1="'+(labelY-4)+'" x2="'+(labelX+8)+'" y2="'+(labelY-4)+'" stroke="#00f" stroke-width="2.5"/>';
+        h+='<text x="'+(labelX+12)+'" y="'+labelY+'" style="font-size:8px;fill:#000">TN HAIRPIN: ('+r.tnNumHairpins+') #'+r.tnBar+' U-bar ('+r.tnLegs+' legs)</text>';
+        labelY+=labelSpacing;
+    }
+    
+    // Shear Hairpin label
+    if(r.useSuppVn){
+        h+='<line x1="'+labelX+'" y1="'+(labelY-4)+'" x2="'+(labelX+8)+'" y2="'+(labelY-4)+'" stroke="#f0f" stroke-width="2"/>';
+        h+='<text x="'+(labelX+12)+'" y="'+labelY+'" style="font-size:8px;fill:#000">VN HAIRPIN: ('+r.vnNumHairpins+') #'+r.vnBar+' U-bar ('+r.vnLegs+' legs)</text>';
+        labelY+=labelSpacing;
+    }
+    
+    // Calculate top offset based on labels
+    var topOffset=Math.max(labelY+5, 50);
+    
+    var baseY=sectH-25;  // move drawing down (closer to bottom)
+    var sectCx=sectW/2;
+    var pedHeight=60;
+    var groutH=tg*scale*1.2;  // smaller grout representation
+    var plateH=tp*scale*2.5;
+    
+    // Pedestal
+    h+='<rect x="'+(sectCx-pedL*scale/2)+'" y="'+(baseY-pedHeight)+'" width="'+(pedL*scale)+'" height="'+pedHeight+'" fill="url(#hatch)" stroke="#000" stroke-width="1"/>';
+    
+    // Grout (smaller)
+    h+='<rect x="'+(sectCx-B*scale/2)+'" y="'+(baseY-pedHeight-groutH)+'" width="'+(B*scale)+'" height="'+groutH+'" fill="#ffd" stroke="#000" stroke-width="1"/>';
+    
+    // Base plate
+    var plateTop=baseY-pedHeight-groutH-plateH;
+    h+='<rect x="'+(sectCx-B*scale/2)+'" y="'+plateTop+'" width="'+(B*scale)+'" height="'+plateH+'" fill="#888" stroke="#000" stroke-width="2"/>';
+    
+    // Column
+    var colH=50;
+    var colTop=plateTop-colH;
+    if(r.type==="W"){
+        h+='<rect x="'+(sectCx-bf*scale/2)+'" y="'+colTop+'" width="'+(bf*scale)+'" height="'+colH+'" fill="#666" stroke="#000" stroke-width="1.5"/>';
+    }else{
+        h+='<rect x="'+(sectCx-bf*scale/2)+'" y="'+colTop+'" width="'+(bf*scale)+'" height="'+colH+'" fill="none" stroke="#000" stroke-width="3"/>';
+    }
+    
+    // Anchor bolts - nut on TOP of base plate, shaft goes through plate into pedestal
+    var abLeft=sectCx-boltX*scale;
+    var abRight=sectCx+boltX*scale;
+    var nutTop=plateTop-6;  // nut sits on top of base plate
+    var nutBot=plateTop;    // bottom of nut touches top of plate
+    var abBot=baseY-pedHeight+hef*scale*0.5;  // bottom of anchor (head) in pedestal
+    
+    // Anchor shafts - through plate, grout, into pedestal
+    h+='<line x1="'+abLeft+'" y1="'+nutBot+'" x2="'+abLeft+'" y2="'+abBot+'" stroke="#000" stroke-width="2"/>';
+    h+='<line x1="'+abRight+'" y1="'+nutBot+'" x2="'+abRight+'" y2="'+abBot+'" stroke="#000" stroke-width="2"/>';
+    // Anchor heads at bottom (embedded in pedestal)
+    h+='<rect x="'+(abLeft-5)+'" y="'+(abBot-2)+'" width="10" height="4" fill="#000"/>';
+    h+='<rect x="'+(abRight-5)+'" y="'+(abBot-2)+'" width="10" height="4" fill="#000"/>';
+    // Hex nuts on TOP of base plate
+    h+='<polygon points="'+(abLeft-6)+','+nutBot+' '+(abLeft+6)+','+nutBot+' '+(abLeft+5)+','+nutTop+' '+(abLeft-5)+','+nutTop+'" fill="#444" stroke="#000"/>';
+    h+='<polygon points="'+(abRight-6)+','+nutBot+' '+(abRight+6)+','+nutBot+' '+(abRight+5)+','+nutTop+' '+(abRight-5)+','+nutTop+'" fill="#444" stroke="#000"/>';
+    
+    // Shear Key (if used) - show plate through grout into pedestal
+    if(r.useKey){
+        var groutTop=baseY-pedHeight-groutH;  // top of grout (bottom of plate)
+        var pedTop=baseY-pedHeight;            // top of pedestal
+        var keyTotalH=r.keyD*scale*1.0;        // total depth scaled
+        var keyBot=groutTop+keyTotalH;         // bottom of shear key
+        var keyHalfW=r.keyL*scale*0.35;
+        
+        // Shear key plate (extends from bottom of base plate through grout into pedestal)
+        h+='<rect x="'+(sectCx-keyHalfW)+'" y="'+groutTop+'" width="'+(keyHalfW*2)+'" height="'+keyTotalH+'" fill="#555" stroke="#000" stroke-width="1.5"/>';
+        
+        // Dimension: total depth d (right side)
+        var dimKeyX=sectCx+keyHalfW+8;
+        h+='<line x1="'+dimKeyX+'" y1="'+groutTop+'" x2="'+dimKeyX+'" y2="'+keyBot+'" stroke="#c00" stroke-width="0.5"/>';
+        h+='<line x1="'+(dimKeyX-3)+'" y1="'+groutTop+'" x2="'+(dimKeyX+3)+'" y2="'+groutTop+'" stroke="#c00" stroke-width="0.5"/>';
+        h+='<line x1="'+(dimKeyX-3)+'" y1="'+keyBot+'" x2="'+(dimKeyX+3)+'" y2="'+keyBot+'" stroke="#c00" stroke-width="0.5"/>';
+        h+='<text x="'+(dimKeyX+4)+'" y="'+((groutTop+keyBot)/2)+'" style="'+ds+';fill:#c00" dominant-baseline="middle">d='+r.keyD+'"</text>';
+        
+        // Show grout line
+        var d_eff=(r.keyD-r.tg).toFixed(1);
+        h+='<line x1="'+(sectCx-keyHalfW-5)+'" y1="'+pedTop+'" x2="'+(sectCx+keyHalfW+5)+'" y2="'+pedTop+'" stroke="#c00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+        
+        // Dimension: effective depth d_eff (left side)
+        var dimKeyX2=sectCx-keyHalfW-8;
+        h+='<line x1="'+dimKeyX2+'" y1="'+pedTop+'" x2="'+dimKeyX2+'" y2="'+keyBot+'" stroke="#090" stroke-width="0.5"/>';
+        h+='<line x1="'+(dimKeyX2-3)+'" y1="'+pedTop+'" x2="'+(dimKeyX2+3)+'" y2="'+pedTop+'" stroke="#090" stroke-width="0.5"/>';
+        h+='<line x1="'+(dimKeyX2-3)+'" y1="'+keyBot+'" x2="'+(dimKeyX2+3)+'" y2="'+keyBot+'" stroke="#090" stroke-width="0.5"/>';
+        h+='<text x="'+(dimKeyX2-4)+'" y="'+((pedTop+keyBot)/2)+'" style="'+ds+';fill:#090" dominant-baseline="middle" text-anchor="end">d_eff='+d_eff+'"</text>';
+    }
+    
+    // Supplementary Reinforcement - Tension Hairpins (if used)
+    // Per ACI R17.5.2.1a: ONE hairpin wraps BOTH anchors
+    if(r.useSuppTn){
+        var pedTop=baseY-pedHeight;  // top of pedestal
+        var hairpinTop=pedTop+5;     // start near top of pedestal
+        var hairpinBot=abBot+8;      // extend past anchor head (≥ld)
+        var hairpinOffset=18;        // offset outside the anchors
+        var hookLen=8;               // 90° hook length at bottom
+        
+        // ONE hairpin wrapping BOTH anchors
+        h+='<line x1="'+(abLeft-hairpinOffset)+'" y1="'+hairpinTop+'" x2="'+(abLeft-hairpinOffset)+'" y2="'+hairpinBot+'" stroke="#00f" stroke-width="2.5"/>';
+        h+='<line x1="'+(abLeft-hairpinOffset)+'" y1="'+hairpinBot+'" x2="'+(abLeft-hairpinOffset+hookLen)+'" y2="'+hairpinBot+'" stroke="#00f" stroke-width="2.5"/>';
+        h+='<line x1="'+(abRight+hairpinOffset)+'" y1="'+hairpinTop+'" x2="'+(abRight+hairpinOffset)+'" y2="'+hairpinBot+'" stroke="#00f" stroke-width="2.5"/>';
+        h+='<line x1="'+(abRight+hairpinOffset)+'" y1="'+hairpinBot+'" x2="'+(abRight+hairpinOffset-hookLen)+'" y2="'+hairpinBot+'" stroke="#00f" stroke-width="2.5"/>';
+        h+='<line x1="'+(abLeft-hairpinOffset)+'" y1="'+hairpinTop+'" x2="'+(abRight+hairpinOffset)+'" y2="'+hairpinTop+'" stroke="#00f" stroke-width="2.5"/>';
+    }
+    
+    // Supplementary Reinforcement - Shear Hairpins (if used)
+    if(r.useSuppVn){
+        var pedTop=baseY-pedHeight;
+        var shairpinY=pedTop+12;  // near top of pedestal
+        h+='<line x1="'+(abLeft-22)+'" y1="'+shairpinY+'" x2="'+(abRight+22)+'" y2="'+shairpinY+'" stroke="#f0f" stroke-width="2"/>';
+        h+='<circle cx="'+(abLeft-22)+'" cy="'+shairpinY+'" r="3" fill="#f0f"/>';
+        h+='<circle cx="'+(abRight+22)+'" cy="'+shairpinY+'" r="3" fill="#f0f"/>';
+    }
+    
+    // Section dimensions
+    // hef
+    var dimX2=sectCx+pedL*scale/2+18;
+    h+='<line x1="'+dimX2+'" y1="'+(baseY-pedHeight)+'" x2="'+dimX2+'" y2="'+abBot+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<line x1="'+(dimX2-3)+'" y1="'+(baseY-pedHeight)+'" x2="'+(dimX2+3)+'" y2="'+(baseY-pedHeight)+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<line x1="'+(dimX2-3)+'" y1="'+abBot+'" x2="'+(dimX2+3)+'" y2="'+abBot+'" stroke="#000" stroke-width="0.5"/>';
+    h+='<text x="'+(dimX2+5)+'" y="'+((baseY-pedHeight+abBot)/2)+'" style="'+ds+'" dominant-baseline="middle">hef='+hef+'"</text>';
+    
+    // Grout & plate (left side)
+    var dimX3=sectCx-pedL*scale/2-18;
+    h+='<text x="'+dimX3+'" y="'+(baseY-pedHeight-groutH/2)+'" style="'+ds+'" text-anchor="end" dominant-baseline="middle">GROUT '+tg+'"</text>';
+    h+='<text x="'+dimX3+'" y="'+(baseY-pedHeight-groutH-plateH/2)+'" style="'+ds+'" text-anchor="end" dominant-baseline="middle">PL '+frac(tp)+'</text>';
+    h+='<text x="'+dimX3+'" y="'+(baseY-pedHeight/2)+'" style="'+ds+'" text-anchor="end" dominant-baseline="middle">PEDESTAL</text>';
+    
+    // ca dimension in section
+    h+='<line x1="'+abRight+'" y1="'+(baseY-pedHeight+15)+'" x2="'+(sectCx+pedL*scale/2)+'" y2="'+(baseY-pedHeight+15)+'" stroke="#c00" stroke-width="0.5"/>';
+    h+='<text x="'+((abRight+sectCx+pedL*scale/2)/2)+'" y="'+(baseY-pedHeight+25)+'" style="'+ds+';fill:#c00" text-anchor="middle">ca='+ca+'"</text>';
+    
+    h+='<text x="'+sectCx+'" y="'+(sectH-8)+'" style="font-size:10px;font-family:Arial;font-weight:bold" text-anchor="middle">SECTION VIEW</text>';
+    h+='</svg>';
+    
+    // Notes - more compact, add shear key and hairpin info
+    h+='<div style="border:1px solid #000;padding:6px 10px;margin:5px auto;max-width:'+(planW-20)+'px;font-size:8pt;line-height:1.4">';
+    h+='<b>NOTES:</b> ';
+    h+='1. Base Plate: '+N+'"×'+B+'"×'+frac(tp)+' A572 Gr.'+r.fy+' ';
+    h+='2. Anchors: ('+nBolt+') '+frac(dBolt)+'φ F1554 Gr.'+r.boltGrade+', hef='+hef+'" ';
+    h+='3. Grout: '+tg+'" non-shrink ';
+    h+='4. Concrete: f\'c='+r.fc+'ksi ';
+    if(r.useKey){
+        var d_eff_val=(r.keyD-r.tg).toFixed(1);
+        h+='5. Shear Key: PL'+r.keyT+'"×'+r.keyW+'"×'+r.keyL+'" A572, d='+r.keyD+'" (d_eff='+d_eff_val+'") ';
+    }
+    if(r.useSuppTn)h+=(r.useKey?'6':'5')+'. Tension Hairpin: ('+r.tnNumHairpins+') #'+r.tnBar+' U-bar ';
+    if(r.useSuppVn)h+=((r.useKey?6:5)+(r.useSuppTn?1:0))+'. Shear Hairpin: ('+r.vnNumHairpins+') #'+r.vnBar+' U-bar ';
+    h+='</div>';
+    
+    h+='<div style="text-align:center;font-size:7pt;color:#666;margin-top:3px">Base Plate Designer Pro v5 | '+new Date().toLocaleDateString()+'</div>';
+    h+='</div>'; // end drawing-content
+    h+='</div>';
+    
+    overlay.innerHTML=h;
+    document.body.appendChild(overlay);
+}
+
+function downloadDrawing(){
+    var content=document.getElementById('drawing-content').innerHTML;
+    var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Base Plate Drawing</title>';
+    html+='<style>@page{size:letter;margin:0.3in}body{font-family:Arial,sans-serif;padding:10px}svg{display:block;margin:10px auto}</style>';
+    html+='</head><body>'+content+'</body></html>';
+    
+    var blob=new Blob([html],{type:'text/html'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='BasePlate_Drawing.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+loadCols();
+</script>
 </body>
 </html>

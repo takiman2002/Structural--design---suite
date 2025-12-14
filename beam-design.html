@@ -3,172 +3,1650 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beam Design | ACI 318-19</title>
+    <title>ACI 318 Beam Design Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--orange:#ff9500;--yellow:#ffd166;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-        .header h1{font-size:1.2rem;color:var(--orange)}
-        .back{color:var(--orange);text-decoration:none}
-        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
-        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-        .panel-title{font-size:0.85rem;font-weight:600;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-        .form-group{margin-bottom:10px}
-        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
-        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--orange),var(--yellow));color:#000}
-        .viz{background:var(--bg);border-radius:8px;height:280px}
-        #canvas{width:100%;height:100%}
-        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--orange)}
-        .result-card.pass{border-left-color:var(--green)}
-        .result-card.fail{border-left-color:var(--red)}
-        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
-        .result-value{font-size:1.1rem;font-weight:600}
-        .checks{display:flex;flex-direction:column;gap:6px}
-        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
-        .check.pass{border-left-color:var(--green)}
-        .check.fail{border-left-color:var(--red)}
-        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
-        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
-        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
-        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2234;
+            --bg-input: #0d1320;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+            --border-accent: #334155;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            z-index: 1000;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-green));
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .code-ref {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-input);
+            border-radius: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            border: 1px solid var(--border-accent);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: var(--bg-secondary);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .panel-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .panel-icon.geometry { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+        .panel-icon.material { background: linear-gradient(135deg, #10b981, #14b8a6); }
+        .panel-icon.reinforcement { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .panel-icon.loading { background: linear-gradient(135deg, #ef4444, #ec4899); }
+
+        .panel-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .panel-content {
+            padding: 1.5rem;
+        }
+
+        .input-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .unit {
+            position: absolute;
+            right: 1rem;
+            color: var(--text-muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            width: 100%;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-accent);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-accent);
+        }
+
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .result-header {
+            background: var(--bg-secondary);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-ok {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-ng {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-warning {
+            background: rgba(234, 179, 8, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .result-content {
+            padding: 1.5rem;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .result-item {
+            background: var(--bg-input);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .result-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .result-value.highlight {
+            color: var(--accent-green);
+        }
+
+        .result-value.warning {
+            color: var(--warning);
+        }
+
+        .result-value.danger {
+            color: var(--danger);
+        }
+
+        .result-unit {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-left: 0.25rem;
+        }
+
+        .ratio-bar {
+            margin-top: 1rem;
+            background: var(--bg-input);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .ratio-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .ratio-track {
+            height: 10px;
+            background: var(--bg-secondary);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .ratio-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .ratio-fill.safe {
+            background: linear-gradient(90deg, var(--accent-green), #34d399);
+        }
+
+        .ratio-fill.warning {
+            background: linear-gradient(90deg, var(--warning), #fbbf24);
+        }
+
+        .ratio-fill.danger {
+            background: linear-gradient(90deg, var(--danger), #f87171);
+        }
+
+        .beam-diagram {
+            background: var(--bg-input);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .beam-svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .calculation-report {
+            background: var(--bg-input);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .calc-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .calc-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .calc-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        .calc-line {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .calc-line .value {
+            color: var(--text-primary);
+        }
+
+        .calc-line .formula {
+            color: var(--accent-amber);
+        }
+
+        .calc-line .result {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .calc-line .check-ok {
+            color: var(--success);
+        }
+
+        .calc-line .check-ng {
+            color: var(--danger);
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .export-buttons .btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            border-color: var(--border-accent);
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-color: transparent;
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-accent);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card {
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-accent);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 100;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--border-accent);
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-left: 0.5rem;
+        }
     </style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="back">← Back</a>
-        <div style="text-align:center"><h1>📏 Beam Design</h1><span style="font-size:0.75rem;color:var(--text2)">ACI 318-19</span></div>
-        <div></div>
-    </header>
-    <div class="main">
-        <div class="panel">
-            <div class="panel-title">Beam Type</div>
-            <div class="form-group"><select id="beamType"><option value="rect">Rectangular</option><option value="T">T-Beam</option></select></div>
-            <div class="panel-title" style="margin-top:16px">Geometry</div>
-            <div class="form-row">
-                <div class="form-group"><label>b (in)</label><input type="number" id="b" value="14" onchange="draw();calculate()"></div>
-                <div class="form-group"><label>h (in)</label><input type="number" id="h" value="24" onchange="draw();calculate()"></div>
+    <div class="noise-overlay"></div>
+    
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">RC</div>
+                <div>
+                    <h1>ACI 318 Beam Design</h1>
+                    <p class="subtitle">Reinforced Concrete Beam Design Tool</p>
+                </div>
             </div>
-            <div class="form-row">
-                <div class="form-group"><label>Span (ft)</label><input type="number" id="span" value="24" onchange="calculate()"></div>
-                <div class="form-group"><label>Cover (in)</label><input type="number" id="cover" value="1.5" step="0.25" onchange="calculate()"></div>
+            <span class="code-ref">ACI 318-19 | US Customary Units (in, kip)</span>
+        </header>
+
+        <div class="main-grid">
+            <div class="input-panel">
+                <div class="panel-header">
+                    <div class="panel-icon geometry">📐</div>
+                    <span class="panel-title">Design Input</span>
+                </div>
+                <div class="panel-content">
+                    <!-- Geometry Section -->
+                    <div class="input-section">
+                        <div class="section-title">Beam Geometry</div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Width (b)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="beam-width" value="12" step="0.5" min="6">
+                                    <span class="unit">in</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Total Depth (h)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="beam-height" value="24" step="0.5" min="8">
+                                    <span class="unit">in</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Clear Cover (c<sub>c</sub>)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="cover" value="1.5" step="0.25" min="0.75">
+                                    <span class="unit">in</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Span Length (L)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="span-length" value="240" step="12" min="24">
+                                    <span class="unit">in</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Material Section -->
+                    <div class="input-section">
+                        <div class="section-title">Material Properties</div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>f'<sub>c</sub> (Concrete)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="fc" value="4000" step="500" min="2500">
+                                    <span class="unit">psi</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>f<sub>y</sub> (Rebar)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="fy" value="60000" step="5000" min="40000">
+                                    <span class="unit">psi</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>f<sub>yt</sub> (Stirrup)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="fyt" value="60000" step="5000" min="40000">
+                                <span class="unit">psi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reinforcement Section -->
+                    <div class="input-section">
+                        <div class="section-title">Reinforcement</div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Tension Bar Size</label>
+                                <select id="bar-size">
+                                    <option value="3">#3 (0.11 in²)</option>
+                                    <option value="4">#4 (0.20 in²)</option>
+                                    <option value="5">#5 (0.31 in²)</option>
+                                    <option value="6">#6 (0.44 in²)</option>
+                                    <option value="7">#7 (0.60 in²)</option>
+                                    <option value="8" selected>#8 (0.79 in²)</option>
+                                    <option value="9">#9 (1.00 in²)</option>
+                                    <option value="10">#10 (1.27 in²)</option>
+                                    <option value="11">#11 (1.56 in²)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Number of Bars</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="num-bars" value="4" step="1" min="2" max="10">
+                                    <span class="unit">ea</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Stirrup Size</label>
+                                <select id="stirrup-size">
+                                    <option value="3" selected>#3 (0.11 in²)</option>
+                                    <option value="4">#4 (0.20 in²)</option>
+                                    <option value="5">#5 (0.31 in²)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Stirrup Spacing</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="stirrup-spacing" value="6" step="1" min="3" max="24">
+                                    <span class="unit">in</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading Section -->
+                    <div class="input-section">
+                        <div class="section-title">Design Loads (Factored)</div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>M<sub>u</sub> (Moment)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="mu" value="250" step="10" min="0">
+                                    <span class="unit">kip-ft</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>V<sub>u</sub> (Shear)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="vu" value="45" step="5" min="0">
+                                    <span class="unit">kip</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Service Load Moment (M<sub>a</sub>) - Optional</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="ma" value="175" step="10" min="0">
+                                <span class="unit">kip-ft</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="calculateBeam()">
+                        <span>🔧</span> Calculate Design
+                    </button>
+                </div>
             </div>
-            <div class="panel-title" style="margin-top:16px">Materials</div>
-            <div class="form-row">
-                <div class="form-group"><label>f'c (psi)</label><input type="number" id="fc" value="4000" onchange="calculate()"></div>
-                <div class="form-group"><label>fy (ksi)</label><input type="number" id="fy" value="60" onchange="calculate()"></div>
+
+            <div class="results-panel" id="results-panel">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('summary')">Summary</div>
+                    <div class="tab" onclick="switchTab('flexure')">Flexure</div>
+                    <div class="tab" onclick="switchTab('shear')">Shear</div>
+                    <div class="tab" onclick="switchTab('deflection')">Deflection</div>
+                    <div class="tab" onclick="switchTab('report')">Full Report</div>
+                </div>
+
+                <!-- Summary Tab -->
+                <div id="tab-summary" class="tab-content">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">
+                                <span>📊</span>
+                                Design Summary
+                            </div>
+                            <span class="status-badge status-ok" id="overall-status">OK</span>
+                        </div>
+                        <div class="result-content">
+                            <div class="beam-diagram" id="beam-diagram">
+                                <svg class="beam-svg" viewBox="0 0 400 200" id="cross-section-svg">
+                                    <!-- Cross section will be drawn here -->
+                                </svg>
+                            </div>
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">Flexural Capacity</div>
+                                    <div class="result-value" id="mn-result">--<span class="result-unit">kip-ft</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Shear Capacity</div>
+                                    <div class="result-value" id="vn-result">--<span class="result-unit">kip</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Flexure Ratio</div>
+                                    <div class="result-value" id="flexure-ratio">--</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Shear Ratio</div>
+                                    <div class="result-value" id="shear-ratio">--</div>
+                                </div>
+                            </div>
+                            <div class="ratio-bar">
+                                <div class="ratio-label">
+                                    <span>Demand/Capacity (Flexure)</span>
+                                    <span id="dc-ratio-text">--</span>
+                                </div>
+                                <div class="ratio-track">
+                                    <div class="ratio-fill safe" id="dc-ratio-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flexure Tab -->
+                <div id="tab-flexure" class="tab-content hidden">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">
+                                <span>📐</span>
+                                Flexural Design
+                            </div>
+                            <span class="status-badge status-ok" id="flexure-status">OK</span>
+                        </div>
+                        <div class="result-content">
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">Effective Depth (d)</div>
+                                    <div class="result-value" id="d-result">--<span class="result-unit">in</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Steel Area (A<sub>s</sub>)</div>
+                                    <div class="result-value" id="as-result">--<span class="result-unit">in²</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Neutral Axis (c)</div>
+                                    <div class="result-value" id="c-result">--<span class="result-unit">in</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Stress Block (a)</div>
+                                    <div class="result-value" id="a-result">--<span class="result-unit">in</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Strain (ε<sub>t</sub>)</div>
+                                    <div class="result-value" id="strain-result">--</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">φ Factor</div>
+                                    <div class="result-value" id="phi-result">--</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">M<sub>n</sub> (Nominal)</div>
+                                    <div class="result-value" id="mn-nominal">--<span class="result-unit">kip-ft</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">φM<sub>n</sub> (Design)</div>
+                                    <div class="result-value highlight" id="phi-mn">--<span class="result-unit">kip-ft</span></div>
+                                </div>
+                            </div>
+                            <div class="ratio-bar">
+                                <div class="ratio-label">
+                                    <span>Reinforcement Ratio (ρ)</span>
+                                    <span id="rho-text">--</span>
+                                </div>
+                                <div class="ratio-track">
+                                    <div class="ratio-fill safe" id="rho-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shear Tab -->
+                <div id="tab-shear" class="tab-content hidden">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">
+                                <span>⚡</span>
+                                Shear Design
+                            </div>
+                            <span class="status-badge status-ok" id="shear-status">OK</span>
+                        </div>
+                        <div class="result-content">
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">V<sub>c</sub> (Concrete)</div>
+                                    <div class="result-value" id="vc-result">--<span class="result-unit">kip</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">V<sub>s</sub> (Stirrup)</div>
+                                    <div class="result-value" id="vs-result">--<span class="result-unit">kip</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">A<sub>v</sub> (Stirrup Area)</div>
+                                    <div class="result-value" id="av-result">--<span class="result-unit">in²</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Spacing (s)</div>
+                                    <div class="result-value" id="s-result">--<span class="result-unit">in</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">V<sub>n</sub> (Nominal)</div>
+                                    <div class="result-value" id="vn-nominal">--<span class="result-unit">kip</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">φV<sub>n</sub> (Design)</div>
+                                    <div class="result-value highlight" id="phi-vn">--<span class="result-unit">kip</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Max Spacing</div>
+                                    <div class="result-value" id="max-spacing">--<span class="result-unit">in</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">V<sub>s,max</sub> Check</div>
+                                    <div class="result-value" id="vs-max-check">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deflection Tab -->
+                <div id="tab-deflection" class="tab-content hidden">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">
+                                <span>📉</span>
+                                Deflection Check
+                            </div>
+                            <span class="status-badge status-ok" id="deflection-status">OK</span>
+                        </div>
+                        <div class="result-content">
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">E<sub>c</sub> (Concrete)</div>
+                                    <div class="result-value" id="ec-result">--<span class="result-unit">ksi</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">I<sub>g</sub> (Gross)</div>
+                                    <div class="result-value" id="ig-result">--<span class="result-unit">in⁴</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">I<sub>cr</sub> (Cracked)</div>
+                                    <div class="result-value" id="icr-result">--<span class="result-unit">in⁴</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">I<sub>e</sub> (Effective)</div>
+                                    <div class="result-value" id="ie-result">--<span class="result-unit">in⁴</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">M<sub>cr</sub> (Cracking)</div>
+                                    <div class="result-value" id="mcr-result">--<span class="result-unit">kip-ft</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Δ<sub>calc</sub></div>
+                                    <div class="result-value" id="delta-result">--<span class="result-unit">in</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Δ<sub>allow</sub> (L/240)</div>
+                                    <div class="result-value" id="delta-allow">--<span class="result-unit">in</span></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Δ Ratio</div>
+                                    <div class="result-value highlight" id="delta-ratio">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full Report Tab -->
+                <div id="tab-report" class="tab-content hidden">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">
+                                <span>📋</span>
+                                Calculation Report
+                            </div>
+                        </div>
+                        <div class="result-content">
+                            <div class="calculation-report" id="calc-report">
+                                <p style="color: var(--text-muted); text-align: center;">
+                                    Click "Calculate Design" to generate the full calculation report
+                                </p>
+                            </div>
+                            <div class="export-buttons">
+                                <button class="btn btn-secondary" onclick="exportReport('txt')">
+                                    📄 Export TXT
+                                </button>
+                                <button class="btn btn-secondary" onclick="exportReport('html')">
+                                    🌐 Export HTML
+                                </button>
+                                <button class="btn btn-secondary" onclick="printReport()">
+                                    🖨️ Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="panel-title" style="margin-top:16px">Design Forces</div>
-            <div class="form-row">
-                <div class="form-group"><label>Mu (k-ft)</label><input type="number" id="Mu" value="280" onchange="calculate()"></div>
-                <div class="form-group"><label>Vu (kips)</label><input type="number" id="Vu" value="65" onchange="calculate()"></div>
-            </div>
-            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
-        </div>
-        <div class="panel">
-            <div class="panel-title">Beam Section</div>
-            <div class="viz"><canvas id="canvas"></canvas></div>
-            <div class="panel-title" style="margin-top:16px">Reinforcement</div>
-            <div class="result-grid">
-                <div class="result-card"><div class="result-label">As,req</div><div class="result-value" id="AsReq">--</div></div>
-                <div class="result-card"><div class="result-label">Bars</div><div class="result-value" id="bars">--</div></div>
-                <div class="result-card"><div class="result-label">Stirrups</div><div class="result-value" id="stirrups">--</div></div>
-                <div class="result-card"><div class="result-label">ρ</div><div class="result-value" id="rho">--</div></div>
-            </div>
-        </div>
-        <div class="panel">
-            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
-            <div class="result-grid">
-                <div class="result-card pass" id="flexCard"><div class="result-label">φMn</div><div class="result-value" id="phiMn">--</div></div>
-                <div class="result-card pass" id="shearCard"><div class="result-label">φVn</div><div class="result-value" id="phiVn">--</div></div>
-                <div class="result-card"><div class="result-label">d</div><div class="result-value" id="dEff">--</div></div>
-                <div class="result-card"><div class="result-label">a</div><div class="result-value" id="aBlock">--</div></div>
-            </div>
-            <div class="panel-title">Design Checks</div>
-            <div class="checks" id="checks"></div>
         </div>
     </div>
+
     <script>
-        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
-        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;draw()}
-        document.addEventListener('DOMContentLoaded',()=>{resize();calculate()});
-        window.addEventListener('resize',resize);
-        function draw(){
-            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
-            const b=+document.getElementById('b').value;
-            const h=+document.getElementById('h').value;
-            const sc=8,cx=c.width/2,cy=c.height/2;
-            ctx.fillStyle='rgba(255,149,0,0.4)';
-            ctx.fillRect(cx-b*sc/2,cy-h*sc/2,b*sc,h*sc);
-            ctx.strokeStyle='#ff9500';ctx.lineWidth=2;
-            ctx.strokeRect(cx-b*sc/2,cy-h*sc/2,b*sc,h*sc);
-            const barY=cy+h*sc/2-1.5*sc-0.5*sc;
-            [-2,-1,0,1,2].filter((_,i,a)=>i<4).forEach((x,i)=>{
-                ctx.beginPath();
-                ctx.arc(cx+(i-1.5)*3*sc,barY,5,0,Math.PI*2);
-                ctx.fillStyle='#ffd166';ctx.fill();
+        // Bar properties database
+        const barData = {
+            3: { dia: 0.375, area: 0.11 },
+            4: { dia: 0.500, area: 0.20 },
+            5: { dia: 0.625, area: 0.31 },
+            6: { dia: 0.750, area: 0.44 },
+            7: { dia: 0.875, area: 0.60 },
+            8: { dia: 1.000, area: 0.79 },
+            9: { dia: 1.128, area: 1.00 },
+            10: { dia: 1.270, area: 1.27 },
+            11: { dia: 1.410, area: 1.56 }
+        };
+
+        // Global results storage
+        let calcResults = {};
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
             });
-            ctx.strokeStyle='#48cae4';ctx.setLineDash([3,3]);
-            for(let i=1;i<4;i++){
-                ctx.strokeRect(cx-b*sc/2+sc/2,cy-h*sc/2+i*h*sc/4-h*sc/8,b*sc-sc,h*sc/4);
+            // Remove active from all tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Show selected tab
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            // Add active to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function calculateBeam() {
+            // Get input values
+            const b = parseFloat(document.getElementById('beam-width').value);
+            const h = parseFloat(document.getElementById('beam-height').value);
+            const cover = parseFloat(document.getElementById('cover').value);
+            const L = parseFloat(document.getElementById('span-length').value);
+            const fc = parseFloat(document.getElementById('fc').value);
+            const fy = parseFloat(document.getElementById('fy').value);
+            const fyt = parseFloat(document.getElementById('fyt').value);
+            const barSize = parseInt(document.getElementById('bar-size').value);
+            const numBars = parseInt(document.getElementById('num-bars').value);
+            const stirrupSize = parseInt(document.getElementById('stirrup-size').value);
+            const stirrupSpacing = parseFloat(document.getElementById('stirrup-spacing').value);
+            const Mu = parseFloat(document.getElementById('mu').value);
+            const Vu = parseFloat(document.getElementById('vu').value);
+            const Ma = parseFloat(document.getElementById('ma').value);
+
+            // Calculate effective depth
+            const db = barData[barSize].dia;
+            const ds = barData[stirrupSize].dia;
+            const d = h - cover - ds - db / 2;
+
+            // Steel area
+            const As = numBars * barData[barSize].area;
+
+            // Modular ratio
+            const Ec = 57000 * Math.sqrt(fc) / 1000; // ksi
+            const Es = 29000; // ksi
+            const n = Es / Ec;
+
+            // Beta1 factor (ACI 318-19 Section 22.2.2.4.3)
+            let beta1;
+            if (fc <= 4000) {
+                beta1 = 0.85;
+            } else if (fc >= 8000) {
+                beta1 = 0.65;
+            } else {
+                beta1 = 0.85 - 0.05 * (fc - 4000) / 1000;
             }
-            ctx.setLineDash([]);
-            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
-            ctx.fillText(b+'"',cx-8,cy+h*sc/2+18);
-            ctx.save();ctx.translate(cx+b*sc/2+15,cy);ctx.rotate(-Math.PI/2);ctx.fillText(h+'"',-8,0);ctx.restore();
+
+            // ========== FLEXURAL DESIGN ==========
+            // Stress block depth (a) from equilibrium
+            const a = (As * fy) / (0.85 * fc * b);
+            const c = a / beta1;
+
+            // Strain in tension steel
+            const epsilon_cu = 0.003;
+            const epsilon_t = epsilon_cu * (d - c) / c;
+            const epsilon_ty = fy / Es / 1000;
+
+            // Phi factor based on strain (ACI 318-19 Table 21.2.2)
+            let phi_flex;
+            if (epsilon_t >= 0.005) {
+                phi_flex = 0.90;
+            } else if (epsilon_t <= epsilon_ty) {
+                phi_flex = 0.65;
+            } else {
+                phi_flex = 0.65 + 0.25 * (epsilon_t - epsilon_ty) / (0.005 - epsilon_ty);
+            }
+
+            // Nominal moment capacity
+            const Mn = As * fy * (d - a / 2) / 12000; // kip-ft
+            const phiMn = phi_flex * Mn;
+
+            // Reinforcement ratio
+            const rho = As / (b * d);
+            const rho_min = Math.max(3 * Math.sqrt(fc) / fy, 200 / fy);
+            const rho_max = 0.85 * beta1 * fc / fy * (epsilon_cu / (epsilon_cu + 0.004));
+
+            // ========== SHEAR DESIGN ==========
+            // Concrete shear strength (ACI 318-19 Section 22.5.5.1)
+            const Vc = 2 * Math.sqrt(fc) * b * d / 1000; // kip
+
+            // Stirrup contribution
+            const Av = 2 * barData[stirrupSize].area;
+            const Vs = Av * fyt * d / stirrupSpacing / 1000; // kip
+
+            // Total shear capacity
+            const Vn = Vc + Vs;
+            const phi_shear = 0.75;
+            const phiVn = phi_shear * Vn;
+
+            // Maximum Vs limit (ACI 318-19 Section 22.5.1.2)
+            const Vs_max = 8 * Math.sqrt(fc) * b * d / 1000;
+
+            // Maximum stirrup spacing (ACI 318-19 Section 9.7.6.2.2)
+            let s_max;
+            if (Vs <= 4 * Math.sqrt(fc) * b * d / 1000) {
+                s_max = Math.min(d / 2, 24);
+            } else {
+                s_max = Math.min(d / 4, 12);
+            }
+
+            // ========== DEFLECTION CHECK ==========
+            // Gross moment of inertia
+            const Ig = b * Math.pow(h, 3) / 12;
+
+            // Cracking moment
+            const fr = 7.5 * Math.sqrt(fc); // psi
+            const yt = h / 2;
+            const Mcr = fr * Ig / yt / 12000; // kip-ft
+
+            // Cracked moment of inertia
+            // Find neutral axis depth for cracked section
+            const nAs = n * As;
+            // b*x^2/2 = n*As*(d-x) => b*x^2/2 + n*As*x - n*As*d = 0
+            const aa = b / 2;
+            const bb = nAs;
+            const cc = -nAs * d;
+            const x_cr = (-bb + Math.sqrt(bb * bb - 4 * aa * cc)) / (2 * aa);
+
+            const Icr = b * Math.pow(x_cr, 3) / 3 + nAs * Math.pow(d - x_cr, 2);
+
+            // Effective moment of inertia (ACI 318-19 Section 24.2.3.5)
+            let Ie;
+            if (Ma * 12 <= Mcr * 12) {
+                Ie = Ig;
+            } else {
+                const ratio = Math.pow(Mcr / Ma, 3);
+                Ie = ratio * Ig + (1 - ratio) * Icr;
+                Ie = Math.min(Ie, Ig);
+            }
+
+            // Immediate deflection (simple span with uniform load approximation)
+            // Delta = 5*w*L^4/(384*E*I) or for moment: Delta = M*L^2/(8*E*I) * (5/48)
+            // Using: Delta = 5*M*L^2/(48*E*I) for simple span
+            const delta_calc = 5 * Ma * 12 * Math.pow(L, 2) / (48 * Ec * Ie); // in
+            const delta_allow = L / 240;
+
+            // ========== CHECK STATUS ==========
+            const flexureOK = phiMn >= Mu;
+            const shearOK = phiVn >= Vu;
+            const deflectionOK = delta_calc <= delta_allow;
+            const rhoOK = rho >= rho_min && rho <= rho_max;
+            const spacingOK = stirrupSpacing <= s_max;
+            const vsMaxOK = Vs <= Vs_max;
+
+            const overallOK = flexureOK && shearOK && deflectionOK;
+
+            // Store results
+            calcResults = {
+                // Input
+                b, h, d, cover, L, fc, fy, fyt, barSize, numBars, As,
+                stirrupSize, stirrupSpacing, Av, Mu, Vu, Ma,
+                // Flexure
+                a, c, beta1, epsilon_t, epsilon_ty, phi_flex, Mn, phiMn, rho, rho_min, rho_max,
+                // Shear
+                Vc, Vs, Vn, phi_shear, phiVn, s_max, Vs_max, vsMaxOK,
+                // Deflection
+                Ec, Es, n, Ig, Icr, Ie, Mcr, fr, x_cr, delta_calc, delta_allow,
+                // Status
+                flexureOK, shearOK, deflectionOK, rhoOK, spacingOK, overallOK
+            };
+
+            // Update UI
+            updateResults();
+            drawCrossSection();
+            generateReport();
         }
-        function calculate(){
-            const b=+document.getElementById('b').value;
-            const h=+document.getElementById('h').value;
-            const span=+document.getElementById('span').value*12;
-            const cover=+document.getElementById('cover').value;
-            const fc=+document.getElementById('fc').value;
-            const fy=+document.getElementById('fy').value*1000;
-            const Mu=+document.getElementById('Mu').value;
-            const Vu=+document.getElementById('Vu').value;
-            const d=h-cover-0.5-0.5;
-            const Rn=Mu*12000/(0.9*b*d*d);
-            const rho=0.85*fc/fy*(1-Math.sqrt(1-2*Rn/(0.85*fc)));
-            const rhoMin=Math.max(3*Math.sqrt(fc)/fy,200/fy);
-            const rhoMax=0.85*0.85*fc/fy*0.003/(0.003+0.005);
-            const As=Math.max(rho*b*d,rhoMin*b*d);
-            const a=As*fy/(0.85*fc*b);
-            const phiMn=0.9*As*fy*(d-a/2)/(12000);
-            const Vc=2*Math.sqrt(fc)*b*d/1000;
-            const sMax=Math.min(d/2,24);
-            const Av=0.22;
-            const Vs=(Vu/0.75-Vc);
-            const sReq=Vs>0?Av*fy/1000*d/Vs:sMax;
-            const s=Math.min(sReq,sMax);
-            const phiVn=0.75*(Vc+Av*fy/1000*d/s);
-            const nBars=Math.ceil(As/0.79);
-            const checks=[
-                {name:'Flexural Strength',dcr:Mu/phiMn,pass:phiMn>=Mu},
-                {name:'Shear Strength',dcr:Vu/phiVn,pass:phiVn>=Vu},
-                {name:'Min Steel (ρ≥'+rhoMin.toFixed(4)+')',dcr:rhoMin/rho,pass:rho>=rhoMin},
-                {name:'Max Steel (ρ≤'+rhoMax.toFixed(4)+')',dcr:rho/rhoMax,pass:rho<=rhoMax}
-            ];
-            const allPass=checks.every(c=>c.pass);
-            document.getElementById('phiMn').textContent=phiMn.toFixed(1)+' k-ft';
-            document.getElementById('phiVn').textContent=phiVn.toFixed(1)+' k';
-            document.getElementById('dEff').textContent=d.toFixed(2)+'"';
-            document.getElementById('aBlock').textContent=a.toFixed(2)+'"';
-            document.getElementById('AsReq').textContent=As.toFixed(2)+' in²';
-            document.getElementById('bars').textContent=nBars+'-#8';
-            document.getElementById('stirrups').textContent='#4 @ '+s.toFixed(0)+'"';
-            document.getElementById('rho').textContent=(rho*100).toFixed(3)+'%';
-            document.getElementById('status').className='status '+(allPass?'pass':'fail');
-            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
-            document.getElementById('flexCard').className='result-card '+(checks[0].pass?'pass':'fail');
-            document.getElementById('shearCard').className='result-card '+(checks[1].pass?'pass':'fail');
-            document.getElementById('checks').innerHTML=checks.map(c=>
-                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
-            ).join('');
-            draw();
+
+        function updateResults() {
+            const r = calcResults;
+
+            // Summary tab
+            document.getElementById('mn-result').innerHTML = `${r.phiMn.toFixed(1)}<span class="result-unit">kip-ft</span>`;
+            document.getElementById('vn-result').innerHTML = `${r.phiVn.toFixed(1)}<span class="result-unit">kip</span>`;
+            document.getElementById('flexure-ratio').textContent = (r.Mu / r.phiMn).toFixed(3);
+            document.getElementById('shear-ratio').textContent = (r.Vu / r.phiVn).toFixed(3);
+
+            const dcRatio = r.Mu / r.phiMn;
+            document.getElementById('dc-ratio-text').textContent = `${(dcRatio * 100).toFixed(1)}%`;
+            const dcBar = document.getElementById('dc-ratio-bar');
+            dcBar.style.width = `${Math.min(dcRatio * 100, 100)}%`;
+            dcBar.className = 'ratio-fill ' + (dcRatio <= 0.7 ? 'safe' : dcRatio <= 1.0 ? 'warning' : 'danger');
+
+            // Overall status
+            const overallStatus = document.getElementById('overall-status');
+            if (r.overallOK) {
+                overallStatus.textContent = 'OK';
+                overallStatus.className = 'status-badge status-ok';
+            } else {
+                overallStatus.textContent = 'NG';
+                overallStatus.className = 'status-badge status-ng';
+            }
+
+            // Flexure tab
+            document.getElementById('d-result').innerHTML = `${r.d.toFixed(2)}<span class="result-unit">in</span>`;
+            document.getElementById('as-result').innerHTML = `${r.As.toFixed(2)}<span class="result-unit">in²</span>`;
+            document.getElementById('c-result').innerHTML = `${r.c.toFixed(2)}<span class="result-unit">in</span>`;
+            document.getElementById('a-result').innerHTML = `${r.a.toFixed(2)}<span class="result-unit">in</span>`;
+            document.getElementById('strain-result').textContent = r.epsilon_t.toFixed(5);
+            document.getElementById('phi-result').textContent = r.phi_flex.toFixed(3);
+            document.getElementById('mn-nominal').innerHTML = `${r.Mn.toFixed(1)}<span class="result-unit">kip-ft</span>`;
+            document.getElementById('phi-mn').innerHTML = `${r.phiMn.toFixed(1)}<span class="result-unit">kip-ft</span>`;
+
+            const rhoPercent = r.rho * 100;
+            const rhoMaxPercent = r.rho_max * 100;
+            document.getElementById('rho-text').textContent = `${rhoPercent.toFixed(3)}% (min: ${(r.rho_min * 100).toFixed(3)}%, max: ${rhoMaxPercent.toFixed(3)}%)`;
+            const rhoBar = document.getElementById('rho-bar');
+            rhoBar.style.width = `${Math.min(rhoPercent / rhoMaxPercent * 100, 100)}%`;
+            rhoBar.className = 'ratio-fill ' + (r.rhoOK ? 'safe' : 'danger');
+
+            // Flexure status
+            const flexStatus = document.getElementById('flexure-status');
+            flexStatus.textContent = r.flexureOK ? 'OK' : 'NG';
+            flexStatus.className = 'status-badge ' + (r.flexureOK ? 'status-ok' : 'status-ng');
+
+            // Shear tab
+            document.getElementById('vc-result').innerHTML = `${r.Vc.toFixed(1)}<span class="result-unit">kip</span>`;
+            document.getElementById('vs-result').innerHTML = `${r.Vs.toFixed(1)}<span class="result-unit">kip</span>`;
+            document.getElementById('av-result').innerHTML = `${r.Av.toFixed(2)}<span class="result-unit">in²</span>`;
+            document.getElementById('s-result').innerHTML = `${r.stirrupSpacing.toFixed(1)}<span class="result-unit">in</span>`;
+            document.getElementById('vn-nominal').innerHTML = `${r.Vn.toFixed(1)}<span class="result-unit">kip</span>`;
+            document.getElementById('phi-vn').innerHTML = `${r.phiVn.toFixed(1)}<span class="result-unit">kip</span>`;
+            document.getElementById('max-spacing').innerHTML = `${r.s_max.toFixed(1)}<span class="result-unit">in</span>`;
+            
+            const vsMaxCheck = document.getElementById('vs-max-check');
+            vsMaxCheck.textContent = r.vsMaxOK ? 'OK' : 'NG';
+            vsMaxCheck.className = 'result-value ' + (r.vsMaxOK ? 'highlight' : 'danger');
+
+            const shearStatus = document.getElementById('shear-status');
+            shearStatus.textContent = r.shearOK ? 'OK' : 'NG';
+            shearStatus.className = 'status-badge ' + (r.shearOK ? 'status-ok' : 'status-ng');
+
+            // Deflection tab
+            document.getElementById('ec-result').innerHTML = `${r.Ec.toFixed(0)}<span class="result-unit">ksi</span>`;
+            document.getElementById('ig-result').innerHTML = `${r.Ig.toFixed(0)}<span class="result-unit">in⁴</span>`;
+            document.getElementById('icr-result').innerHTML = `${r.Icr.toFixed(0)}<span class="result-unit">in⁴</span>`;
+            document.getElementById('ie-result').innerHTML = `${r.Ie.toFixed(0)}<span class="result-unit">in⁴</span>`;
+            document.getElementById('mcr-result').innerHTML = `${r.Mcr.toFixed(1)}<span class="result-unit">kip-ft</span>`;
+            document.getElementById('delta-result').innerHTML = `${r.delta_calc.toFixed(3)}<span class="result-unit">in</span>`;
+            document.getElementById('delta-allow').innerHTML = `${r.delta_allow.toFixed(3)}<span class="result-unit">in</span>`;
+            document.getElementById('delta-ratio').textContent = (r.delta_calc / r.delta_allow).toFixed(3);
+
+            const deflStatus = document.getElementById('deflection-status');
+            deflStatus.textContent = r.deflectionOK ? 'OK' : 'NG';
+            deflStatus.className = 'status-badge ' + (r.deflectionOK ? 'status-ok' : 'status-ng');
         }
+
+        function drawCrossSection() {
+            const r = calcResults;
+            const svg = document.getElementById('cross-section-svg');
+            
+            // Scale factors
+            const scale = 6;
+            const offsetX = 100;
+            const offsetY = 20;
+            
+            const bScaled = r.b * scale;
+            const hScaled = r.h * scale;
+            const coverScaled = r.cover * scale;
+            const dbScaled = barData[r.barSize].dia * scale;
+            const dsScaled = barData[r.stirrupSize].dia * scale;
+
+            svg.innerHTML = `
+                <!-- Concrete section -->
+                <rect x="${offsetX}" y="${offsetY}" width="${bScaled}" height="${hScaled}" 
+                      fill="#374151" stroke="#6b7280" stroke-width="2"/>
+                
+                <!-- Stirrup outline -->
+                <rect x="${offsetX + coverScaled}" y="${offsetY + coverScaled}" 
+                      width="${bScaled - 2*coverScaled}" height="${hScaled - 2*coverScaled}" 
+                      fill="none" stroke="#f59e0b" stroke-width="${dsScaled}" rx="3"/>
+                
+                <!-- Compression zone (stress block) -->
+                <rect x="${offsetX}" y="${offsetY}" width="${bScaled}" height="${r.a * scale}" 
+                      fill="rgba(59, 130, 246, 0.3)" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4"/>
+                
+                <!-- Tension bars -->
+                ${drawTensionBars(r.numBars, r.b, r.h, r.cover, r.barSize, r.stirrupSize, scale, offsetX, offsetY)}
+                
+                <!-- Dimension lines -->
+                <!-- Width dimension -->
+                <line x1="${offsetX}" y1="${offsetY + hScaled + 30}" x2="${offsetX + bScaled}" y2="${offsetY + hScaled + 30}" 
+                      stroke="#94a3b8" stroke-width="1"/>
+                <line x1="${offsetX}" y1="${offsetY + hScaled + 25}" x2="${offsetX}" y2="${offsetY + hScaled + 35}" 
+                      stroke="#94a3b8" stroke-width="1"/>
+                <line x1="${offsetX + bScaled}" y1="${offsetY + hScaled + 25}" x2="${offsetX + bScaled}" y2="${offsetY + hScaled + 35}" 
+                      stroke="#94a3b8" stroke-width="1"/>
+                <text x="${offsetX + bScaled/2}" y="${offsetY + hScaled + 45}" 
+                      fill="#94a3b8" font-family="IBM Plex Mono" font-size="12" text-anchor="middle">b = ${r.b}"</text>
+                
+                <!-- Height dimension -->
+                <line x1="${offsetX + bScaled + 30}" y1="${offsetY}" x2="${offsetX + bScaled + 30}" y2="${offsetY + hScaled}" 
+                      stroke="#94a3b8" stroke-width="1"/>
+                <line x1="${offsetX + bScaled + 25}" y1="${offsetY}" x2="${offsetX + bScaled + 35}" y2="${offsetY}" 
+                      stroke="#94a3b8" stroke-width="1"/>
+                <line x1="${offsetX + bScaled + 25}" y1="${offsetY + hScaled}" x2="${offsetX + bScaled + 35}" y2="${offsetY + hScaled}" 
+                      stroke="#94a3b8" stroke-width="1"/>
+                <text x="${offsetX + bScaled + 45}" y="${offsetY + hScaled/2 + 4}" 
+                      fill="#94a3b8" font-family="IBM Plex Mono" font-size="12" text-anchor="start">h = ${r.h}"</text>
+                
+                <!-- Effective depth marker -->
+                <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + r.d * scale}" 
+                      stroke="#10b981" stroke-width="2"/>
+                <line x1="${offsetX - 25}" y1="${offsetY}" x2="${offsetX - 15}" y2="${offsetY}" 
+                      stroke="#10b981" stroke-width="2"/>
+                <line x1="${offsetX - 25}" y1="${offsetY + r.d * scale}" x2="${offsetX - 15}" y2="${offsetY + r.d * scale}" 
+                      stroke="#10b981" stroke-width="2"/>
+                <text x="${offsetX - 35}" y="${offsetY + r.d * scale / 2 + 4}" 
+                      fill="#10b981" font-family="IBM Plex Mono" font-size="10" text-anchor="end">d = ${r.d.toFixed(1)}"</text>
+                
+                <!-- Legend -->
+                <rect x="300" y="30" width="15" height="15" fill="rgba(59, 130, 246, 0.3)" stroke="#3b82f6"/>
+                <text x="320" y="42" fill="#94a3b8" font-family="Outfit" font-size="11">Compression Block (a)</text>
+                
+                <circle cx="307" cy="60" r="6" fill="#ef4444"/>
+                <text x="320" y="64" fill="#94a3b8" font-family="Outfit" font-size="11">Tension Rebar (#${r.barSize})</text>
+                
+                <rect x="300" y="75" width="15" height="8" fill="none" stroke="#f59e0b" stroke-width="2"/>
+                <text x="320" y="82" fill="#94a3b8" font-family="Outfit" font-size="11">Stirrup (#${r.stirrupSize})</text>
+            `;
+        }
+
+        function drawTensionBars(numBars, b, h, cover, barSize, stirrupSize, scale, offsetX, offsetY) {
+            const db = barData[barSize].dia;
+            const ds = barData[stirrupSize].dia;
+            const barRadius = db * scale / 2;
+            
+            // Calculate bar positions
+            const yPos = offsetY + (h - cover - ds - db/2) * scale;
+            const startX = offsetX + (cover + ds + db/2) * scale;
+            const endX = offsetX + (b - cover - ds - db/2) * scale;
+            const spacing = (endX - startX) / (numBars - 1);
+            
+            let bars = '';
+            for (let i = 0; i < numBars; i++) {
+                const xPos = numBars === 1 ? (startX + endX) / 2 : startX + i * spacing;
+                bars += `<circle cx="${xPos}" cy="${yPos}" r="${barRadius}" fill="#ef4444" stroke="#dc2626" stroke-width="1"/>`;
+            }
+            return bars;
+        }
+
+        function generateReport() {
+            const r = calcResults;
+            const report = document.getElementById('calc-report');
+            
+            const checkMark = '✓';
+            const crossMark = '✗';
+
+            report.innerHTML = `
+                <div class="calc-section">
+                    <div class="calc-title">═══ ACI 318-19 BEAM DESIGN CALCULATION ═══</div>
+                    <div class="calc-line">Date: ${new Date().toLocaleDateString()}</div>
+                    <div class="calc-line">Code Reference: ACI 318-19</div>
+                    <div class="calc-line">Units: US Customary (in, kip, psi)</div>
+                </div>
+
+                <div class="calc-section">
+                    <div class="calc-title">1. INPUT DATA</div>
+                    <div class="calc-line"><strong>Geometry:</strong></div>
+                    <div class="calc-line">  Width, b = <span class="value">${r.b}</span> in</div>
+                    <div class="calc-line">  Total Depth, h = <span class="value">${r.h}</span> in</div>
+                    <div class="calc-line">  Clear Cover = <span class="value">${r.cover}</span> in</div>
+                    <div class="calc-line">  Span Length, L = <span class="value">${r.L}</span> in = <span class="value">${(r.L/12).toFixed(1)}</span> ft</div>
+                    <div class="calc-line"><strong>Materials:</strong></div>
+                    <div class="calc-line">  f'c = <span class="value">${r.fc}</span> psi</div>
+                    <div class="calc-line">  fy = <span class="value">${r.fy}</span> psi</div>
+                    <div class="calc-line">  fyt = <span class="value">${r.fyt}</span> psi</div>
+                    <div class="calc-line"><strong>Reinforcement:</strong></div>
+                    <div class="calc-line">  Tension Bars: <span class="value">${r.numBars}-#${r.barSize}</span>, As = <span class="value">${r.As.toFixed(2)}</span> in²</div>
+                    <div class="calc-line">  Stirrups: <span class="value">#${r.stirrupSize}@${r.stirrupSpacing}"</span>, Av = <span class="value">${r.Av.toFixed(2)}</span> in²</div>
+                    <div class="calc-line"><strong>Design Loads:</strong></div>
+                    <div class="calc-line">  Mu = <span class="value">${r.Mu}</span> kip-ft</div>
+                    <div class="calc-line">  Vu = <span class="value">${r.Vu}</span> kip</div>
+                    <div class="calc-line">  Ma = <span class="value">${r.Ma}</span> kip-ft (service)</div>
+                </div>
+
+                <div class="calc-section">
+                    <div class="calc-title">2. FLEXURAL DESIGN (ACI 318-19 Ch. 22)</div>
+                    <div class="calc-line"><strong>Effective Depth:</strong></div>
+                    <div class="calc-line">  d = h - cover - d_stirrup - d_bar/2</div>
+                    <div class="calc-line">  d = ${r.h} - ${r.cover} - ${barData[r.stirrupSize].dia} - ${barData[r.barSize].dia}/2 = <span class="result">${r.d.toFixed(2)} in</span></div>
+                    
+                    <div class="calc-line"><strong>β₁ Factor (Section 22.2.2.4.3):</strong></div>
+                    <div class="calc-line">  For f'c = ${r.fc} psi: β₁ = <span class="result">${r.beta1.toFixed(3)}</span></div>
+                    
+                    <div class="calc-line"><strong>Stress Block Depth:</strong></div>
+                    <div class="calc-line formula">  a = As × fy / (0.85 × f'c × b)</div>
+                    <div class="calc-line">  a = ${r.As.toFixed(2)} × ${r.fy} / (0.85 × ${r.fc} × ${r.b})</div>
+                    <div class="calc-line">  a = <span class="result">${r.a.toFixed(3)} in</span></div>
+                    
+                    <div class="calc-line"><strong>Neutral Axis Depth:</strong></div>
+                    <div class="calc-line formula">  c = a / β₁</div>
+                    <div class="calc-line">  c = ${r.a.toFixed(3)} / ${r.beta1.toFixed(3)} = <span class="result">${r.c.toFixed(3)} in</span></div>
+                    
+                    <div class="calc-line"><strong>Tensile Strain (Section 21.2.2):</strong></div>
+                    <div class="calc-line formula">  εt = εcu × (d - c) / c</div>
+                    <div class="calc-line">  εt = 0.003 × (${r.d.toFixed(2)} - ${r.c.toFixed(3)}) / ${r.c.toFixed(3)}</div>
+                    <div class="calc-line">  εt = <span class="result">${r.epsilon_t.toFixed(5)}</span> ${r.epsilon_t >= 0.005 ? '≥ 0.005 (Tension-Controlled)' : r.epsilon_t >= r.epsilon_ty ? '(Transition Zone)' : '< εy (Compression-Controlled)'}</div>
+                    
+                    <div class="calc-line"><strong>Strength Reduction Factor φ (Table 21.2.2):</strong></div>
+                    <div class="calc-line">  φ = <span class="result">${r.phi_flex.toFixed(3)}</span></div>
+                    
+                    <div class="calc-line"><strong>Nominal Moment Capacity:</strong></div>
+                    <div class="calc-line formula">  Mn = As × fy × (d - a/2) / 12000</div>
+                    <div class="calc-line">  Mn = ${r.As.toFixed(2)} × ${r.fy} × (${r.d.toFixed(2)} - ${r.a.toFixed(3)}/2) / 12000</div>
+                    <div class="calc-line">  Mn = <span class="result">${r.Mn.toFixed(2)} kip-ft</span></div>
+                    
+                    <div class="calc-line"><strong>Design Moment Capacity:</strong></div>
+                    <div class="calc-line formula">  φMn = φ × Mn</div>
+                    <div class="calc-line">  φMn = ${r.phi_flex.toFixed(3)} × ${r.Mn.toFixed(2)} = <span class="result">${r.phiMn.toFixed(2)} kip-ft</span></div>
+                    
+                    <div class="calc-line"><strong>Check: φMn ≥ Mu</strong></div>
+                    <div class="calc-line">  ${r.phiMn.toFixed(2)} ${r.flexureOK ? '≥' : '<'} ${r.Mu} kip-ft <span class="${r.flexureOK ? 'check-ok' : 'check-ng'}">${r.flexureOK ? checkMark + ' OK' : crossMark + ' NG'}</span></div>
+                    
+                    <div class="calc-line"><strong>Reinforcement Ratio Check (Section 9.6.1):</strong></div>
+                    <div class="calc-line">  ρ = As / (b × d) = ${r.As.toFixed(2)} / (${r.b} × ${r.d.toFixed(2)}) = <span class="value">${(r.rho * 100).toFixed(4)}%</span></div>
+                    <div class="calc-line">  ρ_min = max(3√f'c/fy, 200/fy) = <span class="value">${(r.rho_min * 100).toFixed(4)}%</span></div>
+                    <div class="calc-line">  ρ_max = 0.85β₁(f'c/fy)(εcu/(εcu+0.004)) = <span class="value">${(r.rho_max * 100).toFixed(4)}%</span></div>
+                    <div class="calc-line">  ρ_min ≤ ρ ≤ ρ_max: <span class="${r.rhoOK ? 'check-ok' : 'check-ng'}">${r.rhoOK ? checkMark + ' OK' : crossMark + ' NG'}</span></div>
+                </div>
+
+                <div class="calc-section">
+                    <div class="calc-title">3. SHEAR DESIGN (ACI 318-19 Ch. 22)</div>
+                    <div class="calc-line"><strong>Concrete Shear Strength (Section 22.5.5.1):</strong></div>
+                    <div class="calc-line formula">  Vc = 2λ√f'c × bw × d / 1000</div>
+                    <div class="calc-line">  Vc = 2 × 1.0 × √${r.fc} × ${r.b} × ${r.d.toFixed(2)} / 1000</div>
+                    <div class="calc-line">  Vc = <span class="result">${r.Vc.toFixed(2)} kip</span></div>
+                    
+                    <div class="calc-line"><strong>Stirrup Shear Strength (Section 22.5.10.5.3):</strong></div>
+                    <div class="calc-line formula">  Vs = Av × fyt × d / s / 1000</div>
+                    <div class="calc-line">  Vs = ${r.Av.toFixed(2)} × ${r.fyt} × ${r.d.toFixed(2)} / ${r.stirrupSpacing} / 1000</div>
+                    <div class="calc-line">  Vs = <span class="result">${r.Vs.toFixed(2)} kip</span></div>
+                    
+                    <div class="calc-line"><strong>Maximum Vs Check (Section 22.5.1.2):</strong></div>
+                    <div class="calc-line formula">  Vs,max = 8√f'c × bw × d / 1000</div>
+                    <div class="calc-line">  Vs,max = 8 × √${r.fc} × ${r.b} × ${r.d.toFixed(2)} / 1000 = <span class="value">${r.Vs_max.toFixed(2)} kip</span></div>
+                    <div class="calc-line">  Vs ≤ Vs,max: ${r.Vs.toFixed(2)} ${r.vsMaxOK ? '≤' : '>'} ${r.Vs_max.toFixed(2)} <span class="${r.vsMaxOK ? 'check-ok' : 'check-ng'}">${r.vsMaxOK ? checkMark + ' OK' : crossMark + ' NG'}</span></div>
+                    
+                    <div class="calc-line"><strong>Total Shear Capacity:</strong></div>
+                    <div class="calc-line formula">  Vn = Vc + Vs</div>
+                    <div class="calc-line">  Vn = ${r.Vc.toFixed(2)} + ${r.Vs.toFixed(2)} = <span class="result">${r.Vn.toFixed(2)} kip</span></div>
+                    
+                    <div class="calc-line"><strong>Design Shear Capacity:</strong></div>
+                    <div class="calc-line formula">  φVn = φ × Vn (φ = 0.75)</div>
+                    <div class="calc-line">  φVn = 0.75 × ${r.Vn.toFixed(2)} = <span class="result">${r.phiVn.toFixed(2)} kip</span></div>
+                    
+                    <div class="calc-line"><strong>Check: φVn ≥ Vu</strong></div>
+                    <div class="calc-line">  ${r.phiVn.toFixed(2)} ${r.shearOK ? '≥' : '<'} ${r.Vu} kip <span class="${r.shearOK ? 'check-ok' : 'check-ng'}">${r.shearOK ? checkMark + ' OK' : crossMark + ' NG'}</span></div>
+                    
+                    <div class="calc-line"><strong>Maximum Stirrup Spacing (Section 9.7.6.2.2):</strong></div>
+                    <div class="calc-line">  s_max = ${r.s_max.toFixed(1)} in</div>
+                    <div class="calc-line">  s = ${r.stirrupSpacing} in ${r.spacingOK ? '≤' : '>'} s_max <span class="${r.spacingOK ? 'check-ok' : 'check-ng'}">${r.spacingOK ? checkMark + ' OK' : crossMark + ' NG'}</span></div>
+                </div>
+
+                <div class="calc-section">
+                    <div class="calc-title">4. DEFLECTION CHECK (ACI 318-19 Section 24.2)</div>
+                    <div class="calc-line"><strong>Material Properties:</strong></div>
+                    <div class="calc-line">  Ec = 57000√f'c / 1000 = 57000 × √${r.fc} / 1000 = <span class="value">${r.Ec.toFixed(0)} ksi</span></div>
+                    <div class="calc-line">  Es = <span class="value">${r.Es} ksi</span></div>
+                    <div class="calc-line">  n = Es / Ec = ${r.Es} / ${r.Ec.toFixed(0)} = <span class="value">${r.n.toFixed(2)}</span></div>
+                    
+                    <div class="calc-line"><strong>Gross Moment of Inertia:</strong></div>
+                    <div class="calc-line formula">  Ig = b × h³ / 12</div>
+                    <div class="calc-line">  Ig = ${r.b} × ${r.h}³ / 12 = <span class="result">${r.Ig.toFixed(0)} in⁴</span></div>
+                    
+                    <div class="calc-line"><strong>Cracking Moment (Section 24.2.3.5):</strong></div>
+                    <div class="calc-line formula">  fr = 7.5λ√f'c = 7.5 × 1.0 × √${r.fc} = ${r.fr.toFixed(1)} psi</div>
+                    <div class="calc-line formula">  Mcr = fr × Ig / yt / 12000</div>
+                    <div class="calc-line">  Mcr = ${r.fr.toFixed(1)} × ${r.Ig.toFixed(0)} / ${r.h/2} / 12000 = <span class="result">${r.Mcr.toFixed(2)} kip-ft</span></div>
+                    
+                    <div class="calc-line"><strong>Cracked Section Analysis:</strong></div>
+                    <div class="calc-line">  Neutral axis depth, x = <span class="value">${r.x_cr.toFixed(3)} in</span></div>
+                    <div class="calc-line formula">  Icr = b × x³ / 3 + n × As × (d - x)²</div>
+                    <div class="calc-line">  Icr = <span class="result">${r.Icr.toFixed(0)} in⁴</span></div>
+                    
+                    <div class="calc-line"><strong>Effective Moment of Inertia (Eq. 24.2.3.5a):</strong></div>
+                    <div class="calc-line">  Ma = ${r.Ma} kip-ft ${r.Ma > r.Mcr ? '>' : '≤'} Mcr = ${r.Mcr.toFixed(2)} kip-ft</div>
+                    <div class="calc-line">  Ie = <span class="result">${r.Ie.toFixed(0)} in⁴</span></div>
+                    
+                    <div class="calc-line"><strong>Immediate Deflection (Simple Span):</strong></div>
+                    <div class="calc-line formula">  Δ = 5 × Ma × L² / (48 × Ec × Ie)</div>
+                    <div class="calc-line">  Δ = 5 × ${r.Ma} × 12 × ${r.L}² / (48 × ${r.Ec.toFixed(0)} × ${r.Ie.toFixed(0)})</div>
+                    <div class="calc-line">  Δ = <span class="result">${r.delta_calc.toFixed(4)} in</span></div>
+                    
+                    <div class="calc-line"><strong>Allowable Deflection (Table 24.2.2):</strong></div>
+                    <div class="calc-line">  Δ_allow = L / 240 = ${r.L} / 240 = <span class="value">${r.delta_allow.toFixed(3)} in</span></div>
+                    
+                    <div class="calc-line"><strong>Check: Δ ≤ Δ_allow</strong></div>
+                    <div class="calc-line">  ${r.delta_calc.toFixed(4)} ${r.deflectionOK ? '≤' : '>'} ${r.delta_allow.toFixed(3)} in <span class="${r.deflectionOK ? 'check-ok' : 'check-ng'}">${r.deflectionOK ? checkMark + ' OK' : crossMark + ' NG'}</span></div>
+                </div>
+
+                <div class="calc-section">
+                    <div class="calc-title">5. DESIGN SUMMARY</div>
+                    <div class="calc-line">┌─────────────────────────────────────────────────┐</div>
+                    <div class="calc-line">│ FLEXURAL DESIGN: φMn = ${r.phiMn.toFixed(1)} kip-ft ≥ Mu = ${r.Mu} kip-ft    <span class="${r.flexureOK ? 'check-ok' : 'check-ng'}">${r.flexureOK ? checkMark : crossMark}</span> │</div>
+                    <div class="calc-line">│ SHEAR DESIGN: φVn = ${r.phiVn.toFixed(1)} kip ≥ Vu = ${r.Vu} kip          <span class="${r.shearOK ? 'check-ok' : 'check-ng'}">${r.shearOK ? checkMark : crossMark}</span> │</div>
+                    <div class="calc-line">│ DEFLECTION: Δ = ${r.delta_calc.toFixed(3)} in ≤ Δ_allow = ${r.delta_allow.toFixed(3)} in      <span class="${r.deflectionOK ? 'check-ok' : 'check-ng'}">${r.deflectionOK ? checkMark : crossMark}</span> │</div>
+                    <div class="calc-line">├─────────────────────────────────────────────────┤</div>
+                    <div class="calc-line">│ OVERALL: <span class="${r.overallOK ? 'check-ok' : 'check-ng'}" style="font-weight: bold;">${r.overallOK ? 'DESIGN ADEQUATE' : 'DESIGN NOT ADEQUATE'}</span>                       │</div>
+                    <div class="calc-line">└─────────────────────────────────────────────────┘</div>
+                </div>
+            `;
+        }
+
+        function exportReport(format) {
+            const r = calcResults;
+            let content = '';
+            
+            if (format === 'txt') {
+                content = document.getElementById('calc-report').innerText;
+                const blob = new Blob([content], { type: 'text/plain' });
+                downloadFile(blob, 'beam_design_calculation.txt');
+            } else if (format === 'html') {
+                content = `<!DOCTYPE html>
+<html>
+<head>
+    <title>ACI 318 Beam Design Calculation</title>
+    <style>
+        body { font-family: 'Courier New', monospace; padding: 2rem; max-width: 800px; margin: auto; }
+        .calc-title { font-weight: bold; color: #0066cc; margin: 1.5rem 0 1rem; }
+        .value { color: #006600; }
+        .result { color: #cc6600; font-weight: bold; }
+        .check-ok { color: #008800; }
+        .check-ng { color: #cc0000; }
+        h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>ACI 318-19 Beam Design Calculation</h1>
+    ${document.getElementById('calc-report').innerHTML}
+</body>
+</html>`;
+                const blob = new Blob([content], { type: 'text/html' });
+                downloadFile(blob, 'beam_design_calculation.html');
+            }
+        }
+
+        function downloadFile(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function printReport() {
+            const printContent = document.getElementById('calc-report').innerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>ACI 318 Beam Design Calculation</title>
+                    <style>
+                        body { font-family: 'Courier New', monospace; padding: 1rem; font-size: 11px; }
+                        .calc-title { font-weight: bold; margin: 1rem 0 0.5rem; }
+                        .calc-section { margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px dashed #ccc; }
+                        .check-ok { color: green; }
+                        .check-ng { color: red; }
+                        .result { font-weight: bold; }
+                        @media print { body { padding: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <h2 style="text-align: center;">ACI 318-19 Beam Design Calculation</h2>
+                    ${printContent}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Initialize with default calculation
+        window.onload = function() {
+            calculateBeam();
+        };
     </script>
 </body>
 </html>

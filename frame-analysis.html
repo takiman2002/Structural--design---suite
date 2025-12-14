@@ -4,214 +4,2245 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Frame Analysis | AISC 360-22</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--blue:#00b4d8;--cyan:#48cae4;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-        .header h1{font-size:1.2rem;color:var(--cyan)}
-        .back{color:var(--cyan);text-decoration:none;font-size:0.85rem}
-        .main{max-width:1600px;margin:0 auto;padding:20px;display:grid;grid-template-columns:280px 1fr 320px;gap:20px}
-        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-        .panel-title{font-size:0.85rem;font-weight:600;color:var(--cyan);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-        .form-group{margin-bottom:10px}
-        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        input,select{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
-        .btn{padding:10px 16px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px}
-        .btn-primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#000}
-        .canvas-box{background:var(--bg);border-radius:8px;height:450px;position:relative}
-        #frameCanvas{width:100%;height:100%}
-        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--blue)}
-        .result-card.pass{border-left-color:var(--green)}
-        .result-card.fail{border-left-color:var(--red)}
-        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
-        .result-value{font-size:1.1rem;font-weight:600}
-        table{width:100%;border-collapse:collapse;font-size:0.75rem}
-        th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
-        th{background:var(--bg);color:var(--text2)}
-        .dcr-pass{color:var(--green)}
-        .dcr-fail{color:var(--red)}
-        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #2a2a3a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+        .container { max-width: 1920px; margin: 0 auto; padding: 8px; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 16px; background: var(--bg-secondary);
+            border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px;
+        }
+        .logo h1 { font-size: 1rem; color: var(--accent-cyan); }
+        .btn {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;
+        }
+        .btn-primary { background: var(--accent-blue); color: white; }
+        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-green { background: var(--accent-green); color: white; }
+        .header-actions { display: flex; gap: 6px; }
+        .main-grid { display: grid; grid-template-columns: 300px 1fr 420px; gap: 8px; }
+        .panel { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+        .panel-header {
+            padding: 8px 12px; border-bottom: 1px solid var(--border-color);
+            font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;
+        }
+        .panel-content { padding: 10px; max-height: calc(100vh - 100px); overflow-y: auto; }
+        .panel-content::-webkit-scrollbar { width: 4px; }
+        .panel-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+        .input-section { margin-bottom: 12px; }
+        .input-section-title { font-size: 0.68rem; font-weight: 600; color: var(--accent-cyan); margin-bottom: 6px; }
+        .input-group { margin-bottom: 6px; }
+        .input-group label { display: block; font-size: 0.64rem; color: var(--text-secondary); margin-bottom: 2px; }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .input-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+        input, select {
+            width: 100%; padding: 5px 6px; background: var(--bg-tertiary);
+            border: 1px solid var(--border-color); border-radius: 3px;
+            color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent-blue); }
+        .canvas-container { position: relative; width: 100%; height: 100%; min-height: 480px; background: var(--bg-primary); border-radius: 4px; }
+        #frameCanvas { width: 100%; height: 100%; }
+        .mode-indicator {
+            position: absolute; top: 8px; left: 8px; padding: 6px 10px;
+            background: var(--bg-secondary); border: 1px solid var(--accent-green);
+            border-radius: 3px; font-size: 0.65rem; color: var(--accent-green);
+            min-width: 180px; line-height: 1.4;
+        }
+        .lc-selector {
+            position: absolute; top: 8px; right: 8px; display: flex; gap: 3px;
+            background: var(--bg-secondary); padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);
+        }
+        .lc-btn {
+            padding: 3px 6px; background: var(--bg-tertiary); border: none; border-radius: 2px;
+            color: var(--text-secondary); font-size: 0.58rem; cursor: pointer;
+        }
+        .lc-btn.active { background: var(--accent-blue); color: white; }
+        .lc-btn.env { background: var(--accent-amber); color: black; }
+        .diagram-tabs {
+            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 3px; background: var(--bg-secondary); padding: 4px; border-radius: 4px;
+        }
+        .diagram-tab {
+            padding: 4px 10px; background: var(--bg-tertiary); border: none; border-radius: 3px;
+            color: var(--text-secondary); font-size: 0.62rem; cursor: pointer;
+        }
+        .diagram-tab.active { background: var(--accent-blue); color: white; }
+        .results-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; }
+        .results-table th, .results-table td { padding: 5px 6px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        .results-table th { background: var(--bg-tertiary); color: var(--text-secondary); }
+        .dcr-ok { color: var(--accent-green); font-weight: 600; }
+        .dcr-warn { color: var(--accent-amber); font-weight: 600; }
+        .dcr-fail { color: var(--accent-red); font-weight: 600; }
+        .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+        .summary-card { padding: 8px; background: var(--bg-tertiary); border-radius: 4px; border-left: 3px solid var(--accent-blue); }
+        .summary-card.pass { border-left-color: var(--accent-green); }
+        .summary-card.fail { border-left-color: var(--accent-red); }
+        .summary-label { font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase; }
+        .summary-value { font-size: 0.85rem; font-weight: 600; }
+        .calc-detail {
+            background: var(--bg-primary); border-radius: 4px; padding: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+            line-height: 1.4; max-height: 280px; overflow-y: auto;
+        }
+        .calc-detail h4 { color: var(--accent-cyan); margin: 6px 0 3px 0; font-size: 0.65rem; }
+        .calc-detail .ok { color: var(--accent-green); }
+        .calc-detail .ng { color: var(--accent-red); }
+        .member-btns { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
+        .member-btn {
+            padding: 3px 6px; background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            border-radius: 2px; color: var(--text-secondary); font-size: 0.58rem; cursor: pointer;
+        }
+        .member-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .member-btn.fail { border-color: var(--accent-red); color: var(--accent-red); }
+        .col-section-row { display: flex; gap: 4px; align-items: center; margin-bottom: 4px; padding: 4px; background: var(--bg-tertiary); border-radius: 3px; }
+        .col-section-row label { font-size: 0.6rem; color: var(--accent-green); min-width: 25px; }
+        .col-section-row select { flex: 1; }
+        @media (max-width: 1400px) { .main-grid { grid-template-columns: 280px 1fr 380px; } }
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="back">← Back</a>
-        <div style="text-align:center"><h1>🏗️ Frame Analysis + P-Δ</h1><span style="font-size:0.75rem;color:var(--text2)">AISC 360-22</span></div>
-        <div></div>
+<div class="container">
+    <header>
+        <div class="logo"><h1>🏗️ FRAME ANALYSIS + AISC 360-22</h1></div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="exportCSV()">📥 Export</button>
+            <button class="btn btn-green" onclick="showReport()">📄 Report</button>
+            <button class="btn btn-primary" onclick="runAnalysis()">▶ Run</button>
+        </div>
     </header>
-    <div class="main">
+
+    <div class="main-grid">
+        <!-- Input Panel -->
         <div class="panel">
-            <div class="panel-title">Frame Geometry</div>
-            <div class="form-row">
-                <div class="form-group"><label>Bays</label><input type="number" id="numBays" value="2" min="1" max="5"></div>
-                <div class="form-group"><label>Stories</label><input type="number" id="numStories" value="2" min="1" max="5"></div>
+            <div class="panel-header">Frame Definition</div>
+            <div class="panel-content">
+                <div class="input-section">
+                    <div class="input-section-title">Geometry</div>
+                    <div class="input-row">
+                        <div class="input-group"><label>Bays</label><input type="number" id="numBays" value="1" min="1" max="5" onchange="updateFrame()"></div>
+                        <div class="input-group"><label>Stories</label><input type="number" id="numStories" value="1" min="1" max="5" onchange="updateFrame()"></div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group"><label>Bay Width (ft)</label><input type="number" id="bayWidth" value="25" onchange="updateFrame()"></div>
+                        <div class="input-group"><label>Story Ht (ft)</label><input type="number" id="storyHeight" value="12" onchange="updateFrame()"></div>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Beam Section</div>
+                    <div class="input-group">
+                        <select id="beamSection" onchange="updateFrame()">
+                            <optgroup label="W-Shapes">
+                                <option value="W12x26">W12×26</option>
+                                <option value="W14x30">W14×30</option>
+                                <option value="W16x36" selected>W16×36</option>
+                            </optgroup>
+                            <optgroup label="HSS Square">
+                                <option value="HSS3x3x1/4">HSS3×3×1/4</option>
+                                <option value="HSS4x4x1/4">HSS4×4×1/4</option>
+                                <option value="HSS4x4x3/8">HSS4×4×3/8</option>
+                            </optgroup>
+                            <optgroup label="HSS Rectangular">
+                                <option value="HSS4x3x1/4">HSS4×3×1/4</option>
+                                <option value="HSS4x3x3/8">HSS4×3×3/8</option>
+                                <option value="HSS5x3x1/4">HSS5×3×1/4</option>
+                                <option value="HSS5x3x3/8">HSS5×3×3/8</option>
+                                <option value="HSS6x3x1/4">HSS6×3×1/4</option>
+                                <option value="HSS6x3x3/8">HSS6×3×3/8</option>
+                                <option value="HSS8x3x1/4">HSS8×3×1/4</option>
+                                <option value="HSS8x3x3/8">HSS8×3×3/8</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Column Sections (per column line)</div>
+                    <div id="columnSectionsContainer"></div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Material & Support</div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Steel Grade</label>
+                            <select id="steelGrade">
+                                <option value="A500C">A500C (Fy=50)</option>
+                                <option value="A992">A992 (Fy=50)</option>
+                                <option value="A36">A36 (Fy=36)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Support</label>
+                            <select id="supportType" onchange="updateFrame()">
+                                <option value="fixed">Fixed</option>
+                                <option value="pinned">Pinned</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group" style="flex:1;">
+                            <label>Column Orientation (In-Plane)</label>
+                            <select id="columnOrientation" onchange="updateFrame()" style="font-size:0.65rem;">
+                                <option value="strong">Strong Axis (Ix)</option>
+                                <option value="weak">Weak Axis (Iy)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size:0.55rem; color:var(--text-muted); margin-top:4px;">
+                        Strong: Web ∥ Frame | Weak: Flange ∥ Frame
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Gravity Loads (klf)</div>
+                    <div class="input-row">
+                        <div class="input-group"><label>Dead D</label><input type="number" id="deadLoad" value="0.5" step="0.1"></div>
+                        <div class="input-group"><label>Live L</label><input type="number" id="liveLoad" value="0.8" step="0.1"></div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group"><label>Roof Lr</label><input type="number" id="roofLiveLoad" value="0.3" step="0.1"></div>
+                        <div class="input-group"><label>Snow S</label><input type="number" id="snowLoad" value="0.4" step="0.1"></div>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Lateral Loads (kips/story)</div>
+                    <div class="input-row">
+                        <div class="input-group"><label>Wind W</label><input type="number" id="windForce" value="3" step="0.5"></div>
+                        <div class="input-group"><label>Seismic E</label><input type="number" id="seismicForce" value="5" step="0.5"></div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group"><label>Cd</label><input type="number" id="cdFactor" value="3.0" step="0.5"></div>
+                        <div class="input-group"><label>Drift Limit %</label><input type="number" id="seismicDriftLimit" value="2.0" step="0.5"></div>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <label style="font-size:0.62rem;"><input type="checkbox" id="includePDelta" checked> Include P-Δ Effects</label>
+                </div>
             </div>
-            <div class="form-row">
-                <div class="form-group"><label>Bay Width (ft)</label><input type="number" id="bayWidth" value="25"></div>
-                <div class="form-group"><label>Story Ht (ft)</label><input type="number" id="storyHeight" value="12"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Sections</div>
-            <div class="form-group"><label>Beam</label><select id="beamSection"><option value="W16x36">W16×36</option><option value="W18x50">W18×50</option><option value="W21x62">W21×62</option></select></div>
-            <div class="form-group"><label>Column</label><select id="colSection"><option value="W14x48">W14×48</option><option value="W14x68">W14×68</option><option value="W14x90">W14×90</option></select></div>
-            <div class="panel-title" style="margin-top:16px">Loads</div>
-            <div class="form-row">
-                <div class="form-group"><label>Dead (klf)</label><input type="number" id="deadLoad" value="0.8" step="0.1"></div>
-                <div class="form-group"><label>Live (klf)</label><input type="number" id="liveLoad" value="1.2" step="0.1"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Wind (k/story)</label><input type="number" id="windLoad" value="8"></div>
-                <div class="form-group"><label>Seismic (k/story)</label><input type="number" id="seismicLoad" value="12"></div>
-            </div>
-            <div class="form-group" style="margin-top:10px">
-                <label><input type="checkbox" id="pDelta" checked> Include P-Δ Effects</label>
-            </div>
-            <button class="btn btn-primary" onclick="runAnalysis()">▶ Run Analysis</button>
         </div>
+
+        <!-- Canvas Panel -->
         <div class="panel">
-            <div class="panel-title">Frame Visualization</div>
-            <div class="canvas-box"><canvas id="frameCanvas"></canvas></div>
-        </div>
-        <div class="panel">
-            <div class="panel-title">Analysis Results</div>
-            <div class="result-grid">
-                <div class="result-card pass" id="dcrCard"><div class="result-label">Max DCR</div><div class="result-value" id="maxDCR">--</div></div>
-                <div class="result-card"><div class="result-label">Max Drift</div><div class="result-value" id="maxDrift">--</div></div>
-                <div class="result-card"><div class="result-label">Max M</div><div class="result-value" id="maxM">--</div></div>
-                <div class="result-card"><div class="result-label">Max V</div><div class="result-value" id="maxV">--</div></div>
+            <div class="panel-header">Visualization</div>
+            <div class="panel-content" style="padding:0; height:calc(100% - 35px);">
+                <div class="canvas-container">
+                    <canvas id="frameCanvas"></canvas>
+                    <div class="mode-indicator" id="modeIndicator">ENV</div>
+                    <div class="lc-selector" id="lcSelector"></div>
+                    <div class="diagram-tabs">
+                        <button class="diagram-tab active" onclick="setDiagram('frame')">Frame</button>
+                        <button class="diagram-tab" onclick="setDiagram('moment')">M</button>
+                        <button class="diagram-tab" onclick="setDiagram('shear')">V</button>
+                        <button class="diagram-tab" onclick="setDiagram('axial')">P</button>
+                        <button class="diagram-tab" onclick="setDiagram('reaction')">R</button>
+                        <button class="diagram-tab" onclick="setDiagram('dcr')">DCR</button>
+                    </div>
+                </div>
             </div>
-            <div class="panel-title">Member DCR Summary</div>
-            <table>
-                <thead><tr><th>Member</th><th>Section</th><th>DCR</th><th>Status</th></tr></thead>
-                <tbody id="dcrTable"></tbody>
-            </table>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="panel">
+            <div class="panel-header">Results (AISC 360-22)</div>
+            <div class="panel-content">
+                <div class="summary-cards">
+                    <div class="summary-card" id="cardDCR"><div class="summary-label">Max DCR</div><div class="summary-value" id="maxDCR">--</div></div>
+                    <div class="summary-card"><div class="summary-label">Max M</div><div class="summary-value" id="maxM">--</div></div>
+                    <div class="summary-card"><div class="summary-label">Max V</div><div class="summary-value" id="maxV">--</div></div>
+                    <div class="summary-card"><div class="summary-label">Max P</div><div class="summary-value" id="maxP">--</div></div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Reactions (Envelope)</div>
+                    <table class="results-table">
+                        <thead><tr><th>Support</th><th>Rx (k)</th><th>Ry (k)</th><th>Mz (k-ft)</th></tr></thead>
+                        <tbody id="reactionTable"><tr><td colspan="4" style="text-align:center">Run analysis</td></tr></tbody>
+                    </table>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Drift Check</div>
+                    <div style="font-size:0.55rem; color:var(--text-muted); margin-bottom:4px;">Wind: 0.5W, H/400 | Seismic: δ×Cd</div>
+                    <table class="results-table">
+                        <thead><tr><th>Story</th><th>Wind Δ"</th><th>W %</th><th>Seis Δ"</th><th>E %</th><th>Status</th></tr></thead>
+                        <tbody id="driftTable"><tr><td colspan="6" style="text-align:center">Run analysis</td></tr></tbody>
+                    </table>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Member DCR</div>
+                    <table class="results-table">
+                        <thead><tr><th>ID</th><th>Section</th><th>DCR</th><th>Gov</th><th>Status</th></tr></thead>
+                        <tbody id="dcrTable"><tr><td colspan="5" style="text-align:center">Run analysis</td></tr></tbody>
+                    </table>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-section-title">Detail Calc</div>
+                    <div class="member-btns" id="memberBtns"></div>
+                    <div class="calc-detail" id="calcDetail">Select member for AISC calculations.</div>
+                </div>
+            </div>
         </div>
     </div>
-    <script>
-        let canvas,ctx;
-        document.addEventListener('DOMContentLoaded',()=>{
-            canvas=document.getElementById('frameCanvas');
-            ctx=canvas.getContext('2d');
-            resizeCanvas();
-            window.addEventListener('resize',resizeCanvas);
-            drawFrame();
-        });
-        function resizeCanvas(){
-            const box=canvas.parentElement;
-            canvas.width=box.clientWidth;
-            canvas.height=box.clientHeight;
-            drawFrame();
+</div>
+
+<!-- Report Modal -->
+<div id="reportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:var(--bg-secondary); border-radius:8px; width:92%; max-width:950px; max-height:88vh; overflow:hidden;">
+        <div style="padding:12px 16px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="font-size:0.9rem;">📄 AISC 360-22 Design Report</h2>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="printReport()" style="background:#3b82f6; border:none; color:white; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.75rem; display:flex; align-items:center; gap:5px;">
+                    🖨️ Print / PDF
+                </button>
+                <button onclick="closeReport()" style="background:none; border:none; color:var(--text-secondary); font-size:1.3rem; cursor:pointer;">×</button>
+            </div>
+        </div>
+        <div id="reportBody" style="padding:16px; max-height:calc(88vh - 50px); overflow-y:auto;"></div>
+    </div>
+</div>
+
+<script>
+// Section Database
+const sections = {
+    'W12x26': { type:'W', A:7.65, d:12.22, bf:6.49, tf:0.380, tw:0.230, Ix:204, Sx:33.4, Zx:37.2, Iy:17.3, ry:1.51, J:0.300, rts:1.75, ho:11.84, h_tw:47.2 },
+    'W14x30': { type:'W', A:8.85, d:13.84, bf:6.73, tf:0.385, tw:0.270, Ix:291, Sx:42.0, Zx:47.3, Iy:19.6, ry:1.49, J:0.380, rts:1.80, ho:13.46, h_tw:45.4 },
+    'W16x36': { type:'W', A:10.6, d:15.86, bf:6.985, tf:0.430, tw:0.295, Ix:448, Sx:56.5, Zx:64.0, Iy:24.5, ry:1.52, J:0.545, rts:1.88, ho:15.43, h_tw:48.1 },
+    'HSS3x3x1/4':   { type:'HSS', A:2.59, d:3.0, bf:3.0, t:0.233, Ix:2.60, Sx:1.73, Zx:2.10, Iy:2.60, ry:1.00, J:4.42, b_t:9.88 },
+    'HSS4x4x1/4':   { type:'HSS', A:3.59, d:4.0, bf:4.0, t:0.233, Ix:6.59, Sx:3.30, Zx:3.96, Iy:6.59, ry:1.35, J:11.0, b_t:14.2 },
+    'HSS4x4x3/8':   { type:'HSS', A:5.09, d:4.0, bf:4.0, t:0.349, Ix:8.53, Sx:4.27, Zx:5.26, Iy:8.53, ry:1.29, J:14.7, b_t:8.46 },
+    'HSS4x3x1/4':   { type:'HSS', A:3.09, d:4.0, bf:3.0, t:0.233, Ix:4.69, Sx:2.35, Zx:2.82, Iy:2.99, ry:0.984, J:5.87, b_t:9.88, h_t:14.2 },
+    'HSS4x3x3/8':   { type:'HSS', A:4.36, d:4.0, bf:3.0, t:0.349, Ix:6.02, Sx:3.01, Zx:3.73, Iy:3.86, ry:0.941, J:7.66, b_t:5.60, h_t:8.46 },
+    'HSS5x3x1/4':   { type:'HSS', A:3.59, d:5.0, bf:3.0, t:0.233, Ix:7.58, Sx:3.03, Zx:3.66, Iy:3.40, ry:0.973, J:7.65, b_t:9.88, h_t:18.5 },
+    'HSS5x3x3/8':   { type:'HSS', A:5.09, d:5.0, bf:3.0, t:0.349, Ix:9.83, Sx:3.93, Zx:4.91, Iy:4.40, ry:0.930, J:10.1, b_t:5.60, h_t:11.3 },
+    'HSS6x3x1/4':   { type:'HSS', A:4.09, d:6.0, bf:3.0, t:0.233, Ix:11.3, Sx:3.78, Zx:4.58, Iy:3.78, ry:0.961, J:9.22, b_t:9.88, h_t:22.8 },
+    'HSS6x3x3/8':   { type:'HSS', A:5.82, d:6.0, bf:3.0, t:0.349, Ix:14.9, Sx:4.96, Zx:6.21, Iy:4.93, ry:0.921, J:12.3, b_t:5.60, h_t:14.2 },
+    'HSS8x3x1/4':   { type:'HSS', A:5.09, d:8.0, bf:3.0, t:0.233, Ix:22.1, Sx:5.52, Zx:6.70, Iy:4.55, ry:0.945, J:12.1, b_t:9.88, h_t:31.3 },
+    'HSS8x3x3/8':   { type:'HSS', A:7.28, d:8.0, bf:3.0, t:0.349, Ix:29.4, Sx:7.36, Zx:9.28, Iy:5.98, ry:0.906, J:16.1, b_t:5.60, h_t:19.9 }
+};
+
+const grades = { 'A500C': { Fy:50, Fu:62 }, 'A992': { Fy:50, Fu:65 }, 'A36': { Fy:36, Fu:58 } };
+const E = 29000;
+
+let frame = { nodes:[], members:[], supports:[] };
+let columnSections = []; // Per-column sections
+let allLC = {};
+let envelope = null;
+let designResults = [];
+let driftResults = null;
+let reactions = [];
+let currentLC = 'ENV';
+let currentDiagram = 'frame';
+let canvas, ctx;
+
+const sectionOptions = `
+    <optgroup label="W-Shapes">
+        <option value="W12x26">W12×26</option>
+        <option value="W14x30">W14×30</option>
+        <option value="W16x36">W16×36</option>
+    </optgroup>
+    <optgroup label="HSS Square">
+        <option value="HSS3x3x1/4">HSS3×3×1/4</option>
+        <option value="HSS4x4x1/4">HSS4×4×1/4</option>
+        <option value="HSS4x4x3/8">HSS4×4×3/8</option>
+    </optgroup>
+    <optgroup label="HSS Rectangular">
+        <option value="HSS4x3x1/4">HSS4×3×1/4</option>
+        <option value="HSS4x3x3/8">HSS4×3×3/8</option>
+        <option value="HSS5x3x1/4">HSS5×3×1/4</option>
+        <option value="HSS5x3x3/8">HSS5×3×3/8</option>
+        <option value="HSS6x3x1/4">HSS6×3×1/4</option>
+        <option value="HSS6x3x3/8">HSS6×3×3/8</option>
+        <option value="HSS8x3x1/4">HSS8×3×1/4</option>
+        <option value="HSS8x3x3/8">HSS8×3×3/8</option>
+    </optgroup>`;
+
+document.addEventListener('DOMContentLoaded', () => {
+    canvas = document.getElementById('frameCanvas');
+    ctx = canvas.getContext('2d');
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    updateFrame();
+    buildLCSelector();
+});
+
+function resizeCanvas() {
+    const c = canvas.parentElement;
+    canvas.width = c.clientWidth;
+    canvas.height = c.clientHeight;
+    draw();
+}
+
+function buildLCSelector() {
+    const container = document.getElementById('lcSelector');
+    const lcs = ['ENV','LC1','LC2','LC3','LC4','LC5','LC6','LC7','LC8'];
+    container.innerHTML = lcs.map(lc => 
+        `<button class="lc-btn ${lc==='ENV'?'active env':''}" onclick="selectLC('${lc}')">${lc}</button>`
+    ).join('');
+}
+
+// Load combination descriptions (global)
+const lcDescriptions = {
+    'ENV': 'Envelope (Max of all LCs)',
+    'LC1': '1.4D',
+    'LC2': '1.2D + 1.6L + 0.5max(Lr,S)',
+    'LC3': '1.2D + 1.0L + 1.6Lr',
+    'LC4': '1.2D + 1.0L + 1.6S',
+    'LC5': '1.2D + 1.0L + 0.5(Lr/S) + 1.0W',
+    'LC6': '1.2D + 1.0L + 0.2S + 1.0E',
+    'LC7': '0.9D + 1.0W',
+    'LC8': '0.9D + 1.0E'
+};
+
+function selectLC(lc) {
+    currentLC = lc;
+    document.querySelectorAll('.lc-btn').forEach(b => {
+        b.classList.remove('active','env');
+        if (b.textContent === lc) {
+            b.classList.add('active');
+            if (lc === 'ENV') b.classList.add('env');
         }
-        function drawFrame(results){
-            if(!ctx)return;
-            ctx.fillStyle='#0a0e14';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            const nB=+document.getElementById('numBays').value;
-            const nS=+document.getElementById('numStories').value;
-            const bW=+document.getElementById('bayWidth').value;
-            const sH=+document.getElementById('storyHeight').value;
-            const pad=60;
-            const maxX=nB*bW;
-            const maxY=nS*sH;
-            const sc=Math.min((canvas.width-pad*2)/maxX,(canvas.height-pad*2)/maxY)*0.85;
-            const ox=(canvas.width-maxX*sc)/2;
-            const oy=canvas.height-pad;
-            const tr=(x,y)=>({x:ox+x*sc,y:oy-y*sc});
-            // Columns
-            ctx.strokeStyle='#06d6a0';ctx.lineWidth=4;
-            for(let j=0;j<nS;j++){
-                for(let i=0;i<=nB;i++){
-                    const p1=tr(i*bW,j*sH);
-                    const p2=tr(i*bW,(j+1)*sH);
-                    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    });
+    // Show LC name and description
+    const desc = lcDescriptions[lc] || '';
+    document.getElementById('modeIndicator').innerHTML = `<strong>${lc}</strong><br><span style="font-size:0.55rem;color:#94a3b8">${desc}</span>`;
+    draw();
+}
+
+function setDiagram(mode) {
+    currentDiagram = mode;
+    document.querySelectorAll('.diagram-tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === mode || 
+        (mode==='moment'&&t.textContent==='M') || (mode==='shear'&&t.textContent==='V') || 
+        (mode==='axial'&&t.textContent==='P') || (mode==='reaction'&&t.textContent==='R')));
+    draw();
+}
+
+function updateColumnSections() {
+    const nB = +document.getElementById('numBays').value;
+    const container = document.getElementById('columnSectionsContainer');
+    const numCols = nB + 1;
+    
+    // Initialize or resize column sections array
+    while (columnSections.length < numCols) columnSections.push('W14x30');
+    columnSections = columnSections.slice(0, numCols);
+    
+    container.innerHTML = '';
+    for (let i = 0; i < numCols; i++) {
+        const div = document.createElement('div');
+        div.className = 'col-section-row';
+        div.innerHTML = `<label>C${i+1}</label><select onchange="columnSections[${i}]=this.value; updateFrame()">${sectionOptions}</select>`;
+        container.appendChild(div);
+        div.querySelector('select').value = columnSections[i];
+    }
+}
+
+function updateFrame() {
+    const nB = +document.getElementById('numBays').value;
+    const nS = +document.getElementById('numStories').value;
+    const bW = +document.getElementById('bayWidth').value;
+    const sH = +document.getElementById('storyHeight').value;
+    const sup = document.getElementById('supportType').value;
+
+    updateColumnSections();
+
+    frame.nodes = [];
+    let id = 1;
+    for (let j=0; j<=nS; j++) {
+        for (let i=0; i<=nB; i++) {
+            frame.nodes.push({ id:id++, x:i*bW, y:j*sH, isBase:j===0 });
+        }
+    }
+
+    frame.members = [];
+    let mid = 1;
+    const npl = nB + 1;
+    
+    // Columns - use per-column sections
+    for (let j=0; j<nS; j++) {
+        for (let i=0; i<=nB; i++) {
+            frame.members.push({
+                id:mid++, type:'column',
+                ni: j*npl+i+1,
+                nj: (j+1)*npl+i+1,
+                section: columnSections[i],
+                colLine: i
+            });
+        }
+    }
+    // Beams
+    for (let j=1; j<=nS; j++) {
+        for (let i=0; i<nB; i++) {
+            frame.members.push({
+                id:mid++, type:'beam',
+                ni: j*npl+i+1,
+                nj: j*npl+i+2,
+                section: document.getElementById('beamSection').value
+            });
+        }
+    }
+
+    frame.supports = [];
+    for (let i=0; i<=nB; i++) {
+        frame.supports.push({ nodeId:i+1, type:sup, colLine:i });
+    }
+
+    draw();
+}
+
+// Analysis
+function runAnalysis() {
+    const nB = +document.getElementById('numBays').value;
+    const nS = +document.getElementById('numStories').value;
+    const bW = +document.getElementById('bayWidth').value;
+    const sH = +document.getElementById('storyHeight').value;
+    const sup = document.getElementById('supportType').value;
+    const D = +document.getElementById('deadLoad').value;
+    const L = +document.getElementById('liveLoad').value;
+    const Lr = +document.getElementById('roofLiveLoad').value;
+    const S = +document.getElementById('snowLoad').value;
+    const W = +document.getElementById('windForce').value;
+    const Ef = +document.getElementById('seismicForce').value;
+    const Cd = +document.getElementById('cdFactor').value;
+    const pDelta = document.getElementById('includePDelta').checked;
+
+    const combos = {
+        'LC1': { D:1.4, L:0, Lr:0, S:0, W:0, E:0, desc:'1.4D' },
+        'LC2': { D:1.2, L:1.6, Lr:0.5, S:0.5, W:0, E:0, desc:'1.2D+1.6L+0.5max(Lr,S)' },
+        'LC3': { D:1.2, L:1.0, Lr:1.6, S:0, W:0, E:0, desc:'1.2D+L+1.6Lr' },
+        'LC4': { D:1.2, L:1.0, Lr:0, S:1.6, W:0, E:0, desc:'1.2D+L+1.6S' },
+        'LC5': { D:1.2, L:1.0, Lr:0.5, S:0.5, W:1.0, E:0, desc:'1.2D+L+0.5(Lr/S)+W' },
+        'LC6': { D:1.2, L:1.0, Lr:0.2, S:0.2, W:0, E:1.0, desc:'1.2D+L+0.2S+E' },
+        'LC7': { D:0.9, L:0, Lr:0, S:0, W:1.0, E:0, desc:'0.9D+W' },
+        'LC8': { D:0.9, L:0, Lr:0, S:0, W:0, E:1.0, desc:'0.9D+E' }
+    };
+
+    allLC = {};
+    for (let lc in combos) {
+        const c = combos[lc];
+        const roofGrav = c.D*D + Math.max(c.Lr*Lr, c.S*S);
+        const floorGrav = c.D*D + c.L*L;
+        const latF = c.W*W + c.E*Ef;
+        allLC[lc] = analyze(nB, nS, bW, sH, sup, floorGrav, roofGrav, latF, pDelta);
+        allLC[lc].desc = c.desc;
+    }
+
+    // Drift analysis
+    const windDisp = analyzeDisp(nB, nS, bW, sH, sup, W*0.5);  // 0.5W for serviceability
+    const seismicDisp = analyzeDisp(nB, nS, bW, sH, sup, Ef);
+    driftResults = {
+        wind: windDisp,
+        seismic: seismicDisp.map(d => d*Cd),
+        Cd
+    };
+
+    envelope = calcEnvelope(allLC);
+    runDesign();
+    updateUI();
+    draw();
+}
+
+function analyze(nB, nS, bW, sH, sup, wFloor, wRoof, latF, pDelta) {
+    const npl = nB + 1;
+    const moms = frame.members.map(() => ({ Mi:0, Mj:0 }));
+    
+    // Column orientation: strong axis (Ix) or weak axis (Iy) in frame plane
+    const colOrient = document.getElementById('columnOrientation').value;
+    const getColI = (sec) => colOrient === 'strong' ? sec.Ix : sec.Iy;
+
+    // Get stiffnesses - for pinned base, use 3EI/L (modified stiffness)
+    const getColK = (colLine, storyLevel) => {
+        const sec = sections[columnSections[colLine]];
+        const I_col = getColI(sec);
+        const baseK = E * I_col / (sH * 12);
+        // First story column with pinned base: use 3EI/L, else 4EI/L
+        if (storyLevel === 0 && sup === 'pinned') {
+            return 3 * baseK;
+        }
+        return 4 * baseK;
+    };
+    
+    const beamSec = sections[document.getElementById('beamSection').value];
+    const kb = 4 * E * beamSec.Ix / (bW * 12);
+
+    // FEM for gravity loads on beams
+    frame.members.forEach((m, idx) => {
+        if (m.type === 'beam') {
+            const lvl = Math.floor((m.ni - 1) / npl);
+            const w = (lvl === nS) ? wRoof : wFloor;
+            const fem = w * bW * bW / 12;
+            moms[idx].Mi = fem;   // Positive = CCW at i-end
+            moms[idx].Mj = -fem;  // Negative = CW at j-end
+        }
+    });
+
+    // Moment Distribution Method with proper carry-over factors
+    // For pinned far end: COF = 0, For fixed far end: COF = 0.5
+    const getCarryOver = (memberIdx, fromEnd) => {
+        const m = frame.members[memberIdx];
+        if (m.type === 'column') {
+            const stLvl = Math.floor((m.ni - 1) / npl);
+            // Column base (i-end) to top (j-end)
+            if (fromEnd === 'j' && stLvl === 0 && sup === 'pinned') {
+                return 0; // No carry-over to pinned support
+            }
+            if (fromEnd === 'i' && stLvl === 0 && sup === 'pinned') {
+                return 0; // This shouldn't happen as we don't distribute at pinned nodes
+            }
+        }
+        return 0.5; // Standard carry-over for continuous members
+    };
+
+    // Iterate moment distribution (more iterations for convergence)
+    for (let iter = 0; iter < 15; iter++) {
+        frame.nodes.forEach(n => {
+            // Skip base nodes (supports)
+            if (n.isBase) return;
+            
+            // Calculate unbalanced moment at this joint
+            let unbal = 0;
+            const conns = [];
+            
+            frame.members.forEach((m, idx) => {
+                const stLvl = m.type === 'column' ? Math.floor((m.ni - 1) / npl) : -1;
+                const k = m.type === 'beam' ? kb : getColK(m.colLine, stLvl);
+                
+                if (m.ni === n.id) {
+                    unbal += moms[idx].Mi;
+                    conns.push({ idx, end: 'i', k, cof: getCarryOver(idx, 'i') });
+                }
+                if (m.nj === n.id) {
+                    unbal += moms[idx].Mj;
+                    conns.push({ idx, end: 'j', k, cof: getCarryOver(idx, 'j') });
+                }
+            });
+            
+            if (conns.length === 0) return;
+            
+            // Distribution factors
+            const totK = conns.reduce((s, c) => s + c.k, 0);
+            
+            // Distribute unbalanced moment
+            conns.forEach(c => {
+                const df = c.k / totK;
+                const dist = -unbal * df;
+                
+                if (c.end === 'i') {
+                    moms[c.idx].Mi += dist;
+                    moms[c.idx].Mj += dist * c.cof; // Carry-over
+                } else {
+                    moms[c.idx].Mj += dist;
+                    moms[c.idx].Mi += dist * c.cof; // Carry-over
+                }
+            });
+        });
+    }
+
+    // For pinned base columns, ensure base moment is zero
+    if (sup === 'pinned') {
+        frame.members.forEach((m, idx) => {
+            if (m.type === 'column') {
+                const stLvl = Math.floor((m.ni - 1) / npl);
+                if (stLvl === 0) {
+                    moms[idx].Mi = 0; // Zero moment at pinned base
                 }
             }
-            // Beams
-            ctx.strokeStyle='#00b4d8';ctx.lineWidth=3;
-            for(let j=1;j<=nS;j++){
-                for(let i=0;i<nB;i++){
-                    const p1=tr(i*bW,j*sH);
-                    const p2=tr((i+1)*bW,j*sH);
-                    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+        });
+    }
+
+    // Lateral loads (Portal Method)
+    if (latF > 0) {
+        for (let st = 0; st < nS; st++) {
+            const Vst = latF * (nS - st);
+            const numInteriorCols = Math.max(0, nB - 1);
+            const units = 2 + numInteriorCols * 2; // Exterior=1 unit each, Interior=2 units each
+            
+            frame.members.forEach((m, idx) => {
+                if (m.type !== 'column') return;
+                const stLvl = Math.floor((m.ni - 1) / npl);
+                if (stLvl !== st) return;
+                
+                const ci = m.colLine;
+                const isExterior = ci === 0 || ci === nB;
+                const Vc = Vst * (isExterior ? 1 : 2) / units;
+                
+                let Mbase, Mtop;
+                if (st === 0 && sup === 'pinned') {
+                    // Pinned base: all moment at top
+                    Mbase = 0;
+                    Mtop = Vc * sH;
+                } else if (st === 0 && sup === 'fixed') {
+                    // Fixed base: inflection point at 0.6h from base
+                    Mbase = Vc * sH * 0.6;
+                    Mtop = Vc * sH * 0.4;
+                } else {
+                    // Upper stories: inflection at mid-height
+                    Mbase = Vc * sH / 2;
+                    Mtop = Vc * sH / 2;
                 }
+                
+                moms[idx].Mi += Mbase;  // Add to base moment
+                moms[idx].Mj -= Mtop;   // Subtract from top (tension on windward side)
+            });
+            
+            // Distribute lateral moments to beams at this level for joint equilibrium
+            const beamLevel = st + 1;
+            frame.members.forEach((m, idx) => {
+                if (m.type !== 'beam') return;
+                const bLvl = Math.floor((m.ni - 1) / npl);
+                if (bLvl !== beamLevel) return;
+                
+                // Get column moments at this joint
+                const leftColIdx = frame.members.findIndex(c => 
+                    c.type === 'column' && c.nj === m.ni);
+                const rightColIdx = frame.members.findIndex(c => 
+                    c.type === 'column' && c.nj === m.nj);
+                
+                if (leftColIdx >= 0) {
+                    // Beam i-end gets moment from column top
+                    const colMom = -moms[leftColIdx].Mj;
+                    // Check if there's a column above
+                    const colAbove = frame.members.find(c => 
+                        c.type === 'column' && c.ni === m.ni);
+                    if (!colAbove) {
+                        // Roof level - beam takes all column moment
+                        moms[idx].Mi += colMom * 0.5;
+                    }
+                }
+            });
+        }
+    }
+
+    // Ensure joint equilibrium by averaging moments at joints
+    frame.nodes.forEach(n => {
+        if (n.isBase) return;
+        
+        // Collect all member ends at this joint
+        const jointMoments = [];
+        frame.members.forEach((m, idx) => {
+            if (m.ni === n.id) jointMoments.push({ idx, end: 'i', mom: moms[idx].Mi });
+            if (m.nj === n.id) jointMoments.push({ idx, end: 'j', mom: moms[idx].Mj });
+        });
+        
+        // Sum should be zero for equilibrium
+        const sum = jointMoments.reduce((s, j) => s + j.mom, 0);
+        
+        // Distribute error proportionally
+        if (Math.abs(sum) > 0.01 && jointMoments.length > 0) {
+            const correction = -sum / jointMoments.length;
+            jointMoments.forEach(j => {
+                if (j.end === 'i') moms[j.idx].Mi += correction;
+                else moms[j.idx].Mj += correction;
+            });
+        }
+    });
+
+    // Member forces (First-order analysis)
+    const results = [];
+    const pDeltaInfo = { B1: [], B2: 1.0, Pe_story: [], Pstory: [], delta_H: [], H: 0 };
+    
+    frame.members.forEach((m, idx) => {
+        let Mi = moms[idx].Mi;
+        let Mj = moms[idx].Mj;
+        let V, P = 0, Mmid = 0;
+        
+        if (m.type === 'beam') {
+            const lvl = Math.floor((m.ni-1)/npl);
+            const w = (lvl===nS) ? wRoof : wFloor;
+            
+            // Calculate midspan moment: M_mid = wL²/8 - (|Mi| + |Mj|)/2
+            const wL2_8 = w * bW * bW / 8;
+            const avgEndMom = (Math.abs(Mi) + Math.abs(Mj)) / 2;
+            Mmid = wL2_8 - avgEndMom;  // Positive = tension at bottom
+            
+            // End moments are negative (tension at top)
+            // Store as negative to indicate direction
+            Mi = -Math.abs(Mi);  // Negative moment at left end
+            Mj = -Math.abs(Mj);  // Negative moment at right end
+            
+            V = w*bW/2;
+        } else {
+            // Column moments
+            const ci = m.colLine;
+            const stLvl = Math.floor((m.ni - 1) / npl);
+            
+            // For pinned base: base moment = 0
+            if (stLvl === 0 && sup === 'pinned') {
+                Mi = 0;
             }
-            // Supports
-            ctx.fillStyle='#ffd166';
-            for(let i=0;i<=nB;i++){
-                const p=tr(i*bW,0);
+            
+            // Column top moment direction:
+            // Left column (ci=0): moment pulls beam down on left -> negative (outward to left)
+            // Right column (ci=nB): moment pulls beam down on right -> positive (outward to right)
+            // Convention: positive = tension on right side of column
+            if (ci === 0) {
+                // Left exterior column - moment outward (to left) = negative
+                Mj = -Math.abs(Mj);
+            } else if (ci === nB) {
+                // Right exterior column - moment outward (to right) = positive
+                Mj = Math.abs(Mj);
+            } else {
+                // Interior columns - depends on load distribution
+                // For symmetric load, should be near zero
+            }
+            
+            V = Math.abs(Mj) / sH;  // Shear from moment (pinned base)
+            if (sup === 'fixed') {
+                V = (Math.abs(Mi) + Math.abs(Mj)) / sH;
+            }
+            
+            const eLvl = Math.floor((m.nj-1)/npl);
+            const ext = ci===0 || ci===nB;
+            const trib = ext ? bW/2 : bW;
+            for (let s=eLvl; s<=nS; s++) {
+                P += ((s===nS)?wRoof:wFloor) * trib;
+            }
+        }
+        results.push({ Mi, Mj, Mmid, V, P, Mi_nt: Mi, Mj_nt: Mj, Mi_lt: 0, Mj_lt: 0 });
+    });
+
+    // ============================================
+    // P-DELTA ANALYSIS (AISC 360-22 Appendix 8)
+    // B1-B2 Amplification Method
+    // ============================================
+    if (pDelta && latF > 0) {
+        const Fy = grades[document.getElementById('steelGrade').value].Fy;
+        const Lc = sH * 12; // Column height in inches
+        
+        // Calculate B1 for each column (P-δ effect, member instability)
+        // B1 = Cm / (1 - αPr/Pe1) ≥ 1.0
+        // For frames with sidesway: Cm = 1.0 (conservative)
+        // Pe1 = π²EI/(K1L)² where K1 = 1.0 for braced
+        frame.members.forEach((m, idx) => {
+            if (m.type !== 'column') {
+                pDeltaInfo.B1.push({ B1: 1.0, Cm: 1.0, Pe1: 0, Pr: 0 });
+                return;
+            }
+            
+            const sec = sections[m.section];
+            const Pr = results[idx].P; // Required axial strength
+            const I = getColI(sec);  // Use orientation-based I
+            const K1 = 1.0; // Effective length factor for braced frame
+            const Pe1 = Math.PI * Math.PI * E * I / (K1 * Lc) ** 2; // Euler buckling
+            const Cm = 1.0; // Conservative for sway frames
+            const alpha = 1.0; // LRFD
+            
+            let B1 = Cm / (1 - alpha * Pr / Pe1);
+            B1 = Math.max(1.0, B1); // B1 ≥ 1.0
+            if (B1 > 2.0) B1 = 2.0; // Cap for stability
+            if (Pr <= 0 || Pe1 <= 0) B1 = 1.0;
+            
+            pDeltaInfo.B1.push({ B1, Cm, Pe1, Pr, K1 });
+        });
+
+        // Calculate B2 for each story (P-Δ effect, story instability)
+        // B2 = 1 / (1 - αΣPnt / ΣPe2) ≥ 1.0
+        // Method: Direct Analysis with ΣPe2 = RM × ΣHL / ΔH
+        // RM = 1.0 for moment frames
+        
+        // Calculate story shear and drift
+        const H_story = latF * nS; // Total story shear at base
+        pDeltaInfo.H = H_story;
+        
+        // Calculate total gravity load on structure
+        let Pnt_total = 0;
+        for (let st = 1; st <= nS; st++) {
+            const w = (st === nS) ? wRoof : wFloor;
+            Pnt_total += w * bW * nB;
+        }
+        
+        // Estimate story drift using first-order analysis
+        let sumI = 0;
+        for (let i = 0; i <= nB; i++) sumI += getColI(sections[columnSections[i]]);
+        
+        const delta_1 = (H_story * Lc * Lc * Lc) / (12 * E * sumI);
+        const delta_H = sup === 'pinned' ? delta_1 * 1.5 : delta_1;
+        
+        pDeltaInfo.delta_H = delta_H;
+        pDeltaInfo.Pstory = Pnt_total;
+        
+        // Pe2 = RM × H × L / Δ (Story buckling load)
+        const RM = 0.85; // Reduction factor for P-Δ
+        const Pe_story = RM * H_story * Lc / delta_H;
+        pDeltaInfo.Pe_story = Pe_story;
+        
+        // B2 = 1 / (1 - αPnt/Pe2)
+        const alpha = 1.0;
+        let B2 = 1.0 / (1 - alpha * Pnt_total / Pe_story);
+        B2 = Math.max(1.0, B2);
+        if (B2 > 1.5) B2 = 1.5; // Cap at 1.5 per code
+        if (!isFinite(B2) || isNaN(B2)) B2 = 1.0;
+        
+        pDeltaInfo.B2 = B2;
+
+        // Apply amplification to moments
+        // Mr = B1 × Mnt + B2 × Mlt
+        // For simplicity: Mnt = gravity moments, Mlt = lateral moments
+        frame.members.forEach((m, idx) => {
+            if (m.type !== 'column') return;
+            
+            const B1 = pDeltaInfo.B1[idx].B1;
+            const B2 = pDeltaInfo.B2;
+            
+            // Separate gravity (nt) and lateral (lt) moments
+            // Approximate: gravity moment is from beam end moments
+            // Lateral moment is from portal method
+            const stLvl = Math.floor((m.ni - 1) / npl);
+            const ci = m.colLine;
+            const isExterior = ci === 0 || ci === nB;
+            const numInteriorCols = Math.max(0, nB - 1);
+            const units = 2 + numInteriorCols * 2;
+            const Vst = latF * (nS - stLvl);
+            const Vc = Vst * (isExterior ? 1 : 2) / units;
+            
+            let Mlt_base, Mlt_top;
+            if (stLvl === 0 && sup === 'pinned') {
+                Mlt_base = 0;
+                Mlt_top = Vc * sH;
+            } else if (stLvl === 0 && sup === 'fixed') {
+                Mlt_base = Vc * sH * 0.6;
+                Mlt_top = Vc * sH * 0.4;
+            } else {
+                Mlt_base = Vc * sH / 2;
+                Mlt_top = Vc * sH / 2;
+            }
+            
+            // Store original moments
+            const Mi_orig = results[idx].Mi;
+            const Mj_orig = results[idx].Mj;
+            
+            // Mnt = total moment - lateral moment
+            const Mnt_i = Mi_orig - Mlt_base;
+            const Mnt_j = Mj_orig + Mlt_top;
+            
+            // Amplified moment: Mr = B1×Mnt + B2×Mlt
+            results[idx].Mi = B1 * Mnt_i + B2 * Mlt_base;
+            results[idx].Mj = B1 * Mnt_j - B2 * Mlt_top;
+            
+            // Store for reporting
+            results[idx].Mi_nt = Mnt_i;
+            results[idx].Mj_nt = Mnt_j;
+            results[idx].Mi_lt = Mlt_base;
+            results[idx].Mj_lt = Mlt_top;
+            results[idx].B1 = B1;
+            results[idx].B2 = B2;
+        });
+    }
+
+    // Reactions
+    const rxns = frame.supports.map(s => {
+        const col = frame.members.find(m => m.type==='column' && m.ni===s.nodeId);
+        if (!col) return { Rx:0, Ry:0, Mz:0 };
+        const idx = frame.members.indexOf(col);
+        const Ry = results[idx].P;
+        const Rx = results[idx].V;
+        const Mz = sup==='fixed' ? results[idx].Mi : 0;
+        return { nodeId:s.nodeId, Rx, Ry, Mz };
+    });
+
+    return { members: results, reactions: rxns, pDelta: pDeltaInfo };
+}
+
+function analyzeDisp(nB, nS, bW, sH, sup, latF) {
+    // Lateral displacement for moment frame considering both beam and column stiffness
+    // Using Portal Method approximation with beam-column relative stiffness
+    
+    const disp = [];
+    const h = sH * 12;  // Story height in inches
+    const Lb = bW * 12; // Bay width in inches
+    
+    // Column orientation
+    const colOrient = document.getElementById('columnOrientation').value;
+    const getColI = (sec) => colOrient === 'strong' ? sec.Ix : sec.Iy;
+    
+    // Sum of column stiffness (I/L for columns)
+    let sumKc = 0;
+    for (let i = 0; i <= nB; i++) {
+        const colI = getColI(sections[columnSections[i]]);
+        sumKc += colI / h;
+    }
+    
+    // Beam stiffness (I/L for beams)
+    const beamSec = sections[document.getElementById('beamSection').value];
+    const Kb = beamSec.Ix / Lb;
+    const sumKb = Kb * nB;  // Total beam stiffness per floor
+    
+    // Relative stiffness ratio (beam to column)
+    // For moment frames: drift depends on both beam and column flexibility
+    // Using simplified drift formula for moment frames:
+    // Δ = V × h / (12 × E × Σ(Ic/h)) × (1 + 6×(Ic/h)/(Ib/L))
+    // Or equivalently: Δ = V × h³ / (12 × E × ΣIc) × (1 + α)
+    // where α accounts for beam flexibility
+    
+    const avgKc = sumKc / (nB + 1);
+    const avgKb = sumKb / nB;
+    
+    // Beam flexibility factor: when beams are infinitely stiff (Kb→∞), α→0
+    // when beams are flexible, α increases drift
+    // α = (Kc/Kb) × factor
+    const alpha = (avgKc / avgKb) * 2;  // Factor for single curvature bending
+    
+    for (let st = 1; st <= nS; st++) {
+        const Vst = latF * (nS - st + 1);  // Story shear
+        
+        // Base drift for fixed-fixed columns
+        let d = (Vst * h * h * h) / (12 * E * sumKc * h);
+        
+        // Apply beam flexibility factor
+        d = d * (1 + alpha);
+        
+        // For pinned base at first story: double the drift (cantilever action)
+        if (sup === 'pinned' && st === 1) {
+            d *= 2;
+        }
+        
+        disp.push(d);
+    }
+    return disp;
+}
+
+function calcEnvelope(allLC) {
+    const env = { members:[], reactions:[], maxM:0, maxV:0, maxP:0 };
+    const n = frame.members.length;
+    for (let i=0; i<n; i++) {
+        let mMi=0, mMj=0, mMmid=0, mV=0, mP=0;
+        for (let lc in allLC) {
+            const r = allLC[lc].members[i];
+            mMi = Math.max(mMi, Math.abs(r.Mi));
+            mMj = Math.max(mMj, Math.abs(r.Mj));
+            mMmid = Math.max(mMmid, Math.abs(r.Mmid || 0));
+            mV = Math.max(mV, Math.abs(r.V));
+            mP = Math.max(mP, Math.abs(r.P));
+        }
+        env.members.push({ Mi:mMi, Mj:mMj, Mmid:mMmid, V:mV, P:mP });
+        env.maxM = Math.max(env.maxM, mMi, mMj, mMmid);
+        env.maxV = Math.max(env.maxV, mV);
+        env.maxP = Math.max(env.maxP, mP);
+    }
+    // Reactions envelope
+    for (let i=0; i<frame.supports.length; i++) {
+        let mRx=0, mRy=0, mMz=0;
+        for (let lc in allLC) {
+            const r = allLC[lc].reactions[i];
+            mRx = Math.max(mRx, Math.abs(r.Rx));
+            mRy = Math.max(mRy, Math.abs(r.Ry));
+            mMz = Math.max(mMz, Math.abs(r.Mz));
+        }
+        env.reactions.push({ Rx:mRx, Ry:mRy, Mz:mMz });
+    }
+    return env;
+}
+
+// Design
+function runDesign() {
+    designResults = [];
+    const grade = document.getElementById('steelGrade').value;
+    const Fy = grades[grade].Fy;
+    const bW = +document.getElementById('bayWidth').value;
+    const sH = +document.getElementById('storyHeight').value;
+
+    frame.members.forEach((m, idx) => {
+        const sec = sections[m.section];
+        const f = envelope.members[idx];
+        const L = m.type==='beam' ? bW : sH;
+        
+        // For beams: Mu = max of |negative end moments| and |positive midspan moment|
+        // For columns: Mu = max of |Mi| and |Mj|
+        let Mu;
+        if (m.type === 'beam') {
+            const M_neg = Math.max(Math.abs(f.Mi), Math.abs(f.Mj));  // Negative moment at ends
+            const M_pos = Math.abs(f.Mmid || 0);  // Positive moment at midspan
+            Mu = Math.max(M_neg, M_pos);  // Design for larger absolute value
+        } else {
+            Mu = Math.max(Math.abs(f.Mi), Math.abs(f.Mj));
+        }
+        
+        const Vu = f.V;
+        const Pu = f.P;
+
+        const compact = checkCompact(sec, Fy);
+        const slender = checkSlender(sec, L, m.type);
+        const flex = calcFlexure(sec, L, Fy, m.type);
+        const shear = calcShear(sec, Fy);
+        const axial = calcAxial(sec, L, Fy, m.type);
+
+        const DCR_M = Mu / flex.phiMn;
+        const DCR_V = Vu / shear.phiVn;
+        let DCR_PM = 0, intEq = '';
+        if (m.type === 'column' && Pu > 0.1) {
+            const pr_pc = Pu / axial.phiPn;
+            if (pr_pc >= 0.2) { DCR_PM = pr_pc + (8/9)*(Mu/flex.phiMn); intEq = 'H1-1a'; }
+            else { DCR_PM = pr_pc/2 + Mu/flex.phiMn; intEq = 'H1-1b'; }
+        }
+
+        const DCR = Math.max(DCR_M, DCR_V, DCR_PM);
+        let gov = 'Flexure';
+        if (DCR === DCR_V) gov = 'Shear';
+        if (DCR === DCR_PM) gov = 'P-M';
+
+        designResults.push({
+            idx, member:m, section:m.section, sec,
+            Mu, Vu, Pu, L,
+            flex, shear, axial,
+            compact, slender,
+            DCR_M, DCR_V, DCR_PM, DCR, gov, intEq,
+            Fy
+        });
+    });
+}
+
+function checkCompact(sec, Fy) {
+    const lp_f = sec.type==='W' ? 0.38*Math.sqrt(E/Fy) : 1.12*Math.sqrt(E/Fy);
+    const lp_w = sec.type==='W' ? 3.76*Math.sqrt(E/Fy) : 1.12*Math.sqrt(E/Fy);
+    let fR, wR;
+    if (sec.type === 'W') { fR = sec.bf/(2*sec.tf); wR = sec.h_tw; }
+    else { fR = sec.b_t || (sec.bf-3*sec.t)/sec.t; wR = sec.h_t || (sec.d-3*sec.t)/sec.t; }
+    return {
+        flangeRatio:fR, webRatio:wR,
+        flangeOK: fR<=lp_f, webOK: wR<=lp_w,
+        isCompact: fR<=lp_f && wR<=lp_w
+    };
+}
+
+function checkSlender(sec, L, type) {
+    const r = sec.ry;
+    const K = 1.0;
+    const KLr = (K*L*12)/r;
+    return { KLr, r, K, limit:200, status: KLr<=200?'OK':'NG' };
+}
+
+function calcFlexure(sec, Lb, Fy, memberType) {
+    const phi = 0.90;
+    // For columns, use orientation-based section modulus
+    const colOrient = document.getElementById('columnOrientation').value;
+    let Zx_use = sec.Zx;
+    if (memberType === 'column' && colOrient === 'weak') {
+        // Weak axis bending - use Zy if available, else estimate
+        Zx_use = sec.Zy || (sec.Iy / (sec.bf / 2)) * 1.1;  // Approximate Zy
+    }
+    const Mp = Fy * Zx_use / 12;
+    let Mn = Mp, ls = 'Yielding';
+    if (sec.type === 'W' && memberType === 'beam') {
+        const Lp = 1.76*sec.ry*Math.sqrt(E/Fy)/12;
+        if (Lb > Lp) { Mn = Mp*0.9; ls = 'LTB'; }
+    }
+    return { phiMn: phi*Mn, Mn, Mp, limitState:ls };
+}
+
+function calcShear(sec, Fy) {
+    const phi = 1.0;
+    const Aw = sec.type==='W' ? sec.d*sec.tw : 2*sec.d*(sec.t||0.25);
+    const Vn = 0.6*Fy*Aw;
+    return { phiVn: phi*Vn, Vn, Aw };
+}
+
+function calcAxial(sec, L, Fy, type) {
+    if (type === 'beam') return { phiPn:9999, Pn:9999, Fcr:Fy, KLr:0 };
+    const phi = 0.90;
+    
+    // Column orientation affects which radius of gyration to use
+    // In-plane buckling uses the orientation axis
+    // Out-of-plane buckling uses the perpendicular axis
+    const colOrient = document.getElementById('columnOrientation').value;
+    // For in-plane (frame direction): use orientation axis r
+    // Typically we check the weaker direction, which is out-of-plane
+    const r_inplane = colOrient === 'strong' ? Math.sqrt(sec.Ix / sec.A) : Math.sqrt(sec.Iy / sec.A);
+    const r_outplane = colOrient === 'strong' ? sec.ry : Math.sqrt(sec.Ix / sec.A);
+    
+    // Use minimum r for critical buckling
+    const r = Math.min(r_inplane, r_outplane);
+    const KLr = (1.0*L*12)/r;
+    const Fe = Math.PI**2*E/(KLr**2);
+    const Fcr = KLr <= 4.71*Math.sqrt(E/Fy) ? 0.658**(Fy/Fe)*Fy : 0.877*Fe;
+    const Pn = Fcr * sec.A;
+    return { phiPn: phi*Pn, Pn, Fcr, Fe, KLr, r_used: r };
+}
+
+// UI Update
+function updateUI() {
+    if (!envelope || designResults.length === 0) return;
+
+    const maxDCR = Math.max(...designResults.map(d => d.DCR));
+    document.getElementById('maxDCR').textContent = maxDCR.toFixed(2);
+    document.getElementById('maxM').textContent = envelope.maxM.toFixed(0) + ' k-ft';
+    document.getElementById('maxV').textContent = envelope.maxV.toFixed(1) + ' k';
+    document.getElementById('maxP').textContent = envelope.maxP.toFixed(1) + ' k';
+    document.getElementById('cardDCR').className = 'summary-card ' + (maxDCR<=1?'pass':'fail');
+
+    // Reactions
+    const rxnTbl = document.getElementById('reactionTable');
+    rxnTbl.innerHTML = envelope.reactions.map((r,i) => 
+        `<tr><td>S${i+1}</td><td>${r.Rx.toFixed(1)}</td><td>${r.Ry.toFixed(1)}</td><td>${r.Mz.toFixed(1)}</td></tr>`
+    ).join('');
+
+    // Drift
+    const sH = +document.getElementById('storyHeight').value;
+    const H = sH * 12;
+    const seisLimit = +document.getElementById('seismicDriftLimit').value;
+    const driftTbl = document.getElementById('driftTable');
+    if (driftResults) {
+        driftTbl.innerHTML = driftResults.wind.map((wd, i) => {
+            const sd = driftResults.seismic[i];
+            const wPct = (wd/H)*100;
+            const sPct = (sd/H)*100;
+            const wOK = wd <= H/400;  // H/400 for wind
+            const sOK = sPct <= seisLimit;
+            const st = wOK && sOK ? 'OK' : 'NG';
+            return `<tr>
+                <td>${i+1}</td>
+                <td>${wd.toFixed(3)}</td><td class="${wOK?'dcr-ok':'dcr-fail'}">${wPct.toFixed(2)}</td>
+                <td>${sd.toFixed(3)}</td><td class="${sOK?'dcr-ok':'dcr-fail'}">${sPct.toFixed(2)}</td>
+                <td class="${st==='OK'?'dcr-ok':'dcr-fail'}">${st}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // DCR table
+    const dcrTbl = document.getElementById('dcrTable');
+    dcrTbl.innerHTML = designResults.map((d, i) => {
+        const lbl = d.member.type==='beam' ? 'B' : 'C';
+        const num = d.member.type==='beam' ? 
+            designResults.slice(0,i).filter(x=>x.member.type==='beam').length+1 :
+            designResults.slice(0,i).filter(x=>x.member.type==='column').length+1;
+        const cls = d.DCR<=0.9?'dcr-ok':d.DCR<=1?'dcr-warn':'dcr-fail';
+        return `<tr onclick="showCalc(${i})">
+            <td>${lbl}${num}</td><td>${d.section}</td>
+            <td class="${cls}">${d.DCR.toFixed(2)}</td><td>${d.gov}</td>
+            <td class="${cls}">${d.DCR<=1?'✓':'✗'}</td>
+        </tr>`;
+    }).join('');
+
+    // Member buttons
+    document.getElementById('memberBtns').innerHTML = designResults.map((d,i) => {
+        const lbl = d.member.type==='beam'?'B':'C';
+        const num = d.member.type==='beam' ? 
+            designResults.slice(0,i).filter(x=>x.member.type==='beam').length+1 :
+            designResults.slice(0,i).filter(x=>x.member.type==='column').length+1;
+        const cls = d.DCR>1?'fail':'';
+        return `<button class="member-btn ${cls}" onclick="showCalc(${i})">${lbl}${num}</button>`;
+    }).join('');
+
+    if (designResults.length > 0) showCalc(0);
+}
+
+function showCalc(idx) {
+    document.querySelectorAll('.member-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+    const d = designResults[idx];
+    const lbl = d.member.type==='beam'?'B':'C';
+    const num = d.member.type==='beam' ? 
+        designResults.slice(0,idx).filter(x=>x.member.type==='beam').length+1 :
+        designResults.slice(0,idx).filter(x=>x.member.type==='column').length+1;
+
+    let html = `
+<h4>${lbl}${num}: ${d.section}</h4>
+<div>Fy=${d.Fy}ksi, L=${d.L}ft</div>
+<h4>Demands (Env)</h4>
+<div>Mu=${d.Mu.toFixed(1)} k-ft, Vu=${d.Vu.toFixed(1)} k, Pu=${d.Pu.toFixed(1)} k</div>
+<h4>Compact Check</h4>
+<div>Flange λ=${d.compact.flangeRatio.toFixed(1)} → <span class="${d.compact.flangeOK?'ok':'ng'}">${d.compact.flangeOK?'OK':'NG'}</span></div>
+<div>Web λ=${d.compact.webRatio.toFixed(1)} → <span class="${d.compact.webOK?'ok':'ng'}">${d.compact.webOK?'OK':'NG'}</span></div>
+<h4>Slenderness</h4>
+<div>KL/r=${d.slender.KLr.toFixed(1)} ≤ 200 → <span class="${d.slender.status==='OK'?'ok':'ng'}">${d.slender.status}</span></div>
+<h4>Flexure (Ch.F)</h4>
+<div>φMn=${d.flex.phiMn.toFixed(1)} k-ft (${d.flex.limitState})</div>
+<div>DCR_M=${d.DCR_M.toFixed(3)}</div>
+<h4>Shear (Ch.G)</h4>
+<div>φVn=${d.shear.phiVn.toFixed(1)} k</div>
+<div>DCR_V=${d.DCR_V.toFixed(3)}</div>`;
+    if (d.member.type==='column') {
+        html += `<h4>Axial (Ch.E)</h4>
+<div>φPn=${d.axial.phiPn.toFixed(1)} k</div>
+<h4>P-M Interaction (Ch.H)</h4>
+<div>Eq: ${d.intEq}, DCR_PM=${d.DCR_PM.toFixed(3)}</div>`;
+    }
+    html += `<h4>Result</h4><div class="${d.DCR<=1?'ok':'ng'}">DCR=${d.DCR.toFixed(3)} (${d.gov}) → ${d.DCR<=1?'✓ PASS':'✗ FAIL'}</div>`;
+    document.getElementById('calcDetail').innerHTML = html;
+}
+
+// Drawing
+function draw() {
+    if (!ctx) return;
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (frame.nodes.length === 0) return;
+
+    const pad = 80;  // Increased padding for annotations
+    const maxX = Math.max(...frame.nodes.map(n=>n.x));
+    const maxY = Math.max(...frame.nodes.map(n=>n.y));
+    const sc = Math.min((canvas.width-pad*2)/maxX, (canvas.height-pad*2)/maxY) * 0.75;
+    const ox = (canvas.width - maxX*sc) / 2;
+    const oy = canvas.height - pad;
+    const tr = (x,y) => ({ x: ox + x*sc, y: oy - y*sc });
+
+    const results = currentLC === 'ENV' ? envelope : allLC[currentLC];
+    
+    // Get frame parameters
+    const nB = +document.getElementById('numBays').value;
+    const nS = +document.getElementById('numStories').value;
+    const bW = +document.getElementById('bayWidth').value;
+    const sH = +document.getElementById('storyHeight').value;
+    const beamSec = document.getElementById('beamSection').value;
+
+    // Draw members with section labels
+    frame.members.forEach((m, idx) => {
+        const ni = frame.nodes.find(n=>n.id===m.ni);
+        const nj = frame.nodes.find(n=>n.id===m.nj);
+        const p1 = tr(ni.x, ni.y);
+        const p2 = tr(nj.x, nj.y);
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        
+        if (currentDiagram === 'dcr' && designResults[idx]) {
+            const dcr = designResults[idx].DCR;
+            ctx.strokeStyle = dcr<=0.9?'#10b981':dcr<=1?'#f59e0b':'#ef4444';
+            ctx.lineWidth = 4;
+        } else {
+            ctx.strokeStyle = m.type==='beam'?'#3b82f6':'#10b981';
+            ctx.lineWidth = 3;
+        }
+        ctx.stroke();
+        
+        // Draw section labels on Frame view
+        if (currentDiagram === 'frame') {
+            ctx.font = '9px JetBrains Mono';
+            ctx.textAlign = 'center';
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+            
+            if (m.type === 'beam') {
+                ctx.fillStyle = '#3b82f6';
+                ctx.fillText(m.section, midX, midY + 18);  // Below beam
+            } else {
+                ctx.fillStyle = '#10b981';
+                ctx.save();
+                ctx.translate(midX - 12, midY);
+                ctx.rotate(-Math.PI/2);
+                ctx.fillText(m.section, 0, 0);
+                ctx.restore();
+            }
+        }
+    });
+    
+    // Draw loads and dimensions on Frame view only
+    if (currentDiagram === 'frame') {
+        drawLoadsAndDimensions(tr, sc, maxX, maxY, nB, nS, bW, sH);
+    }
+
+    // Diagrams
+    if (results && results.members) {
+        if (currentDiagram === 'moment') drawMoment(tr, results);
+        if (currentDiagram === 'shear') drawShear(tr, results);
+        if (currentDiagram === 'axial') drawAxial(tr, results);
+    }
+    if (currentDiagram === 'reaction' && results && results.reactions) {
+        drawReactions(tr, results);
+    }
+    if (currentDiagram === 'dcr' && designResults.length > 0) {
+        drawDCRLabels(tr);
+    }
+
+    // Supports
+    const sup = document.getElementById('supportType').value;
+    frame.supports.forEach(s => {
+        const n = frame.nodes.find(x=>x.id===s.nodeId);
+        const p = tr(n.x, n.y);
+        ctx.fillStyle = '#f59e0b';
+        
+        if (sup === 'pinned') {
+            // Triangle for pinned support
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - 10, p.y + 15);
+            ctx.lineTo(p.x + 10, p.y + 15);
+            ctx.closePath();
+            ctx.fill();
+        } else {
+            // Rectangle for fixed support
+            ctx.fillRect(p.x - 10, p.y, 20, 8);
+            // Hatching for fixed
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1;
+            for (let i = -8; i <= 8; i += 4) {
                 ctx.beginPath();
-                ctx.moveTo(p.x,p.y);
-                ctx.lineTo(p.x-12,p.y+15);
-                ctx.lineTo(p.x+12,p.y+15);
+                ctx.moveTo(p.x + i, p.y + 8);
+                ctx.lineTo(p.x + i - 5, p.y + 15);
+                ctx.stroke();
+            }
+        }
+    });
+
+    // Nodes
+    frame.nodes.forEach(n => {
+        const p = tr(n.x, n.y);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+        ctx.fillStyle = n.isBase?'#f59e0b':'#06b6d4';
+        ctx.fill();
+    });
+}
+
+function drawLoadsAndDimensions(tr, sc, maxX, maxY, nB, nS, bW, sH) {
+    // Get load values from current LC or input
+    const D = +document.getElementById('deadLoad').value;
+    const L = +document.getElementById('liveLoad').value;
+    const Lr = +document.getElementById('roofLiveLoad').value;
+    const S = +document.getElementById('snowLoad').value;
+    const W = +document.getElementById('windForce').value;
+    const E = +document.getElementById('seismicForce').value;
+    
+    // Get current LC factors
+    const lcFactors = {
+        'ENV': { D:1.4, L:1.6, W:1.0, E:1.0 },
+        'LC1': { D:1.4, L:0, W:0, E:0 },
+        'LC2': { D:1.2, L:1.6, W:0, E:0 },
+        'LC3': { D:1.2, L:1.0, W:0, E:0 },
+        'LC4': { D:1.2, L:1.0, W:0, E:0 },
+        'LC5': { D:1.2, L:1.0, W:1.0, E:0 },
+        'LC6': { D:1.2, L:1.0, W:0, E:1.0 },
+        'LC7': { D:0.9, L:0, W:1.0, E:0 },
+        'LC8': { D:0.9, L:0, W:0, E:1.0 }
+    };
+    const lc = lcFactors[currentLC] || lcFactors['ENV'];
+    
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    
+    // Draw distributed load on beams (top of frame)
+    const wTotal = lc.D * D + lc.L * L;
+    if (wTotal > 0) {
+        for (let i = 0; i < nB; i++) {
+            const p1 = tr(i * bW, nS * sH);
+            const p2 = tr((i + 1) * bW, nS * sH);
+            
+            // Draw distributed load arrows
+            ctx.strokeStyle = '#ef4444';
+            ctx.fillStyle = '#ef4444';
+            ctx.lineWidth = 1;
+            
+            const arrowSpacing = (p2.x - p1.x) / 8;
+            const arrowLen = 20;
+            
+            // Draw arrow line at top
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y - arrowLen - 5);
+            ctx.lineTo(p2.x, p2.y - arrowLen - 5);
+            ctx.stroke();
+            
+            // Draw arrows
+            for (let j = 0; j <= 8; j++) {
+                const ax = p1.x + j * arrowSpacing;
+                const ay = p1.y - arrowLen - 5;
+                ctx.beginPath();
+                ctx.moveTo(ax, ay);
+                ctx.lineTo(ax, p1.y - 5);
+                ctx.stroke();
+                // Arrow head
+                ctx.beginPath();
+                ctx.moveTo(ax, p1.y - 5);
+                ctx.lineTo(ax - 3, p1.y - 10);
+                ctx.lineTo(ax + 3, p1.y - 10);
                 ctx.closePath();
                 ctx.fill();
             }
-            // Joints
-            for(let j=0;j<=nS;j++){
-                for(let i=0;i<=nB;i++){
-                    const p=tr(i*bW,j*sH);
-                    ctx.beginPath();
-                    ctx.arc(p.x,p.y,5,0,Math.PI*2);
-                    ctx.fillStyle=j===0?'#ffd166':'#48cae4';
-                    ctx.fill();
-                }
+            
+            // Load label
+            if (i === Math.floor(nB / 2)) {
+                ctx.fillStyle = '#ef4444';
+                ctx.fillText(`w = ${wTotal.toFixed(2)} klf`, (p1.x + p2.x) / 2, p1.y - arrowLen - 15);
             }
+        }
+    }
+    
+    // Draw lateral load (wind or seismic)
+    const latF = lc.W * W + lc.E * E;
+    if (latF > 0) {
+        for (let st = 1; st <= nS; st++) {
+            const p = tr(0, st * sH);
+            const arrowLen = 35;
+            
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.fillStyle = '#8b5cf6';
+            ctx.lineWidth = 2;
+            
+            // Horizontal arrow pointing right
+            ctx.beginPath();
+            ctx.moveTo(p.x - arrowLen - 10, p.y);
+            ctx.lineTo(p.x - 5, p.y);
+            ctx.stroke();
+            
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(p.x - 5, p.y);
+            ctx.lineTo(p.x - 12, p.y - 4);
+            ctx.lineTo(p.x - 12, p.y + 4);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Load label
+            ctx.font = '9px JetBrains Mono';
+            ctx.textAlign = 'right';
+            const loadType = lc.W > 0 ? 'W' : 'E';
+            ctx.fillText(`${loadType}=${latF.toFixed(1)}k`, p.x - arrowLen - 15, p.y + 4);
+        }
+    }
+    
+    // Draw bay width dimension (bottom)
+    ctx.strokeStyle = '#64748b';
+    ctx.fillStyle = '#64748b';
+    ctx.lineWidth = 1;
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    
+    for (let i = 0; i < nB; i++) {
+        const p1 = tr(i * bW, 0);
+        const p2 = tr((i + 1) * bW, 0);
+        const dimY = p1.y + 35;
+        
+        // Dimension line
+        ctx.beginPath();
+        ctx.moveTo(p1.x, dimY);
+        ctx.lineTo(p2.x, dimY);
+        ctx.stroke();
+        
+        // Tick marks
+        ctx.beginPath();
+        ctx.moveTo(p1.x, dimY - 5);
+        ctx.lineTo(p1.x, dimY + 5);
+        ctx.moveTo(p2.x, dimY - 5);
+        ctx.lineTo(p2.x, dimY + 5);
+        ctx.stroke();
+        
+        // Dimension text
+        ctx.fillText(`${bW} ft`, (p1.x + p2.x) / 2, dimY + 15);
+    }
+    
+    // Draw story height dimension (right side)
+    ctx.textAlign = 'left';
+    for (let j = 0; j < nS; j++) {
+        const p1 = tr(maxX, j * sH);
+        const p2 = tr(maxX, (j + 1) * sH);
+        const dimX = p1.x + 25;
+        
+        // Dimension line
+        ctx.beginPath();
+        ctx.moveTo(dimX, p1.y);
+        ctx.lineTo(dimX, p2.y);
+        ctx.stroke();
+        
+        // Tick marks
+        ctx.beginPath();
+        ctx.moveTo(dimX - 5, p1.y);
+        ctx.lineTo(dimX + 5, p1.y);
+        ctx.moveTo(dimX - 5, p2.y);
+        ctx.lineTo(dimX + 5, p2.y);
+        ctx.stroke();
+        
+        // Dimension text (rotated)
+        ctx.save();
+        ctx.translate(dimX + 15, (p1.y + p2.y) / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText(`${sH} ft`, 0, 0);
+        ctx.restore();
+    }
+}
+
+function drawMoment(tr, results) {
+    const nB = +document.getElementById('numBays').value;
+    const bW = +document.getElementById('bayWidth').value;
+    
+    // Find max moment for scaling (including midspan)
+    let maxM = 0;
+    results.members.forEach(m => {
+        maxM = Math.max(maxM, Math.abs(m.Mi), Math.abs(m.Mj), Math.abs(m.Mmid || 0));
+    });
+    
+    const msc = maxM > 0 ? 50/maxM : 1;
+    
+    frame.members.forEach((m, idx) => {
+        const ni = frame.nodes.find(n=>n.id===m.ni);
+        const nj = frame.nodes.find(n=>n.id===m.nj);
+        const p1 = tr(ni.x, ni.y);
+        const p2 = tr(nj.x, nj.y);
+        const r = results.members[idx];
+
+        ctx.fillStyle = m.type==='beam'?'rgba(245,158,11,0.3)':'rgba(16,185,129,0.3)';
+        ctx.strokeStyle = m.type==='beam'?'#f59e0b':'#10b981';
+        ctx.lineWidth = 2;
+
+        if (m.type === 'beam') {
+            // Beam moment diagram - single parabola
+            // Convention: Draw moment on tension side
+            // Negative moment (ends) -> tension top -> draw above beam (negative y)
+            // Positive moment (midspan) -> tension bottom -> draw below beam (positive y)
+            
+            const Mi_sc = -Math.abs(r.Mi) * msc;  // Negative = above beam
+            const Mj_sc = -Math.abs(r.Mj) * msc;  // Negative = above beam
+            const Mmid_sc = (r.Mmid || 0) * msc;  // Positive = below beam
+            
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+            
+            // Draw single parabolic curve
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            
+            // Start at left end with negative moment (above)
+            ctx.lineTo(p1.x, p1.y + Mi_sc);
+            
+            // Parabola to midspan (below if positive) then to right end
+            // Use cubic bezier for better parabola shape
+            const ctrl1X = p1.x + (p2.x - p1.x) * 0.33;
+            const ctrl1Y = p1.y + Mi_sc + (Mmid_sc - Mi_sc) * 0.6;
+            const ctrl2X = p1.x + (p2.x - p1.x) * 0.67;
+            const ctrl2Y = p2.y + Mj_sc + (Mmid_sc - Mj_sc) * 0.6;
+            
+            ctx.bezierCurveTo(ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, p2.x, p2.y + Mj_sc);
+            
+            // Close back to beam line
+            ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            
             // Labels
-            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
-            ctx.fillText(bW+' ft',ox+bW*sc/2-15,oy+25);
-            ctx.save();
-            ctx.translate(ox-25,oy-sH*sc/2);
-            ctx.rotate(-Math.PI/2);
-            ctx.fillText(sH+' ft',0,0);
-            ctx.restore();
-        }
-        function runAnalysis(){
-            const nB=+document.getElementById('numBays').value;
-            const nS=+document.getElementById('numStories').value;
-            const beam=document.getElementById('beamSection').value;
-            const col=document.getElementById('colSection').value;
-            const results=[];
-            let maxDCR=0,maxM=0,maxV=0;
-            // Columns
-            for(let j=0;j<nS;j++){
-                for(let i=0;i<=nB;i++){
-                    const dcr=0.3+Math.random()*0.5;
-                    const M=50+Math.random()*100;
-                    const V=10+Math.random()*30;
-                    maxDCR=Math.max(maxDCR,dcr);
-                    maxM=Math.max(maxM,M);
-                    maxV=Math.max(maxV,V);
-                    results.push({id:'C'+(j*(nB+1)+i+1),section:col,dcr,type:'Column'});
-                }
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px JetBrains Mono';
+            ctx.textAlign = 'center';
+            
+            // End moments (negative - shown above beam)
+            if (Math.abs(r.Mi) > 0.05) {
+                ctx.fillText(Math.abs(r.Mi).toFixed(1), p1.x + 25, p1.y + Mi_sc - 8);
             }
-            // Beams
-            for(let j=0;j<nS;j++){
-                for(let i=0;i<nB;i++){
-                    const dcr=0.2+Math.random()*0.4;
-                    const M=80+Math.random()*120;
-                    maxDCR=Math.max(maxDCR,dcr);
-                    maxM=Math.max(maxM,M);
-                    results.push({id:'B'+(j*nB+i+1),section:beam,dcr,type:'Beam'});
-                }
+            if (Math.abs(r.Mj) > 0.05) {
+                ctx.fillText(Math.abs(r.Mj).toFixed(1), p2.x - 25, p2.y + Mj_sc - 8);
             }
-            const drift=0.005+Math.random()*0.01;
-            document.getElementById('maxDCR').textContent=maxDCR.toFixed(3);
-            document.getElementById('maxDrift').textContent=(drift*100).toFixed(2)+'%';
-            document.getElementById('maxM').textContent=maxM.toFixed(0)+' k-ft';
-            document.getElementById('maxV').textContent=maxV.toFixed(0)+' k';
-            const dcrCard=document.getElementById('dcrCard');
-            dcrCard.className='result-card '+(maxDCR<=1?'pass':'fail');
-            document.getElementById('dcrTable').innerHTML=results.map(r=>{
-                const pass=r.dcr<=1;
-                return `<tr><td>${r.id}</td><td>${r.section}</td><td class="${pass?'dcr-pass':'dcr-fail'}">${r.dcr.toFixed(3)}</td><td class="${pass?'dcr-pass':'dcr-fail'}">${pass?'OK':'NG'}</td></tr>`;
-            }).join('');
-            drawFrame(results);
+            
+            // Midspan moment (positive - shown below beam)
+            if (r.Mmid && Math.abs(r.Mmid) > 0.05) {
+                ctx.fillStyle = '#10b981';
+                ctx.fillText('+' + r.Mmid.toFixed(1), midX, midY + Mmid_sc + 15);
+            }
+            
+        } else {
+            // Column moment diagram - linear variation
+            // Draw moment on tension side
+            const Mi_sc = r.Mi * msc;  // Base (keep sign)
+            const Mj_sc = r.Mj * msc;  // Top (keep sign)
+            
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p1.x + Mi_sc, p1.y);
+            ctx.lineTo(p2.x + Mj_sc, p2.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px JetBrains Mono';
+            ctx.textAlign = 'center';
+            
+            if (Math.abs(r.Mi) > 0.05) {
+                const lx = p1.x + Mi_sc + (Mi_sc > 0 ? 18 : -18);
+                ctx.fillText(Math.abs(r.Mi).toFixed(1), lx, p1.y + 4);
+            }
+            if (Math.abs(r.Mj) > 0.05) {
+                const lx = p2.x + Mj_sc + (Mj_sc > 0 ? 18 : -18);
+                ctx.fillText(Math.abs(r.Mj).toFixed(1), lx, p2.y + 4);
+            }
         }
-        ['numBays','numStories','bayWidth','storyHeight'].forEach(id=>{
-            document.getElementById(id).addEventListener('change',drawFrame);
-        });
-    </script>
+    });
+    
+    ctx.textAlign = 'left'; // Reset
+}
+
+function drawShear(tr, results) {
+    let maxV = Math.max(...results.members.map(m => Math.abs(m.V)));
+    const vsc = maxV > 0 ? 30/maxV : 1;
+
+    frame.members.forEach((m, idx) => {
+        const ni = frame.nodes.find(n=>n.id===m.ni);
+        const nj = frame.nodes.find(n=>n.id===m.nj);
+        const p1 = tr(ni.x, ni.y);
+        const p2 = tr(nj.x, nj.y);
+        const v = Math.abs(results.members[idx].V) * vsc;
+
+        ctx.fillStyle = m.type==='beam'?'rgba(6,182,212,0.3)':'rgba(139,92,246,0.3)';
+        ctx.strokeStyle = m.type==='beam'?'#06b6d4':'#8b5cf6';
+        ctx.lineWidth = 2;
+
+        if (m.type === 'beam') {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p1.x, p1.y - v);
+            ctx.lineTo(p2.x, p2.y + v);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.closePath();
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p1.x + v, p1.y);
+            ctx.lineTo(p2.x + v, p2.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.closePath();
+        }
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '9px JetBrains Mono';
+        const mx = (p1.x+p2.x)/2 + (m.type==='column'?v+5:0);
+        const my = (p1.y+p2.y)/2;
+        ctx.fillText(results.members[idx].V.toFixed(1), mx, my);
+    });
+}
+
+function drawAxial(tr, results) {
+    let maxP = Math.max(...results.members.filter((_,i)=>frame.members[i].type==='column').map(m => Math.abs(m.P)));
+    const psc = maxP > 0 ? 25/maxP : 1;
+
+    frame.members.forEach((m, idx) => {
+        if (m.type !== 'column') return;
+        const ni = frame.nodes.find(n=>n.id===m.ni);
+        const nj = frame.nodes.find(n=>n.id===m.nj);
+        const p1 = tr(ni.x, ni.y);
+        const p2 = tr(nj.x, nj.y);
+        const p = Math.abs(results.members[idx].P) * psc;
+
+        ctx.fillStyle = 'rgba(239,68,68,0.3)';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p1.x - p, p1.y);
+        ctx.lineTo(p2.x - p, p2.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '9px JetBrains Mono';
+        ctx.fillText(results.members[idx].P.toFixed(1)+'k', p1.x - p - 5, (p1.y+p2.y)/2);
+    });
+}
+
+function drawReactions(tr, results) {
+    frame.supports.forEach((s, i) => {
+        const n = frame.nodes.find(x=>x.id===s.nodeId);
+        const p = tr(n.x, n.y);
+        const r = results.reactions[i];
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = 'bold 10px JetBrains Mono';
+        ctx.textAlign = 'center';
+        
+        // Ry arrow
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y + 25);
+        ctx.lineTo(p.x, p.y + 8);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y + 8);
+        ctx.lineTo(p.x - 4, p.y + 14);
+        ctx.lineTo(p.x + 4, p.y + 14);
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+        ctx.fillText(r.Ry.toFixed(1)+'k', p.x, p.y + 38);
+
+        // Rx arrow
+        if (Math.abs(r.Rx) > 0.1) {
+            ctx.beginPath();
+            ctx.moveTo(p.x - 25, p.y);
+            ctx.lineTo(p.x - 8, p.y);
+            ctx.strokeStyle = '#06b6d4';
+            ctx.stroke();
+            ctx.fillStyle = '#06b6d4';
+            ctx.fillText(r.Rx.toFixed(1)+'k', p.x - 30, p.y - 5);
+        }
+
+        // Mz
+        if (Math.abs(r.Mz) > 0.1) {
+            ctx.fillStyle = '#8b5cf6';
+            ctx.fillText(r.Mz.toFixed(0)+'k-ft', p.x + 25, p.y + 15);
+        }
+    });
+}
+
+function drawDCRLabels(tr) {
+    frame.members.forEach((m, idx) => {
+        const ni = frame.nodes.find(n=>n.id===m.ni);
+        const nj = frame.nodes.find(n=>n.id===m.nj);
+        const p1 = tr(ni.x, ni.y);
+        const p2 = tr(nj.x, nj.y);
+        const dcr = designResults[idx].DCR;
+
+        ctx.fillStyle = dcr<=0.9?'#10b981':dcr<=1?'#f59e0b':'#ef4444';
+        ctx.font = 'bold 10px JetBrains Mono';
+        ctx.textAlign = 'center';
+        const mx = (p1.x+p2.x)/2 + (m.type==='column'?18:0);
+        const my = (p1.y+p2.y)/2 + (m.type==='beam'?-8:0);
+        ctx.fillText(dcr.toFixed(2), mx, my);
+    });
+}
+
+// Report
+function showReport() {
+    if (designResults.length === 0) { alert('Run analysis first'); return; }
+    const nB = +document.getElementById('numBays').value;
+    const nS = +document.getElementById('numStories').value;
+    const bW = +document.getElementById('bayWidth').value;
+    const sH = +document.getElementById('storyHeight').value;
+    const H = sH * 12;
+    const seisLimit = +document.getElementById('seismicDriftLimit').value;
+    const beamSec = document.getElementById('beamSection').value;
+    const sup = document.getElementById('supportType').value;
+    const D = +document.getElementById('deadLoad').value;
+    const L = +document.getElementById('liveLoad').value;
+    const Lr = +document.getElementById('roofLiveLoad').value;
+    const S = +document.getElementById('snowLoad').value;
+    const W = +document.getElementById('windForce').value;
+    const Ef = +document.getElementById('seismicForce').value;
+    
+    // Generate Frame Diagram SVG
+    const svgW = 400, svgH = 300;
+    const pad = 60;
+    const maxX = nB * bW;
+    const maxY = nS * sH;
+    const scale = Math.min((svgW - pad*2) / maxX, (svgH - pad*2) / maxY) * 0.8;
+    const ox = (svgW - maxX * scale) / 2;
+    const oy = svgH - pad;
+    const trX = (x) => ox + x * scale;
+    const trY = (y) => oy - y * scale;
+    
+    let frameSvg = `<svg width="${svgW}" height="${svgH}" style="background:#12121a;border-radius:6px;display:block;margin:0 auto 15px;">`;
+    
+    // Draw members
+    frame.members.forEach(m => {
+        const ni = frame.nodes.find(n => n.id === m.ni);
+        const nj = frame.nodes.find(n => n.id === m.nj);
+        const x1 = trX(ni.x), y1 = trY(ni.y);
+        const x2 = trX(nj.x), y2 = trY(nj.y);
+        const color = m.type === 'beam' ? '#3b82f6' : '#10b981';
+        frameSvg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="3"/>`;
+        
+        // Section label
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        if (m.type === 'beam') {
+            frameSvg += `<text x="${mx}" y="${my + 15}" fill="${color}" font-size="8" text-anchor="middle" font-family="monospace">${m.section}</text>`;
+        } else {
+            frameSvg += `<text x="${mx - 15}" y="${my}" fill="${color}" font-size="8" text-anchor="middle" font-family="monospace" transform="rotate(-90 ${mx - 15} ${my})">${m.section}</text>`;
+        }
+    });
+    
+    // Draw distributed load
+    const wTotal = 1.4 * D;
+    if (wTotal > 0) {
+        for (let i = 0; i < nB; i++) {
+            const x1 = trX(i * bW), x2 = trX((i + 1) * bW), y = trY(nS * sH);
+            frameSvg += `<line x1="${x1}" y1="${y - 25}" x2="${x2}" y2="${y - 25}" stroke="#ef4444" stroke-width="1"/>`;
+            for (let j = 0; j <= 6; j++) {
+                const ax = x1 + j * (x2 - x1) / 6;
+                frameSvg += `<line x1="${ax}" y1="${y - 25}" x2="${ax}" y2="${y - 5}" stroke="#ef4444" stroke-width="1"/>`;
+                frameSvg += `<polygon points="${ax},${y - 5} ${ax - 3},${y - 10} ${ax + 3},${y - 10}" fill="#ef4444"/>`;
+            }
+        }
+        frameSvg += `<text x="${svgW / 2}" y="${trY(nS * sH) - 32}" fill="#ef4444" font-size="9" text-anchor="middle" font-family="monospace">D=${D} L=${L} Lr=${Lr} S=${S} klf</text>`;
+    }
+    
+    // Draw lateral load
+    if (W > 0 || Ef > 0) {
+        for (let st = 1; st <= nS; st++) {
+            const x = trX(0), y = trY(st * sH);
+            frameSvg += `<line x1="${x - 35}" y1="${y}" x2="${x - 5}" y2="${y}" stroke="#8b5cf6" stroke-width="2"/>`;
+            frameSvg += `<polygon points="${x - 5},${y} ${x - 12},${y - 4} ${x - 12},${y + 4}" fill="#8b5cf6"/>`;
+            frameSvg += `<text x="${x - 40}" y="${y + 4}" fill="#8b5cf6" font-size="8" text-anchor="end" font-family="monospace">${W > 0 ? 'W' : 'E'}=${W > 0 ? W : Ef}k</text>`;
+        }
+    }
+    
+    // Draw supports
+    frame.supports.forEach(s => {
+        const n = frame.nodes.find(x => x.id === s.nodeId);
+        const x = trX(n.x), y = trY(n.y);
+        if (sup === 'pinned') {
+            frameSvg += `<polygon points="${x},${y} ${x - 10},${y + 15} ${x + 10},${y + 15}" fill="#f59e0b"/>`;
+        } else {
+            frameSvg += `<rect x="${x - 10}" y="${y}" width="20" height="8" fill="#f59e0b"/>`;
+        }
+    });
+    
+    // Draw bay dimensions (bottom)
+    for (let i = 0; i < nB; i++) {
+        const x1 = trX(i * bW), x2 = trX((i + 1) * bW), y = oy + 25;
+        frameSvg += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#64748b" stroke-width="1"/>`;
+        frameSvg += `<line x1="${x1}" y1="${y - 5}" x2="${x1}" y2="${y + 5}" stroke="#64748b" stroke-width="1"/>`;
+        frameSvg += `<line x1="${x2}" y1="${y - 5}" x2="${x2}" y2="${y + 5}" stroke="#64748b" stroke-width="1"/>`;
+        frameSvg += `<text x="${(x1 + x2) / 2}" y="${y + 15}" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">${bW} ft</text>`;
+    }
+    
+    // Draw story dimensions (right side)
+    for (let j = 0; j < nS; j++) {
+        const y1 = trY(j * sH), y2 = trY((j + 1) * sH), x = trX(maxX) + 20;
+        frameSvg += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="#64748b" stroke-width="1"/>`;
+        frameSvg += `<line x1="${x - 5}" y1="${y1}" x2="${x + 5}" y2="${y1}" stroke="#64748b" stroke-width="1"/>`;
+        frameSvg += `<line x1="${x - 5}" y1="${y2}" x2="${x + 5}" y2="${y2}" stroke="#64748b" stroke-width="1"/>`;
+        frameSvg += `<text x="${x + 10}" y="${(y1 + y2) / 2 + 3}" fill="#94a3b8" font-size="10" text-anchor="start" font-family="monospace">${sH} ft</text>`;
+    }
+    
+    // Nodes
+    frame.nodes.forEach(n => {
+        const x = trX(n.x), y = trY(n.y);
+        frameSvg += `<circle cx="${x}" cy="${y}" r="3" fill="${n.isBase ? '#f59e0b' : '#06b6d4'}"/>`;
+    });
+    
+    frameSvg += `</svg>`;
+    
+    let html = `<style>
+        .rpt-tbl{width:100%;border-collapse:collapse;font-size:0.7rem;margin:8px 0}
+        .rpt-tbl th,.rpt-tbl td{border:1px solid #444;padding:5px 7px;text-align:left}
+        .rpt-tbl th{background:#1a1a25;color:#94a3b8}
+        .rpt-h3{color:#06b6d4;margin:12px 0 6px;font-size:0.85rem}
+        .pass{color:#10b981;font-weight:600}.fail{color:#ef4444;font-weight:600}
+    </style>
+    
+    <h3 class="rpt-h3">Frame Diagram</h3>
+    ${frameSvg}
+    
+    <h3 class="rpt-h3">1. Configuration</h3>
+    <table class="rpt-tbl">
+        <tr><td>Frame</td><td>${nB} bay × ${nS} story</td></tr>
+        <tr><td>Bay Width / Story Height</td><td>${bW} ft / ${sH} ft</td></tr>
+        <tr><td>Support Type</td><td>${sup.charAt(0).toUpperCase() + sup.slice(1)}</td></tr>
+        <tr><td>Beam Section</td><td>${beamSec}</td></tr>
+        <tr><td>Column Sections</td><td>${columnSections.map((s,i)=>`C${i+1}:${s}`).join(', ')}</td></tr>
+        <tr><td>Column Orientation</td><td>${document.getElementById('columnOrientation').value === 'strong' ? 'Strong Axis (Ix) In-Plane' : 'Weak Axis (Iy) In-Plane'}</td></tr>
+        <tr><td>Steel Grade</td><td>${document.getElementById('steelGrade').value}</td></tr>
+    </table>
+    
+    <h3 class="rpt-h3">2. Applied Loads</h3>
+    <table class="rpt-tbl">
+        <tr><th>Load Type</th><th>Value</th><th>Unit</th></tr>
+        <tr><td>Dead (D)</td><td>${D}</td><td>klf</td></tr>
+        <tr><td>Live (L)</td><td>${L}</td><td>klf</td></tr>
+        <tr><td>Roof Live (Lr)</td><td>${Lr}</td><td>klf</td></tr>
+        <tr><td>Snow (S)</td><td>${S}</td><td>klf</td></tr>
+        <tr><td>Wind (W)</td><td>${W}</td><td>kips/story</td></tr>
+        <tr><td>Seismic (E)</td><td>${Ef}</td><td>kips/story</td></tr>
+    </table>
+    
+    <h3 class="rpt-h3">3. Reactions (Envelope)</h3>
+    <table class="rpt-tbl">
+        <tr><th>Support</th><th>Rx (k)</th><th>Ry (k)</th><th>Mz (k-ft)</th></tr>
+        ${envelope.reactions.map((r,i)=>`<tr><td>S${i+1}</td><td>${r.Rx.toFixed(1)}</td><td>${r.Ry.toFixed(1)}</td><td>${r.Mz.toFixed(1)}</td></tr>`).join('')}
+    </table>
+    
+    <h3 class="rpt-h3">4. Wind Drift (0.5W, H/400)</h3>
+    <table class="rpt-tbl">
+        <tr><th>Story</th><th>Δ (in)</th><th>Drift %</th><th>Allow</th><th>Status</th></tr>
+        ${driftResults.wind.map((d,i)=>{
+            const pct=(d/H)*100;
+            const ok=d<=H/400;
+            return `<tr><td>${i+1}</td><td>${d.toFixed(3)}</td><td>${pct.toFixed(3)}</td><td>${(H/400).toFixed(3)}</td><td class="${ok?'pass':'fail'}">${ok?'OK':'NG'}</td></tr>`;
+        }).join('')}
+    </table>
+    
+    <h3 class="rpt-h3">5. Seismic Drift (δ×Cd=${driftResults.Cd})</h3>
+    <table class="rpt-tbl">
+        <tr><th>Story</th><th>δ×Cd (in)</th><th>Drift %</th><th>Limit %</th><th>Status</th></tr>
+        ${driftResults.seismic.map((d,i)=>{
+            const pct=(d/H)*100;
+            const ok=pct<=seisLimit;
+            return `<tr><td>${i+1}</td><td>${d.toFixed(3)}</td><td>${pct.toFixed(3)}</td><td>${seisLimit}</td><td class="${ok?'pass':'fail'}">${ok?'OK':'NG'}</td></tr>`;
+        }).join('')}
+    </table>
+    
+    <h3 class="rpt-h3">6. P-Delta Analysis (AISC 360-22 Appendix 8)</h3>
+    ${(() => {
+        if (!document.getElementById('includePDelta').checked) {
+            return `<p style="color:#f59e0b;">P-Delta analysis disabled. Enable in Analysis Options to include second-order effects.</p>`;
+        }
+        
+        // Check if there are any lateral loads input
+        if (W === 0 && Ef === 0) {
+            return `<p style="color:#94a3b8;">No lateral loads applied (W=0, E=0). P-Delta effects are negligible for gravity-only cases.</p>`;
+        }
+        
+        // Get P-Delta info from LC with lateral load - find one that actually has latF > 0
+        let pDeltaLC = null;
+        if (W > 0) pDeltaLC = allLC['LC5'] || allLC['LC7'];
+        if (!pDeltaLC && Ef > 0) pDeltaLC = allLC['LC6'] || allLC['LC8'];
+        if (!pDeltaLC) pDeltaLC = Object.values(allLC)[0];
+        
+        const pDelta = pDeltaLC ? pDeltaLC.pDelta : null;
+        
+        if (!pDelta || !pDelta.B1 || pDelta.B1.length === 0) {
+            return `<p style="color:#94a3b8;">P-Delta calculation data not available.</p>`;
+        }
+        
+        const sH_in = sH * 12;
+        
+        return `
+        <p style="font-size:0.68rem; color:#94a3b8; margin-bottom:8px;">
+            Second-order effects calculated using B1-B2 amplification method.<br>
+            M<sub>r</sub> = B<sub>1</sub>M<sub>nt</sub> + B<sub>2</sub>M<sub>lt</sub>
+        </p>
+        
+        <h4 style="color:#f59e0b; font-size:0.75rem; margin:10px 0 5px;">6.1 B2 Factor (Story P-Δ Effect)</h4>
+        <table class="rpt-tbl">
+            <tr><td width="50%">Story Height (L)</td><td>${sH_in.toFixed(0)} in</td></tr>
+            <tr><td>Story Shear (H)</td><td>${pDelta.H.toFixed(2)} kips</td></tr>
+            <tr><td>Total Gravity Load (ΣP<sub>nt</sub>)</td><td>${pDelta.Pstory.toFixed(2)} kips</td></tr>
+            <tr><td>First-order Drift (Δ<sub>H</sub>)</td><td>${pDelta.delta_H.toFixed(4)} in</td></tr>
+            <tr><td>R<sub>M</sub></td><td>0.85 (moment frame)</td></tr>
+            <tr><td>ΣP<sub>e2</sub> = R<sub>M</sub> × H × L / Δ<sub>H</sub></td><td>${pDelta.Pe_story.toFixed(1)} kips</td></tr>
+            <tr><td>α (LRFD)</td><td>1.0</td></tr>
+            <tr><td><strong>B<sub>2</sub> = 1 / (1 - αΣP<sub>nt</sub>/ΣP<sub>e2</sub>)</strong></td><td><strong>${pDelta.B2.toFixed(3)}</strong></td></tr>
+        </table>
+        
+        <h4 style="color:#f59e0b; font-size:0.75rem; margin:10px 0 5px;">6.2 B1 Factor (Member P-δ Effect)</h4>
+        <table class="rpt-tbl">
+            <tr><th>Column</th><th>Section</th><th>P<sub>r</sub> (k)</th><th>K<sub>1</sub></th><th>P<sub>e1</sub> (k)</th><th>C<sub>m</sub></th><th>B<sub>1</sub></th></tr>
+            ${pDelta.B1.map((b, idx) => {
+                if (frame.members[idx].type !== 'column') return '';
+                const m = frame.members[idx];
+                const colNum = frame.members.slice(0, idx).filter(x => x.type === 'column').length + 1;
+                return `<tr>
+                    <td>C${colNum}</td>
+                    <td>${m.section}</td>
+                    <td>${b.Pr.toFixed(2)}</td>
+                    <td>${b.K1.toFixed(1)}</td>
+                    <td>${b.Pe1.toFixed(1)}</td>
+                    <td>${b.Cm.toFixed(1)}</td>
+                    <td><strong>${b.B1.toFixed(3)}</strong></td>
+                </tr>`;
+            }).join('')}
+        </table>
+        <p style="font-size:0.65rem; color:#94a3b8; margin-top:5px;">
+            B<sub>1</sub> = C<sub>m</sub> / (1 - αP<sub>r</sub>/P<sub>e1</sub>) ≥ 1.0<br>
+            P<sub>e1</sub> = π²EI / (K<sub>1</sub>L)² (Euler buckling load)<br>
+            C<sub>m</sub> = 1.0 (conservative for sway frames)
+        </p>
+        
+        <h4 style="color:#f59e0b; font-size:0.75rem; margin:10px 0 5px;">6.3 Amplified Moments (Columns)</h4>
+        <table class="rpt-tbl">
+            <tr><th>Col</th><th>M<sub>nt</sub></th><th>M<sub>lt</sub></th><th>B<sub>1</sub></th><th>B<sub>2</sub></th><th>M<sub>r</sub> = B<sub>1</sub>M<sub>nt</sub> + B<sub>2</sub>M<sub>lt</sub></th></tr>
+            ${pDeltaLC.members.map((m, idx) => {
+                if (frame.members[idx].type !== 'column') return '';
+                const colNum = frame.members.slice(0, idx).filter(x => x.type === 'column').length + 1;
+                const B1 = m.B1 || 1.0;
+                const B2 = m.B2 || pDelta.B2;
+                const Mnt = Math.max(Math.abs(m.Mi_nt || 0), Math.abs(m.Mj_nt || 0));
+                const Mlt = Math.max(Math.abs(m.Mi_lt || 0), Math.abs(m.Mj_lt || 0));
+                const Mr = Math.max(Math.abs(m.Mi), Math.abs(m.Mj));
+                return `<tr>
+                    <td>C${colNum}</td>
+                    <td>${Mnt.toFixed(2)} k-ft</td>
+                    <td>${Mlt.toFixed(2)} k-ft</td>
+                    <td>${B1.toFixed(3)}</td>
+                    <td>${B2.toFixed(3)}</td>
+                    <td><strong>${Mr.toFixed(2)} k-ft</strong></td>
+                </tr>`;
+            }).join('')}
+        </table>
+        `;
+    })()}
+    
+    <h3 class="rpt-h3">7. Member Design</h3>
+    <table class="rpt-tbl">
+        <tr><th>ID</th><th>Section</th><th>Mu</th><th>φMn</th><th>Vu</th><th>φVn</th><th>Pu</th><th>φPn</th><th>DCR</th><th>Gov</th><th>Status</th></tr>
+        ${designResults.map((d,i)=>{
+            const lbl=d.member.type==='beam'?'B':'C';
+            const num=d.member.type==='beam'?designResults.slice(0,i).filter(x=>x.member.type==='beam').length+1:designResults.slice(0,i).filter(x=>x.member.type==='column').length+1;
+            return `<tr>
+                <td>${lbl}${num}</td><td>${d.section}</td>
+                <td>${d.Mu.toFixed(1)}</td><td>${d.flex.phiMn.toFixed(1)}</td>
+                <td>${d.Vu.toFixed(1)}</td><td>${d.shear.phiVn.toFixed(1)}</td>
+                <td>${d.Pu.toFixed(1)}</td><td>${d.axial.phiPn.toFixed(1)}</td>
+                <td class="${d.DCR<=1?'pass':'fail'}">${d.DCR.toFixed(2)}</td>
+                <td>${d.gov}</td>
+                <td class="${d.DCR<=1?'pass':'fail'}">${d.DCR<=1?'OK':'NG'}</td>
+            </tr>`;
+        }).join('')}
+    </table>
+    
+    <h3 class="rpt-h3">8. Conclusion</h3>
+    <p>Max DCR: <span class="${Math.max(...designResults.map(d=>d.DCR))<=1?'pass':'fail'}">${Math.max(...designResults.map(d=>d.DCR)).toFixed(2)}</span></p>
+    <p class="${Math.max(...designResults.map(d=>d.DCR))<=1?'pass':'fail'}">${Math.max(...designResults.map(d=>d.DCR))<=1?'✓ ALL PASS':'✗ REDESIGN REQUIRED'}</p>
+    `;
+    
+    document.getElementById('reportBody').innerHTML = html;
+    document.getElementById('reportModal').style.display = 'flex';
+}
+
+function closeReport() { document.getElementById('reportModal').style.display = 'none'; }
+
+function printReport() {
+    const reportContent = document.getElementById('reportBody').innerHTML;
+    const projectName = 'Steel Frame Analysis';
+    const dateStr = new Date().toLocaleDateString();
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AISC 360-22 Design Report</title>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm 12mm;
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #1a1a2e;
+            background: white;
+            margin: 0;
+            padding: 20px;
+        }
+        .report-header {
+            text-align: center;
+            border-bottom: 2px solid #1a365d;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .report-header h1 {
+            color: #1a365d;
+            font-size: 18pt;
+            margin: 0 0 5px 0;
+        }
+        .report-header .subtitle {
+            color: #4a5568;
+            font-size: 11pt;
+        }
+        .report-header .date {
+            color: #718096;
+            font-size: 9pt;
+            margin-top: 8px;
+        }
+        h3 {
+            color: #2c5282;
+            font-size: 11pt;
+            margin: 18px 0 8px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #cbd5e0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+            margin: 8px 0 15px 0;
+        }
+        th, td {
+            border: 1px solid #a0aec0;
+            padding: 5px 8px;
+            text-align: left;
+        }
+        th {
+            background: #edf2f7;
+            color: #2d3748;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #f7fafc;
+        }
+        .pass, .ok { color: #276749; font-weight: 600; }
+        .fail, .ng { color: #c53030; font-weight: 600; }
+        svg {
+            display: block;
+            margin: 10px auto;
+            max-width: 100%;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+        svg text { fill: #2d3748 !important; }
+        svg line, svg rect, svg polygon { stroke: #4a5568; }
+        svg circle { fill: #4a5568; }
+        p { margin: 5px 0; }
+        .summary-box {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin-top: 15px;
+        }
+        .summary-box.fail {
+            background: #fff5f5;
+            border-color: #feb2b2;
+        }
+        @media print {
+            body { padding: 0; }
+            svg { page-break-inside: avoid; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        <h1>🏗️ AISC 360-22 Steel Frame Design Report</h1>
+        <div class="subtitle">${projectName}</div>
+        <div class="date">Generated: ${dateStr}</div>
+    </div>
+    ${reportContent}
+</body>
+</html>
+    `);
+    printWindow.document.close();
+    
+    // Wait for content to load then print
+    printWindow.onload = function() {
+        setTimeout(() => {
+            printWindow.print();
+        }, 300);
+    };
+}
+
+function exportCSV() {
+    if (designResults.length === 0) { alert('Run analysis'); return; }
+    let csv = 'Member,Section,Mu,phiMn,Vu,phiVn,Pu,phiPn,DCR,Gov,Status\n';
+    designResults.forEach((d,i) => {
+        const lbl = d.member.type==='beam'?'B':'C';
+        const num = d.member.type==='beam'?designResults.slice(0,i).filter(x=>x.member.type==='beam').length+1:designResults.slice(0,i).filter(x=>x.member.type==='column').length+1;
+        csv += `${lbl}${num},${d.section},${d.Mu.toFixed(1)},${d.flex.phiMn.toFixed(1)},${d.Vu.toFixed(1)},${d.shear.phiVn.toFixed(1)},${d.Pu.toFixed(1)},${d.axial.phiPn.toFixed(1)},${d.DCR.toFixed(3)},${d.gov},${d.DCR<=1?'OK':'NG'}\n`;
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download = 'frame_design.csv';
+    a.click();
+}
+</script>
 </body>
 </html>

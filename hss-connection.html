@@ -1,163 +1,478 @@
---red)}
-        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
-        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
-        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
-        @media(max-width:1200px){.main{grid-template-columns:1fr}}
-    </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HSS Moment Connection Designer | 3D</title>
+<style>
+:root{--bg:#0a0e14;--bg2:#111820;--bg3:#1a2332;--card:#141c28;--blue:#00b4d8;--cyan:#48cae4;--orange:#f77f00;--green:#06d6a0;--red:#ef476f;--yellow:#ffd166;--purple:#9d4edd;--text:#e8eef4;--text2:#8b99a8;--muted:#5a6a7a;--border:#2a3a4a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;position:sticky;top:0;z-index:100}
+.header-content{max-width:1800px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#00b4d8,#0077b6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.logo h1{font-size:18px;background:linear-gradient(135deg,#00b4d8,#0077b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo span{font-size:11px;color:var(--text2)}
+.btns{display:flex;gap:8px}
+.btn{padding:8px 16px;border:none;border-radius:6px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,#00b4d8,#0077b6);color:#fff}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.main{max-width:1800px;margin:0 auto;padding:15px;display:grid;grid-template-columns:320px 1fr 340px;gap:15px}
+@media(max-width:1400px){.main{grid-template-columns:300px 1fr}.results{grid-column:1/-1}}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card-header{padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card-body{padding:14px}
+.input-panel{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 80px);overflow-y:auto}
+.section-title{font-size:11px;font-weight:600;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.form-group{margin-bottom:10px}
+.form-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+input,select{width:100%;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px}
+input:focus,select:focus{outline:none;border-color:var(--blue)}
+.conn-types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.conn-type{padding:10px 6px;background:var(--bg2);border:2px solid var(--border);border-radius:8px;cursor:pointer;text-align:center}
+.conn-type:hover{border-color:var(--blue)}
+.conn-type.active{border-color:var(--blue);background:rgba(0,180,216,0.1)}
+.conn-type .icon{font-size:20px}
+.conn-type .label{font-size:11px;color:var(--text2)}
+.conn-type.active .label{color:var(--cyan)}
+.viz{display:flex;flex-direction:column;gap:12px}
+.viz-box{background:var(--bg2);border-radius:10px;position:relative;overflow:hidden}
+.viz-3d{height:360px}
+.viz-2d{height:280px}
+.tabs{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:8px}
+.tab{flex:1;padding:6px 10px;background:transparent;border:none;border-radius:6px;color:var(--text2);font-size:12px;cursor:pointer}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--blue);color:#fff}
+.results{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 80px);overflow-y:auto}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--bg2);border-radius:8px;padding:10px;border-left:3px solid var(--blue)}
+.stat.pass{border-left-color:var(--green)}
+.stat.fail{border-left-color:var(--red)}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase}
+.stat-value{font-size:16px;font-weight:600;margin-top:2px}
+.stat-value.pass{color:var(--green)}
+.stat-value.fail{color:var(--red)}
+.checks{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.check{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg2);border-radius:6px;border-left:3px solid var(--border)}
+.check.pass{border-left-color:var(--green)}
+.check.fail{border-left-color:var(--red)}
+.check-name{font-size:13px}
+.check-ratio{font-size:13px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--bg3)}
+.check-ratio.pass{color:var(--green)}
+.check-ratio.fail{color:var(--red)}
+.badge{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.badge.pass{background:rgba(6,214,160,0.15);color:var(--green)}
+.badge.fail{background:rgba(239,71,111,0.15);color:var(--red)}
+.unit{color:var(--muted);font-size:10px;margin-left:3px}
+canvas{display:block;width:100%;height:100%}
+.legend{position:absolute;bottom:8px;left:8px;background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:6px;font-size:11px}
+.legend-item{display:flex;align-items:center;gap:6px;margin:3px 0}
+.legend-color{width:12px;height:12px;border-radius:2px}
+.hint{position:absolute;top:8px;right:8px;background:rgba(10,14,20,0.8);padding:6px 10px;border-radius:6px;font-size:11px;color:var(--text2)}
+.hss-search{position:relative}
+.hss-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:160px;overflow-y:auto;z-index:50;display:none}
+.hss-dropdown.show{display:block}
+.hss-opt{padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between}
+.hss-opt:hover{background:rgba(0,180,216,0.1)}
+.hss-opt .info{color:var(--muted);font-size:10px}
+</style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="back">← Back</a>
-        <div style="text-align:center"><h1>🔗 HSS Connection 3D</h1><span style="font-size:0.75rem;color:var(--text2)">AISC Design Guide 24</span></div>
-        <div></div>
-    </header>
-    <div class="main">
-        <div class="panel">
-            <div class="panel-title">Connection Type</div>
-            <div class="form-group">
-                <select id="connType" onchange="calculate()">
-                    <option value="welded">Welded</option>
-                    <option value="bolted">Bolted</option>
-                    <option value="combined">Combined (Welded + Bolted)</option>
-                </select>
-            </div>
-            <div class="panel-title" style="margin-top:16px">HSS Column</div>
-            <div class="form-row">
-                <div class="form-group"><label>B (in)</label><input type="number" id="colB" value="10" onchange="draw3D();calculate()"></div>
-                <div class="form-group"><label>H (in)</label><input type="number" id="colH" value="10" onchange="draw3D();calculate()"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>t (in)</label><input type="number" id="colT" value="0.465" step="0.001" onchange="calculate()"></div>
-                <div class="form-group"><label>Fy (ksi)</label><input type="number" id="colFy" value="46" onchange="calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Beam</div>
-            <div class="form-row">
-                <div class="form-group"><label>B (in)</label><input type="number" id="beamB" value="8" onchange="draw3D();calculate()"></div>
-                <div class="form-group"><label>H (in)</label><input type="number" id="beamH" value="12" onchange="draw3D();calculate()"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>t (in)</label><input type="number" id="beamT" value="0.465" step="0.001" onchange="calculate()"></div>
-                <div class="form-group"><label>Fy (ksi)</label><input type="number" id="beamFy" value="46" onchange="calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Design Forces</div>
-            <div class="form-row">
-                <div class="form-group"><label>Mu (k-ft)</label><input type="number" id="Mu" value="150" onchange="calculate()"></div>
-                <div class="form-group"><label>Vu (kips)</label><input type="number" id="Vu" value="45" onchange="calculate()"></div>
-            </div>
-            <button class="btn btn-primary" onclick="calculate()">⚙️ Calculate</button>
-        </div>
-        <div class="panel">
-            <div class="panel-title">3D Visualization (Drag to Rotate)</div>
-            <div class="canvas-box"><canvas id="canvas3d"></canvas></div>
-        </div>
-        <div class="panel">
-            <div class="panel-title" style="display:flex;justify-content:space-between">
-                <span>Results</span>
-                <span class="status pass" id="status">● PASS</span>
-            </div>
-            <div class="result-grid">
-                <div class="result-card pass" id="momCard"><div class="result-label">φMn</div><div class="result-value" id="phiMn">--</div></div>
-                <div class="result-card pass" id="shearCard"><div class="result-label">φVn</div><div class="result-value" id="phiVn">--</div></div>
-                <div class="result-card"><div class="result-label">Gov DCR</div><div class="result-value" id="govDCR">--</div></div>
-                <div class="result-card"><div class="result-label">β Ratio</div><div class="result-value" id="beta">--</div></div>
-            </div>
-            <div class="panel-title">Design Checks</div>
-            <div class="checks" id="checks"></div>
-        </div>
-    </div>
-    <script>
-        let rx=-25,ry=35,drag=false,lx,ly;
-        const c=document.getElementById('canvas3d');
-        const ctx=c.getContext('2d');
-        function resizeCanvas(){
-            const box=c.parentElement;
-            c.width=box.clientWidth;
-            c.height=box.clientHeight;
-            draw3D();
-        }
-        document.addEventListener('DOMContentLoaded',()=>{resizeCanvas();calculate();});
-        window.addEventListener('resize',resizeCanvas);
-        c.onmousedown=e=>{drag=true;lx=e.clientX;ly=e.clientY;c.style.cursor='grabbing'};
-        c.onmousemove=e=>{if(drag){ry+=(e.clientX-lx)*0.5;rx+=(e.clientY-ly)*0.5;rx=Math.max(-90,Math.min(90,rx));lx=e.clientX;ly=e.clientY;draw3D()}};
-        c.onmouseup=()=>{drag=false;c.style.cursor='grab'};
-        c.onmouseleave=()=>{drag=false;c.style.cursor='grab'};
-        function draw3D(){
-            const W=c.width,H=c.height;
-            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
-            const colB=+document.getElementById('colB').value;
-            const colH=+document.getElementById('colH').value;
-            const beamB=+document.getElementById('beamB').value;
-            const beamH=+document.getElementById('beamH').value;
-            const sc=Math.min(W,H)/50,cx=W/2,cy=H/2;
-            const rxr=rx*Math.PI/180,ryr=ry*Math.PI/180;
-            function proj(x,y,z){
-                let x1=x*Math.cos(ryr)-z*Math.sin(ryr);
-                let z1=x*Math.sin(ryr)+z*Math.cos(ryr);
-                let y1=y*Math.cos(rxr)-z1*Math.sin(rxr);
-                let z2=y*Math.sin(rxr)+z1*Math.cos(rxr);
-                const f=500/(500+z2);
-                return{x:cx+x1*sc*f,y:cy-y1*sc*f,z:z2};
-            }
-            function box(x,y,z,w,h,d,fill,stroke){
-                const v=[proj(x-w/2,y-h/2,z-d/2),proj(x+w/2,y-h/2,z-d/2),proj(x+w/2,y+h/2,z-d/2),proj(x-w/2,y+h/2,z-d/2),
-                         proj(x-w/2,y-h/2,z+d/2),proj(x+w/2,y-h/2,z+d/2),proj(x+w/2,y+h/2,z+d/2),proj(x-w/2,y+h/2,z+d/2)];
-                const faces=[[0,1,2,3],[5,4,7,6],[4,0,3,7],[1,5,6,2],[4,5,1,0],[3,2,6,7]];
-                faces.sort((a,b)=>(b.reduce((s,i)=>s+v[i].z,0)-a.reduce((s,i)=>s+v[i].z,0))/4);
-                faces.forEach(f=>{
-                    ctx.beginPath();ctx.moveTo(v[f[0]].x,v[f[0]].y);
-                    f.forEach(i=>ctx.lineTo(v[i].x,v[i].y));ctx.closePath();
-                    ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();
-                });
-            }
-            box(0,-10,0,colB,18,colH,'rgba(0,180,216,0.7)','#00b4d8');
-            box(0,-beamH/2-0.5,0,colB+2,0.75,colH+2,'rgba(255,209,102,0.8)','#ffd166');
-            box(0,0,0,24,beamH,beamB,'rgba(6,214,160,0.7)','#06d6a0');
-            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
-            ctx.fillText('Column (HSS)',cx-100,cy+100);
-            ctx.fillText('Beam (HSS)',cx+40,cy-80);
-        }
-        function calculate(){
-            const colB=+document.getElementById('colB').value;
-            const colH=+document.getElementById('colH').value;
-            const colT=+document.getElementById('colT').value;
-            const colFy=+document.getElementById('colFy').value;
-            const beamH=+document.getElementById('beamH').value;
-            const beamT=+document.getElementById('beamT').value;
-            const Mu=+document.getElementById('Mu').value;
-            const Vu=+document.getElementById('Vu').value;
-            const arm=beamH-beamT;
-            const Ff=(Mu*12)/arm;
-            const phi=0.75;
-            const Fnw=0.6*70;
-            const throat=0.25*0.707;
-            const weldL=2*colB+2*beamH;
-            const weldCap=phi*Fnw*throat*weldL;
-            const momCap=weldCap*arm/12;
-            const shearCap=phi*0.6*colFy*colH*colT*2;
-            const dcrM=Mu/momCap;
-            const dcrV=Vu/shearCap;
-            const beta=beamH/colB;
-            const gamma=colB/(2*colT);
-            const checks=[
-                {name:'Moment Capacity',dcr:dcrM,pass:dcrM<=1,ref:'DG24 §4.2'},
-                {name:'Shear Capacity',dcr:dcrV,pass:dcrV<=1,ref:'DG24 §4.3'},
-                {name:'β Ratio (0.25-1.0)',dcr:beta>=0.25&&beta<=1?0.5:1.5,pass:beta>=0.25&&beta<=1,ref:'DG24 §3.1'},
-                {name:'γ Slenderness (≤35)',dcr:gamma/35,pass:gamma<=35,ref:'DG24 §3.2'}
-            ];
-            const allPass=checks.every(c=>c.pass);
-            const maxDCR=Math.max(dcrM,dcrV);
-            document.getElementById('phiMn').textContent=momCap.toFixed(1)+' k-ft';
-            document.getElementById('phiVn').textContent=shearCap.toFixed(1)+' k';
-            document.getElementById('govDCR').textContent=maxDCR.toFixed(3);
-            document.getElementById('beta').textContent=beta.toFixed(2);
-            document.getElementById('status').className='status '+(allPass?'pass':'fail');
-            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
-            document.getElementById('momCard').className='result-card '+(dcrM<=1?'pass':'fail');
-            document.getElementById('shearCard').className='result-card '+(dcrV<=1?'pass':'fail');
-            document.getElementById('checks').innerHTML=checks.map(c=>
-                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
-            ).join('');
-        }
-    </script>
+<header class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">HSS</div>
+<div><h1>HSS Moment Connection</h1><span>AISC 360-22 | 3D Visualization</span></div>
+</div>
+<div class="btns">
+<button class="btn btn-secondary" onclick="resetForm()">↺ Reset</button>
+<button class="btn btn-secondary" onclick="exportCSV()">📊 Export</button>
+<button class="btn btn-primary" onclick="generateReport()">📄 Report</button>
+</div>
+</div>
+</header>
+<div class="main">
+<div class="input-panel">
+<div class="card">
+<div class="card-header"><div class="card-title">🔗 Connection Type</div></div>
+<div class="card-body">
+<div class="conn-types">
+<div class="conn-type active" data-type="welded" onclick="setType('welded')"><div class="icon">⚡</div><div class="label">Welded</div></div>
+<div class="conn-type" data-type="bolted" onclick="setType('bolted')"><div class="icon">🔩</div><div class="label">Bolted</div></div>
+<div class="conn-type" data-type="combined" onclick="setType('combined')"><div class="icon">⚙️</div><div class="label">Combined</div></div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><div class="card-title">▣ HSS Column</div></div>
+<div class="card-body">
+<div class="form-group hss-search">
+<label>Section</label>
+<input type="text" id="colSec" placeholder="Search HSS..." oninput="showDrop('col')" onfocus="showDrop('col')">
+<div class="hss-dropdown" id="colDrop"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>B<span class="unit">in</span></label><input type="number" id="colB" value="10" onchange="update()"></div>
+<div class="form-group"><label>H<span class="unit">in</span></label><input type="number" id="colH" value="10" onchange="update()"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>t<span class="unit">in</span></label><input type="number" id="colT" value="0.465" step="0.001" onchange="update()"></div>
+<div class="form-group"><label>Fy<span class="unit">ksi</span></label><input type="number" id="colFy" value="46" onchange="update()"></div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><div class="card-title" style="color:var(--green)">▭ Main Beam (Over Column)</div></div>
+<div class="card-body">
+<div class="form-group hss-search">
+<label>Section</label>
+<input type="text" id="mainSec" placeholder="Search HSS..." oninput="showDrop('main')" onfocus="showDrop('main')">
+<div class="hss-dropdown" id="mainDrop"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>B<span class="unit">in</span></label><input type="number" id="mainB" value="8" onchange="update()"></div>
+<div class="form-group"><label>H<span class="unit">in</span></label><input type="number" id="mainH" value="12" onchange="update()"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>t<span class="unit">in</span></label><input type="number" id="mainT" value="0.465" step="0.001" onchange="update()"></div>
+<div class="form-group"><label>Fy<span class="unit">ksi</span></label><input type="number" id="mainFy" value="46" onchange="update()"></div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><div class="card-title" style="color:var(--purple)">▭ Perpendicular Beam</div></div>
+<div class="card-body">
+<div class="form-group hss-search">
+<label>Section</label>
+<input type="text" id="perpSec" placeholder="Search HSS..." oninput="showDrop('perp')" onfocus="showDrop('perp')">
+<div class="hss-dropdown" id="perpDrop"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>B<span class="unit">in</span></label><input type="number" id="perpB" value="6" onchange="update()"></div>
+<div class="form-group"><label>H<span class="unit">in</span></label><input type="number" id="perpH" value="8" onchange="update()"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>t<span class="unit">in</span></label><input type="number" id="perpT" value="0.349" step="0.001" onchange="update()"></div>
+<div class="form-group"><label>Fy<span class="unit">ksi</span></label><input type="number" id="perpFy" value="46" onchange="update()"></div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><div class="card-title">⟳ Design Forces</div></div>
+<div class="card-body">
+<div class="section-title">Main Beam</div>
+<div class="form-row">
+<div class="form-group"><label>Mu<span class="unit">k-ft</span></label><input type="number" id="mainMu" value="150" onchange="update()"></div>
+<div class="form-group"><label>Vu<span class="unit">kips</span></label><input type="number" id="mainVu" value="45" onchange="update()"></div>
+</div>
+<div class="section-title">Perp. Beam</div>
+<div class="form-row">
+<div class="form-group"><label>Mu<span class="unit">k-ft</span></label><input type="number" id="perpMu" value="80" onchange="update()"></div>
+<div class="form-group"><label>Vu<span class="unit">kips</span></label><input type="number" id="perpVu" value="25" onchange="update()"></div>
+</div>
+</div>
+</div>
+<div class="card" id="weldCard">
+<div class="card-header"><div class="card-title">⚡ Weld</div></div>
+<div class="card-body">
+<div class="form-row">
+<div class="form-group"><label>Type</label><select id="weldType" onchange="update()"><option value="CJP">CJP</option><option value="fillet">Fillet</option></select></div>
+<div class="form-group"><label>Size<span class="unit">in</span></label><input type="number" id="weldSize" value="0.375" step="0.0625" onchange="update()"></div>
+</div>
+<div class="form-group"><label>FEXX</label><select id="fexx" onchange="update()"><option value="70">E70</option><option value="80">E80</option></select></div>
+</div>
+</div>
+<div class="card" id="boltCard" style="display:none">
+<div class="card-header"><div class="card-title">🔩 Bolts</div></div>
+<div class="card-body">
+<div class="form-row">
+<div class="form-group"><label>Dia</label><select id="boltDia" onchange="update()"><option value="0.75">3/4"</option><option value="0.875">7/8"</option><option value="1">1"</option></select></div>
+<div class="form-group"><label>Grade</label><select id="boltGrade" onchange="update()"><option value="A325">A325</option><option value="A490">A490</option></select></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Rows</label><input type="number" id="boltRows" value="4" min="2" onchange="update()"></div>
+<div class="form-group"><label>Cols</label><input type="number" id="boltCols" value="2" min="1" onchange="update()"></div>
+</div>
+<div class="form-group"><label>Pitch<span class="unit">in</span></label><input type="number" id="boltPitch" value="3" onchange="update()"></div>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><div class="card-title">▭ Plate</div></div>
+<div class="card-body">
+<div class="form-row">
+<div class="form-group"><label>Width<span class="unit">in</span></label><input type="number" id="plateW" value="12" onchange="update()"></div>
+<div class="form-group"><label>t<span class="unit">in</span></label><input type="number" id="plateT" value="0.75" onchange="update()"></div>
+</div>
+</div>
+</div>
+<button class="btn btn-primary" style="width:100%;padding:12px" onclick="calc()">⚙️ Calculate</button>
+</div>
+<div class="viz">
+<div class="card" style="flex:1">
+<div class="card-header">
+<div class="card-title">🎨 3D View</div>
+<div class="tabs">
+<button class="tab active" onclick="setView3D('iso')">Iso</button>
+<button class="tab" onclick="setView3D('front')">Front</button>
+<button class="tab" onclick="setView3D('side')">Side</button>
+<button class="tab" onclick="setView3D('top')">Top</button>
+</div>
+</div>
+<div class="card-body" style="padding:0">
+<div class="viz-box viz-3d">
+<canvas id="c3d"></canvas>
+<div class="legend">
+<div class="legend-item"><div class="legend-color" style="background:#00b4d8"></div>Column</div>
+<div class="legend-item"><div class="legend-color" style="background:#06d6a0"></div>Main Beam</div>
+<div class="legend-item"><div class="legend-color" style="background:#9d4edd"></div>Perp Beam</div>
+<div class="legend-item"><div class="legend-color" style="background:#f77f00"></div>Plates</div>
+</div>
+<div class="hint">🖱️ Drag to rotate</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header">
+<div class="card-title">📐 2D Detail</div>
+<div class="tabs">
+<button class="tab active" onclick="setView2D('elev')">Elevation</button>
+<button class="tab" onclick="setView2D('plan')">Plan</button>
+<button class="tab" onclick="setView2D('sect')">Section</button>
+</div>
+</div>
+<div class="card-body" style="padding:0">
+<div class="viz-box viz-2d"><svg id="svg2d" viewBox="0 0 560 260"></svg></div>
+</div>
+</div>
+</div>
+<div class="results">
+<div class="card">
+<div class="card-header">
+<div class="card-title">✓ Summary</div>
+<div class="badge pass" id="status">● PASS</div>
+</div>
+<div class="card-body">
+<div class="stats">
+<div class="stat pass"><div class="stat-label">Main Cap</div><div class="stat-value" id="mainCap">--</div></div>
+<div class="stat pass"><div class="stat-label">Perp Cap</div><div class="stat-value" id="perpCap">--</div></div>
+<div class="stat"><div class="stat-label">Gov Ratio</div><div class="stat-value" id="govRatio">--</div></div>
+<div class="stat"><div class="stat-label">Type</div><div class="stat-value" id="typeDisp">Welded</div></div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><div class="card-title">☑ Design Checks</div></div>
+<div class="card-body"><div class="checks" id="checks"></div></div>
+</div>
+<div class="card">
+<div class="card-header"><div class="card-title">📖 References</div></div>
+<div class="card-body" style="font-size:12px;color:var(--text2)">
+<p>• AISC 360-22 Chapter J</p>
+<p>• AISC Design Guide 24</p>
+<p>• AWS D1.1</p>
+</div>
+</div>
+</div>
+</div>
+<script>
+const HSS=[
+{n:'HSS20x20x5/8',B:20,H:20,t:0.581},{n:'HSS20x20x1/2',B:20,H:20,t:0.465},{n:'HSS18x18x5/8',B:18,H:18,t:0.581},{n:'HSS18x18x1/2',B:18,H:18,t:0.465},
+{n:'HSS16x16x5/8',B:16,H:16,t:0.581},{n:'HSS16x16x1/2',B:16,H:16,t:0.465},{n:'HSS16x16x3/8',B:16,H:16,t:0.349},
+{n:'HSS14x14x5/8',B:14,H:14,t:0.581},{n:'HSS14x14x1/2',B:14,H:14,t:0.465},{n:'HSS14x14x3/8',B:14,H:14,t:0.349},
+{n:'HSS12x12x5/8',B:12,H:12,t:0.581},{n:'HSS12x12x1/2',B:12,H:12,t:0.465},{n:'HSS12x12x3/8',B:12,H:12,t:0.349},{n:'HSS12x12x5/16',B:12,H:12,t:0.291},
+{n:'HSS10x10x5/8',B:10,H:10,t:0.581},{n:'HSS10x10x1/2',B:10,H:10,t:0.465},{n:'HSS10x10x3/8',B:10,H:10,t:0.349},{n:'HSS10x10x5/16',B:10,H:10,t:0.291},{n:'HSS10x10x1/4',B:10,H:10,t:0.233},
+{n:'HSS8x8x5/8',B:8,H:8,t:0.581},{n:'HSS8x8x1/2',B:8,H:8,t:0.465},{n:'HSS8x8x3/8',B:8,H:8,t:0.349},{n:'HSS8x8x5/16',B:8,H:8,t:0.291},{n:'HSS8x8x1/4',B:8,H:8,t:0.233},
+{n:'HSS6x6x1/2',B:6,H:6,t:0.465},{n:'HSS6x6x3/8',B:6,H:6,t:0.349},{n:'HSS6x6x5/16',B:6,H:6,t:0.291},{n:'HSS6x6x1/4',B:6,H:6,t:0.233},
+{n:'HSS5x5x3/8',B:5,H:5,t:0.349},{n:'HSS5x5x1/4',B:5,H:5,t:0.233},{n:'HSS4x4x3/8',B:4,H:4,t:0.349},{n:'HSS4x4x1/4',B:4,H:4,t:0.233},
+{n:'HSS16x12x1/2',B:12,H:16,t:0.465},{n:'HSS16x8x1/2',B:8,H:16,t:0.465},{n:'HSS14x10x1/2',B:10,H:14,t:0.465},{n:'HSS12x10x1/2',B:10,H:12,t:0.465},
+{n:'HSS12x8x1/2',B:8,H:12,t:0.465},{n:'HSS12x8x3/8',B:8,H:12,t:0.349},{n:'HSS12x6x1/2',B:6,H:12,t:0.465},{n:'HSS12x6x3/8',B:6,H:12,t:0.349},
+{n:'HSS12x4x1/2',B:4,H:12,t:0.465},{n:'HSS12x4x3/8',B:4,H:12,t:0.349},{n:'HSS10x8x1/2',B:8,H:10,t:0.465},{n:'HSS10x8x3/8',B:8,H:10,t:0.349},
+{n:'HSS10x6x1/2',B:6,H:10,t:0.465},{n:'HSS10x6x3/8',B:6,H:10,t:0.349},{n:'HSS10x4x1/2',B:4,H:10,t:0.465},{n:'HSS10x4x3/8',B:4,H:10,t:0.349},
+{n:'HSS8x6x1/2',B:6,H:8,t:0.465},{n:'HSS8x6x3/8',B:6,H:8,t:0.349},{n:'HSS8x6x5/16',B:6,H:8,t:0.291},{n:'HSS8x4x1/2',B:4,H:8,t:0.465},
+{n:'HSS8x4x3/8',B:4,H:8,t:0.349},{n:'HSS8x4x5/16',B:4,H:8,t:0.291},{n:'HSS8x4x1/4',B:4,H:8,t:0.233},{n:'HSS6x4x3/8',B:4,H:6,t:0.349},
+{n:'HSS6x4x5/16',B:4,H:6,t:0.291},{n:'HSS6x4x1/4',B:4,H:6,t:0.233},{n:'HSS5x4x3/8',B:4,H:5,t:0.349},{n:'HSS5x3x3/8',B:3,H:5,t:0.349}
+];
+const BOLT={A325:{Fnt:90,Fnv:54,mu:0.5},A490:{Fnt:113,Fnv:68,mu:0.5}};
+let connType='welded',v3d='iso',v2d='elev',rx=-25,ry=35,drag=false,lx,ly,results={checks:[],cap:{}};
+document.addEventListener('DOMContentLoaded',()=>{initCanvas();calc();document.addEventListener('click',e=>{if(!e.target.closest('.hss-search'))document.querySelectorAll('.hss-dropdown').forEach(d=>d.classList.remove('show'))})});
+function initCanvas(){
+const c=document.getElementById('c3d'),p=c.parentElement;c.width=p.clientWidth;c.height=p.clientHeight;
+c.onmousedown=e=>{drag=true;lx=e.clientX;ly=e.clientY};
+c.onmousemove=e=>{if(drag){ry+=(e.clientX-lx)*0.5;rx+=(e.clientY-ly)*0.5;rx=Math.max(-90,Math.min(90,rx));lx=e.clientX;ly=e.clientY;draw3D()}};
+c.onmouseup=()=>drag=false;c.onmouseleave=()=>drag=false;
+window.onresize=()=>{c.width=p.clientWidth;c.height=p.clientHeight;draw3D()};
+}
+function setType(t){connType=t;document.querySelectorAll('.conn-type').forEach(b=>b.classList.toggle('active',b.dataset.type===t));
+document.getElementById('weldCard').style.display=(t==='welded'||t==='combined')?'block':'none';
+document.getElementById('boltCard').style.display=(t==='bolted'||t==='combined')?'block':'none';
+document.getElementById('typeDisp').textContent=t.charAt(0).toUpperCase()+t.slice(1);update()}
+function setView3D(v){v3d=v;document.querySelectorAll('.viz-3d .tab').forEach((b,i)=>b.classList.toggle('active',['iso','front','side','top'][i]===v));
+if(v==='iso'){rx=-25;ry=35}else if(v==='front'){rx=0;ry=0}else if(v==='side'){rx=0;ry=90}else{rx=-90;ry=0}draw3D()}
+function setView2D(v){v2d=v;document.querySelectorAll('.viz-2d .tab').forEach((b,i)=>b.classList.toggle('active',['elev','plan','sect'][i]===v));draw2D()}
+function showDrop(m){const inp=document.getElementById(m+'Sec'),drop=document.getElementById(m+'Drop'),t=inp.value.toLowerCase();
+drop.innerHTML=HSS.filter(h=>h.n.toLowerCase().includes(t)).slice(0,10).map(h=>`<div class="hss-opt" onclick="selHSS('${m}','${h.n}')"><span>${h.n}</span><span class="info">t=${h.t}"</span></div>`).join('');
+drop.classList.add('show')}
+function selHSS(m,n){const h=HSS.find(x=>x.n===n);if(!h)return;document.getElementById(m+'Sec').value=n;
+document.getElementById(m+'B').value=h.B;document.getElementById(m+'H').value=h.H;document.getElementById(m+'T').value=h.t;
+document.getElementById(m+'Drop').classList.remove('show');update()}
+function update(){draw3D();draw2D()}
+function calc(){
+const col={B:+document.getElementById('colB').value,H:+document.getElementById('colH').value,t:+document.getElementById('colT').value,Fy:+document.getElementById('colFy').value};
+const main={B:+document.getElementById('mainB').value,H:+document.getElementById('mainH').value,t:+document.getElementById('mainT').value,Fy:+document.getElementById('mainFy').value};
+const perp={B:+document.getElementById('perpB').value,H:+document.getElementById('perpH').value,t:+document.getElementById('perpT').value,Fy:+document.getElementById('perpFy').value};
+const mainL={Mu:+document.getElementById('mainMu').value,Vu:+document.getElementById('mainVu').value};
+const perpL={Mu:+document.getElementById('perpMu').value,Vu:+document.getElementById('perpVu').value};
+const plate={t:+document.getElementById('plateT').value};
+results={checks:[],cap:{}};
+const mainArm=main.H-main.t,mainFf=(mainL.Mu*12)/mainArm;
+const perpArm=perp.H-perp.t,perpFf=(perpL.Mu*12)/perpArm;
+if(connType==='welded'||connType==='combined'){
+const wt=document.getElementById('weldType').value,ws=+document.getElementById('weldSize').value,fexx=+document.getElementById('fexx').value;
+const throat=wt==='CJP'?Math.min(main.t,plate.t):ws*0.707,phi=0.75,Fnw=0.6*fexx;
+const mainWL=2*col.B+2*main.B,mainWC=phi*Fnw*throat*mainWL;
+results.checks.push({name:'Main Weld',dem:mainFf.toFixed(1)+'k',cap:mainWC.toFixed(1)+'k',r:mainFf/mainWC,st:mainFf<=mainWC?'pass':'fail',ref:'J2.4'});
+const perpWL=2*perp.B+2*(perp.B-2*perp.t),perpWC=phi*Fnw*throat*perpWL;
+results.checks.push({name:'Perp Weld',dem:perpFf.toFixed(1)+'k',cap:perpWC.toFixed(1)+'k',r:perpFf/perpWC,st:perpFf<=perpWC?'pass':'fail',ref:'J2.4'});
+results.cap.mainM=mainWC*mainArm/12;results.cap.perpM=perpWC*perpArm/12}
+if(connType==='bolted'||connType==='combined'){
+const dia=+document.getElementById('boltDia').value,gr=document.getElementById('boltGrade').value,nr=+document.getElementById('boltRows').value,nc=+document.getElementById('boltCols').value;
+const n=nr*nc,Ab=Math.PI*dia*dia/4,phi=0.75,props=BOLT[gr];
+const Rns=phi*props.Fnv*Ab*n,Rnb=phi*2.4*dia*plate.t*65*n,cap=Math.min(Rns,Rnb);
+results.checks.push({name:'Bolt Shear',dem:perpL.Vu.toFixed(1)+'k',cap:cap.toFixed(1)+'k',r:perpL.Vu/cap,st:perpL.Vu<=cap?'pass':'fail',ref:'J3.6'})}
+const beta=main.B/col.B,gamma=col.B/(2*col.t);
+results.checks.push({name:'β Ratio',dem:beta.toFixed(3),cap:'0.25-1.0',r:(beta>=0.25&&beta<=1)?0.5:1.5,st:(beta>=0.25&&beta<=1)?'pass':'fail',ref:'DG24'});
+results.checks.push({name:'γ Slenderness',dem:gamma.toFixed(1),cap:'≤35',r:gamma/35,st:gamma<=35?'pass':(gamma<=40?'warn':'fail'),ref:'DG24'});
+const Rn_bear=0.75*1.8*col.Fy*col.B*col.t*2;
+results.checks.push({name:'Cap Plate Bearing',dem:mainFf.toFixed(1)+'k',cap:Rn_bear.toFixed(1)+'k',r:mainFf/Rn_bear,st:mainFf<=Rn_bear?'pass':'fail',ref:'J7'});
+updateUI();draw3D();draw2D()}
+function updateUI(){
+const maxR=Math.max(...results.checks.map(c=>c.r)),allP=results.checks.every(c=>c.st!=='fail');
+document.getElementById('status').className='badge '+(allP?'pass':'fail');
+document.getElementById('status').textContent='● '+(allP?'PASS':'FAIL');
+document.getElementById('mainCap').textContent=(results.cap.mainM||0).toFixed(1)+'k-ft';
+document.getElementById('perpCap').textContent=(results.cap.perpM||0).toFixed(1)+'k-ft';
+document.getElementById('govRatio').textContent=maxR.toFixed(3);
+document.getElementById('govRatio').className='stat-value '+(maxR<=1?'pass':'fail');
+document.getElementById('checks').innerHTML=results.checks.map(c=>`<div class="check ${c.st}"><div><div class="check-name">${c.name}</div><div style="font-size:10px;color:var(--muted)">${c.ref}</div></div><div class="check-ratio ${c.st}">${c.r.toFixed(3)}</div></div>`).join('')}
+function draw3D(){
+const c=document.getElementById('c3d'),ctx=c.getContext('2d'),W=c.width,H=c.height;
+ctx.fillStyle='#111820';ctx.fillRect(0,0,W,H);
+const col={B:+document.getElementById('colB').value,H:+document.getElementById('colH').value,t:+document.getElementById('colT').value};
+const main={B:+document.getElementById('mainB').value,H:+document.getElementById('mainH').value,t:+document.getElementById('mainT').value};
+const perp={B:+document.getElementById('perpB').value,H:+document.getElementById('perpH').value,t:+document.getElementById('perpT').value};
+const plate={t:+document.getElementById('plateT').value};
+const sc=Math.min(W,H)/50,cx=W/2,cy=H/2;
+const rxr=rx*Math.PI/180,ryr=ry*Math.PI/180;
+function proj(x,y,z){let x1=x*Math.cos(ryr)-z*Math.sin(ryr),z1=x*Math.sin(ryr)+z*Math.cos(ryr),y1=y*Math.cos(rxr)-z1*Math.sin(rxr),z2=y*Math.sin(rxr)+z1*Math.cos(rxr);
+const f=500/(500+z2);return{x:cx+x1*sc*f,y:cy-y1*sc*f,z:z2}}
+function box(x,y,z,w,h,d,fill,stroke){
+const v=[proj(x-w/2,y-h/2,z-d/2),proj(x+w/2,y-h/2,z-d/2),proj(x+w/2,y+h/2,z-d/2),proj(x-w/2,y+h/2,z-d/2),
+proj(x-w/2,y-h/2,z+d/2),proj(x+w/2,y-h/2,z+d/2),proj(x+w/2,y+h/2,z+d/2),proj(x-w/2,y+h/2,z+d/2)];
+const faces=[[0,1,2,3],[5,4,7,6],[4,0,3,7],[1,5,6,2],[4,5,1,0],[3,2,6,7]];
+faces.sort((a,b)=>(b.reduce((s,i)=>s+v[i].z,0)-a.reduce((s,i)=>s+v[i].z,0))/4);
+faces.forEach(f=>{ctx.beginPath();ctx.moveTo(v[f[0]].x,v[f[0]].y);f.forEach(i=>ctx.lineTo(v[i].x,v[i].y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()})}
+const colH=16;
+box(0,-colH/2-main.H/2,0,col.B,colH,col.H,'rgba(0,180,216,0.7)','#00b4d8');
+box(0,-main.H/2-plate.t/2,0,col.B+2,plate.t,col.H+2,'rgba(247,127,0,0.8)','#ffd166');
+box(0,0,0,26,main.H,main.B,'rgba(6,214,160,0.7)','#06d6a0');
+const px=6;box(px,0,main.B/2+plate.t/2,perp.B+1,perp.H+2,plate.t,'rgba(247,127,0,0.8)','#ffd166');
+box(px,0,main.B/2+plate.t+6,perp.B,perp.H,12,'rgba(157,78,221,0.7)','#9d4edd');
+if(connType==='welded'||connType==='combined'){ctx.strokeStyle='#f77f00';ctx.lineWidth=3;
+const w1=proj(-col.B/2,-main.H/2-plate.t,-col.H/2),w2=proj(col.B/2,-main.H/2-plate.t,-col.H/2);
+ctx.beginPath();ctx.moveTo(w1.x,w1.y);ctx.lineTo(w2.x,w2.y);ctx.stroke()}
+if(connType==='bolted'||connType==='combined'){
+const nr=+document.getElementById('boltRows').value,nc=+document.getElementById('boltCols').value,pitch=+document.getElementById('boltPitch').value*0.3;
+ctx.fillStyle='#48cae4';
+for(let r=0;r<Math.min(nr,4);r++)for(let c=0;c<Math.min(nc,2);c++){
+const by=(r-(nr-1)/2)*pitch,bx=px+(c-0.5)*1.5,p=proj(bx,by,main.B/2+plate.t);
+ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill()}}
+ctx.font='10px sans-serif';const o=proj(0,0,0),ax=proj(3,0,0),ay=proj(0,3,0),az=proj(0,0,3);
+ctx.strokeStyle='#ef476f';ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(ax.x,ax.y);ctx.stroke();ctx.fillStyle='#ef476f';ctx.fillText('X',ax.x+3,ax.y);
+ctx.strokeStyle='#06d6a0';ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(ay.x,ay.y);ctx.stroke();ctx.fillStyle='#06d6a0';ctx.fillText('Y',ay.x+3,ay.y);
+ctx.strokeStyle='#00b4d8';ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(az.x,az.y);ctx.stroke();ctx.fillStyle='#00b4d8';ctx.fillText('Z',az.x+3,az.y)}
+function draw2D(){
+const svg=document.getElementById('svg2d');
+const col={B:+document.getElementById('colB').value,H:+document.getElementById('colH').value,t:+document.getElementById('colT').value};
+const main={B:+document.getElementById('mainB').value,H:+document.getElementById('mainH').value,t:+document.getElementById('mainT').value};
+const perp={B:+document.getElementById('perpB').value,H:+document.getElementById('perpH').value,t:+document.getElementById('perpT').value};
+const plate={t:+document.getElementById('plateT').value};
+const ws=+document.getElementById('weldSize').value;
+const sc=10,cx=280,cy=130;
+let h='<defs><marker id="arr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5Z" fill="#5a6a7a"/></marker></defs><rect width="560" height="260" fill="#111820"/>';
+if(v2d==='elev'){
+h+=`<text x="280" y="18" fill="#8b99a8" font-size="11" text-anchor="middle">ELEVATION - Main Beam Over Column</text>`;
+const colW=col.B*sc,colHt=100;
+h+=`<rect x="${cx-colW/2}" y="${cy+main.H*sc/2+plate.t*sc}" width="${colW}" height="${colHt}" fill="#1a2332" stroke="#00b4d8" stroke-width="2"/>`;
+h+=`<rect x="${cx-colW/2+col.t*sc}" y="${cy+main.H*sc/2+plate.t*sc}" width="${colW-2*col.t*sc}" height="${colHt}" fill="#0a0e14"/>`;
+const capW=(col.B+2)*sc,capT=plate.t*sc;
+h+=`<rect x="${cx-capW/2}" y="${cy+main.H*sc/2}" width="${capW}" height="${capT}" fill="#f77f00" stroke="#ffd166"/>`;
+const beamW=180,beamH=main.H*sc;
+h+=`<rect x="${cx-beamW/2}" y="${cy-beamH/2}" width="${beamW}" height="${beamH}" fill="#1a2332" stroke="#06d6a0" stroke-width="2"/>`;
+h+=`<rect x="${cx-beamW/2}" y="${cy-beamH/2+main.t*sc}" width="${beamW}" height="${beamH-2*main.t*sc}" fill="#0a0e14"/>`;
+if(connType==='welded'||connType==='combined'){const wss=ws*sc*2;
+h+=`<path d="M${cx-colW/2} ${cy+beamH/2} L${cx-colW/2-wss} ${cy+beamH/2+wss} L${cx-colW/2} ${cy+beamH/2+wss}Z" fill="#f77f00"/>`;
+h+=`<path d="M${cx+colW/2} ${cy+beamH/2} L${cx+colW/2+wss} ${cy+beamH/2+wss} L${cx+colW/2} ${cy+beamH/2+wss}Z" fill="#f77f00"/>`}
+h+=`<line x1="${cx-beamW/2-25}" y1="${cy-beamH/2}" x2="${cx-beamW/2-25}" y2="${cy+beamH/2}" stroke="#5a6a7a" marker-start="url(#arr)" marker-end="url(#arr)"/>`;
+h+=`<text x="${cx-beamW/2-35}" y="${cy}" fill="#8b99a8" font-size="9" text-anchor="end" dominant-baseline="middle">${main.H}"</text>`;
+h+=`<text x="${cx}" y="${cy-beamH/2-8}" fill="#06d6a0" font-size="9" text-anchor="middle">HSS${main.H}×${main.B}×${main.t}"</text>`;
+h+=`<text x="${cx+colW/2+8}" y="${cy+beamH/2+capT+40}" fill="#00b4d8" font-size="9">HSS${col.H}×${col.B}×${col.t}"</text>`}
+else if(v2d==='plan'){
+h+=`<text x="280" y="18" fill="#8b99a8" font-size="11" text-anchor="middle">PLAN - Perpendicular Connection</text>`;
+const mainW=220,mainD=main.B*sc;
+h+=`<rect x="${cx-mainW/2}" y="${cy-mainD/2}" width="${mainW}" height="${mainD}" fill="#1a2332" stroke="#06d6a0" stroke-width="2"/>`;
+h+=`<rect x="${cx-mainW/2}" y="${cy-mainD/2+main.t*sc}" width="${mainW}" height="${mainD-2*main.t*sc}" fill="#0a0e14"/>`;
+const plateW=(perp.B+1)*sc,plateD=plate.t*sc;
+h+=`<rect x="${cx+25-plateW/2}" y="${cy+mainD/2}" width="${plateW}" height="${plateD}" fill="#f77f00" stroke="#ffd166"/>`;
+const perpW=perp.B*sc,perpL=90;
+h+=`<rect x="${cx+25-perpW/2}" y="${cy+mainD/2+plateD}" width="${perpW}" height="${perpL}" fill="#1a2332" stroke="#9d4edd" stroke-width="2"/>`;
+h+=`<rect x="${cx+25-perpW/2+perp.t*sc}" y="${cy+mainD/2+plateD}" width="${perpW-2*perp.t*sc}" height="${perpL}" fill="#0a0e14"/>`;
+if(connType==='bolted'||connType==='combined'){const nc=+document.getElementById('boltCols').value,bg=2.5*sc;
+for(let c=0;c<nc;c++){const bx=cx+25+(c-0.5)*bg;h+=`<circle cx="${bx}" cy="${cy+mainD/2+plateD/2}" r="4" fill="#48cae4" stroke="#00b4d8"/>`}}
+h+=`<text x="${cx-mainW/2+15}" y="${cy}" fill="#06d6a0" font-size="9" dominant-baseline="middle">Main Beam</text>`;
+h+=`<text x="${cx+25}" y="${cy+mainD/2+plateD+perpL+12}" fill="#9d4edd" font-size="9" text-anchor="middle">Perp Beam</text>`}
+else{
+h+=`<text x="280" y="18" fill="#8b99a8" font-size="11" text-anchor="middle">SECTION - Through Connection</text>`;
+const beamW=main.B*sc,beamH=main.H*sc;
+h+=`<rect x="${cx-beamW/2}" y="${cy-beamH/2}" width="${beamW}" height="${beamH}" fill="#1a2332" stroke="#06d6a0" stroke-width="2"/>`;
+h+=`<rect x="${cx-beamW/2+main.t*sc}" y="${cy-beamH/2+main.t*sc}" width="${beamW-2*main.t*sc}" height="${beamH-2*main.t*sc}" fill="#0a0e14"/>`;
+const plateH=14*sc,plateT=plate.t*sc;
+h+=`<rect x="${cx+beamW/2}" y="${cy-plateH/2}" width="${plateT}" height="${plateH}" fill="#f77f00" stroke="#ffd166"/>`;
+const perpW=perp.B*sc,perpH=perp.H*sc;
+h+=`<rect x="${cx+beamW/2+plateT}" y="${cy-perpH/2}" width="${perpW}" height="${perpH}" fill="#1a2332" stroke="#9d4edd" stroke-width="2"/>`;
+h+=`<rect x="${cx+beamW/2+plateT+perp.t*sc}" y="${cy-perpH/2+perp.t*sc}" width="${perpW-2*perp.t*sc}" height="${perpH-2*perp.t*sc}" fill="#0a0e14"/>`;
+if(connType==='bolted'||connType==='combined'){const nr=+document.getElementById('boltRows').value,pitch=+document.getElementById('boltPitch').value*sc*0.4;
+for(let r=0;r<nr;r++){const by=cy+(r-(nr-1)/2)*pitch;h+=`<circle cx="${cx+beamW/2+plateT/2}" cy="${by}" r="3" fill="#48cae4" stroke="#00b4d8"/>`}}
+if(connType==='welded'||connType==='combined'){const wss=ws*sc*1.5;
+h+=`<path d="M${cx+beamW/2} ${cy-perpH/2} L${cx+beamW/2+wss} ${cy-perpH/2-wss} L${cx+beamW/2+wss} ${cy-perpH/2}Z" fill="#f77f00"/>`;
+h+=`<path d="M${cx+beamW/2} ${cy+perpH/2} L${cx+beamW/2+wss} ${cy+perpH/2+wss} L${cx+beamW/2+wss} ${cy+perpH/2}Z" fill="#f77f00"/>`}
+h+=`<line x1="${cx-beamW/2-20}" y1="${cy-beamH/2}" x2="${cx-beamW/2-20}" y2="${cy+beamH/2}" stroke="#5a6a7a" marker-start="url(#arr)" marker-end="url(#arr)"/>`;
+h+=`<text x="${cx-beamW/2-28}" y="${cy}" fill="#8b99a8" font-size="9" text-anchor="end" dominant-baseline="middle">${main.H}"</text>`;
+h+=`<text x="${cx}" y="${cy-beamH/2-8}" fill="#06d6a0" font-size="9" text-anchor="middle">Main</text>`;
+h+=`<text x="${cx+beamW/2+plateT+perpW/2}" y="${cy-perpH/2-8}" fill="#9d4edd" font-size="9" text-anchor="middle">Perp</text>`}
+svg.innerHTML=h}
+function exportCSV(){
+let csv='HSS 3D Connection Design\nDate,'+new Date().toLocaleString()+'\n\nTYPE,'+connType+'\n\n';
+csv+='COLUMN\nB,'+document.getElementById('colB').value+'\nH,'+document.getElementById('colH').value+'\nt,'+document.getElementById('colT').value+'\n\n';
+csv+='MAIN BEAM\nB,'+document.getElementById('mainB').value+'\nH,'+document.getElementById('mainH').value+'\nt,'+document.getElementById('mainT').value+'\n\n';
+csv+='PERP BEAM\nB,'+document.getElementById('perpB').value+'\nH,'+document.getElementById('perpH').value+'\nt,'+document.getElementById('perpT').value+'\n\n';
+csv+='CHECKS\nName,Demand,Capacity,Ratio,Status,Ref\n';
+results.checks.forEach(c=>csv+=c.name+','+c.dem+','+c.cap+','+c.r.toFixed(3)+','+c.st.toUpperCase()+','+c.ref+'\n');
+const b=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='hss_3d_conn.csv';a.click()}
+function generateReport(){
+const w=window.open('','_blank'),ap=results.checks.every(c=>c.st!=='fail');
+w.document.write(`<!DOCTYPE html><html><head><title>HSS Report</title><style>body{font-family:Arial;max-width:800px;margin:0 auto;padding:20px}h1{color:#0077b6;border-bottom:2px solid #0077b6}h2{margin-top:25px}table{width:100%;border-collapse:collapse;margin:15px 0}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f5f5f5}.pass{color:#06d6a0;font-weight:bold}.fail{color:#ef476f;font-weight:bold}.status{padding:15px;border-radius:8px;text-align:center;margin:20px 0}.sp{background:#d4edda;color:#155724}.sf{background:#f8d7da;color:#721c24}</style></head><body>
+<h1>HSS Moment Connection Report</h1><p>Date: ${new Date().toLocaleDateString()} | AISC 360-22</p>
+<div class="status ${ap?'sp':'sf'}"><h2 style="margin:0">${ap?'PASS ✓':'FAIL ✗'}</h2></div>
+<h2>Configuration</h2><table><tr><td>Type</td><td><b>${connType}</b></td></tr><tr><td>Column</td><td>HSS${document.getElementById('colH').value}×${document.getElementById('colB').value}×${document.getElementById('colT').value}"</td></tr><tr><td>Main Beam</td><td>HSS${document.getElementById('mainH').value}×${document.getElementById('mainB').value}×${document.getElementById('mainT').value}"</td></tr><tr><td>Perp Beam</td><td>HSS${document.getElementById('perpH').value}×${document.getElementById('perpB').value}×${document.getElementById('perpT').value}"</td></tr></table>
+<h2>Forces</h2><table><tr><th>Member</th><th>Mu (k-ft)</th><th>Vu (kips)</th></tr><tr><td>Main</td><td>${document.getElementById('mainMu').value}</td><td>${document.getElementById('mainVu').value}</td></tr><tr><td>Perp</td><td>${document.getElementById('perpMu').value}</td><td>${document.getElementById('perpVu').value}</td></tr></table>
+<h2>Design Checks</h2><table><tr><th>Check</th><th>Demand</th><th>Capacity</th><th>Ratio</th><th>Status</th><th>Ref</th></tr>${results.checks.map(c=>`<tr><td>${c.name}</td><td>${c.dem}</td><td>${c.cap}</td><td>${c.r.toFixed(3)}</td><td class="${c.st}">${c.st.toUpperCase()}</td><td>${c.ref}</td></tr>`).join('')}</table>
+<h2>References</h2><ul><li>AISC 360-22</li><li>AISC Design Guide 24</li><li>AWS D1.1</li></ul>
+<p style="margin-top:40px;color:#666;font-size:12px;border-top:1px solid #ddd;padding-top:20px">Generated by HSS Connection Designer. Verify by licensed PE.</p></body></html>`);w.document.close()}
+function resetForm(){if(confirm('Reset?')){location.reload()}}
+</script>
 </body>
 </html>

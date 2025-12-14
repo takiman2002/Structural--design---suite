@@ -1,166 +1,416 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slab Design | ACI 318-19</title>
-    <style>
-        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--orange:#ff9500;--yellow:#ffd166;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-        .header h1{font-size:1.2rem;color:var(--orange)}
-        .back{color:var(--orange);text-decoration:none}
-        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
-        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-        .panel-title{font-size:0.85rem;font-weight:600;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-        .form-group{margin-bottom:10px}
-        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
-        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--orange),var(--yellow));color:#000}
-        .viz{background:var(--bg);border-radius:8px;height:300px}
-        #canvas{width:100%;height:100%}
-        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--orange)}
-        .result-card.pass{border-left-color:var(--green)}
-        .result-card.fail{border-left-color:var(--red)}
-        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
-        .result-value{font-size:1.1rem;font-weight:600}
-        .checks{display:flex;flex-direction:column;gap:6px}
-        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
-        .check.pass{border-left-color:var(--green)}
-        .check.fail{border-left-color:var(--red)}
-        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
-        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
-        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
-        @media(max-width:1200px){.main{grid-template-columns:1fr}}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACI 318-19 Slab Design (US Units)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; }
+  </style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="back">← Back</a>
-        <div style="text-align:center"><h1>📋 Slab Design</h1><span style="font-size:0.75rem;color:var(--text2)">ACI 318-19</span></div>
-        <div></div>
-    </header>
-    <div class="main">
-        <div class="panel">
-            <div class="panel-title">Slab Type</div>
-            <div class="form-group"><select id="slabType" onchange="calculate()"><option value="one-way">One-Way Slab</option><option value="two-way">Two-Way Slab</option></select></div>
-            <div class="panel-title" style="margin-top:16px">Geometry</div>
-            <div class="form-row">
-                <div class="form-group"><label>Span L1 (ft)</label><input type="number" id="L1" value="15" onchange="draw();calculate()"></div>
-                <div class="form-group"><label>Span L2 (ft)</label><input type="number" id="L2" value="20" onchange="draw();calculate()"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>h (in)</label><input type="number" id="h" value="7" onchange="calculate()"></div>
-                <div class="form-group"><label>Cover (in)</label><input type="number" id="cover" value="0.75" step="0.25" onchange="calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Materials</div>
-            <div class="form-row">
-                <div class="form-group"><label>f'c (psi)</label><input type="number" id="fc" value="4000" onchange="calculate()"></div>
-                <div class="form-group"><label>fy (ksi)</label><input type="number" id="fy" value="60" onchange="calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Loads</div>
-            <div class="form-row">
-                <div class="form-group"><label>SDL (psf)</label><input type="number" id="SDL" value="20" onchange="calculate()"></div>
-                <div class="form-group"><label>LL (psf)</label><input type="number" id="LL" value="50" onchange="calculate()"></div>
-            </div>
-            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
-        </div>
-        <div class="panel">
-            <div class="panel-title">Slab Layout</div>
-            <div class="viz"><canvas id="canvas"></canvas></div>
-            <div class="panel-title" style="margin-top:16px">Reinforcement</div>
-            <div class="result-grid">
-                <div class="result-card"><div class="result-label">As,req</div><div class="result-value" id="AsReq">--</div></div>
-                <div class="result-card"><div class="result-label">As,min</div><div class="result-value" id="AsMin">--</div></div>
-                <div class="result-card"><div class="result-label">Spacing</div><div class="result-value" id="spacing">--</div></div>
-                <div class="result-card"><div class="result-label">Bar Size</div><div class="result-value" id="barSize">--</div></div>
-            </div>
-        </div>
-        <div class="panel">
-            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
-            <div class="result-grid">
-                <div class="result-card pass" id="flexCard"><div class="result-label">φMn</div><div class="result-value" id="phiMn">--</div></div>
-                <div class="result-card"><div class="result-label">Mu</div><div class="result-value" id="Mu">--</div></div>
-                <div class="result-card"><div class="result-label">h,min</div><div class="result-value" id="hMin">--</div></div>
-                <div class="result-card"><div class="result-label">Δ/L</div><div class="result-value" id="deflRatio">--</div></div>
-            </div>
-            <div class="panel-title">Design Checks</div>
-            <div class="checks" id="checks"></div>
-        </div>
-    </div>
-    <script>
-        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
-        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;draw()}
-        document.addEventListener('DOMContentLoaded',()=>{resize();calculate()});
-        window.addEventListener('resize',resize);
-        function draw(){
-            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
-            const L1=+document.getElementById('L1').value;
-            const L2=+document.getElementById('L2').value;
-            const sc=12,cx=c.width/2,cy=c.height/2;
-            ctx.fillStyle='rgba(255,149,0,0.3)';
-            ctx.fillRect(cx-L1*sc/2,cy-L2*sc/2,L1*sc,L2*sc);
-            ctx.strokeStyle='#ff9500';ctx.lineWidth=2;
-            ctx.strokeRect(cx-L1*sc/2,cy-L2*sc/2,L1*sc,L2*sc);
-            ctx.setLineDash([5,5]);ctx.strokeStyle='#ffd166';
-            for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(cx-L1*sc/2,cy-L2*sc/2+i*L2*sc/4);ctx.lineTo(cx+L1*sc/2,cy-L2*sc/2+i*L2*sc/4);ctx.stroke();}
-            ctx.setLineDash([]);
-            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
-            ctx.fillText(L1+' ft',cx-15,cy+L2*sc/2+20);
-            ctx.save();ctx.translate(cx-L1*sc/2-15,cy);ctx.rotate(-Math.PI/2);ctx.fillText(L2+' ft',0,0);ctx.restore();
+  <div id="root"></div>
+  <script>
+    const { useState, useMemo, createElement: h } = React;
+
+    const ACI318SlabDesignUS = () => {
+      const [inputs, setInputs] = useState({
+        slabType: 'oneway',
+        L1: 20,
+        L2: 15,
+        h: 8,
+        cover: 1.5,
+        fc: 4000,
+        fy: 60000,
+        deadLoad: 100,
+        liveLoad: 80,
+        sustainedLiveRatio: 0.3,
+        compressionSteel: false,
+        boundaryCondition: 'simply',
+      });
+
+      const [showCalc, setShowCalc] = useState(false);
+
+      const rebarData = {
+        '#3': { db: 0.375, As: 0.11 },
+        '#4': { db: 0.500, As: 0.20 },
+        '#5': { db: 0.625, As: 0.31 },
+        '#6': { db: 0.750, As: 0.44 },
+        '#7': { db: 0.875, As: 0.60 },
+        '#8': { db: 1.000, As: 0.79 },
+        '#9': { db: 1.128, As: 1.00 },
+        '#10': { db: 1.270, As: 1.27 },
+        '#11': { db: 1.410, As: 1.56 },
+      };
+
+      const spacings = [4, 5, 6, 7, 8, 9, 10, 12];
+
+      const handleChange = (field, value) => {
+        setInputs(prev => Object.assign({}, prev, { [field]: value }));
+      };
+
+      const results = useMemo(() => {
+        const { slabType, L1, L2, h, cover, fc, fy, deadLoad, liveLoad, 
+                sustainedLiveRatio, compressionSteel, boundaryCondition } = inputs;
+
+        const lambda = 1.0;
+        const Ec = 57000 * Math.sqrt(fc);
+        const Es = 29000000;
+        const n = Es / Ec;
+        const fr = 7.5 * lambda * Math.sqrt(fc);
+
+        const b = 12;
+        const d = h - cover - 0.5;
+        const Ln = L1 * 12;
+
+        const selfWeight = 150 * h / 12;
+        const totalDL = selfWeight + deadLoad;
+        const totalLL = liveLoad;
+
+        const wu = 1.2 * totalDL + 1.6 * totalLL;
+        const ws = totalDL + totalLL;
+        const wSustained = totalDL + sustainedLiveRatio * totalLL;
+
+        let Mu_coeff;
+        switch(boundaryCondition) {
+          case 'simply': Mu_coeff = 1/8; break;
+          case 'one_cont': Mu_coeff = 1/10; break;
+          case 'both_cont': Mu_coeff = 1/16; break;
+          case 'cantilever': Mu_coeff = 1/2; break;
+          default: Mu_coeff = 1/8;
         }
-        function calculate(){
-            const type=document.getElementById('slabType').value;
-            const L1=+document.getElementById('L1').value*12;
-            const L2=+document.getElementById('L2').value*12;
-            const h=+document.getElementById('h').value;
-            const cover=+document.getElementById('cover').value;
-            const fc=+document.getElementById('fc').value;
-            const fy=+document.getElementById('fy').value*1000;
-            const SDL=+document.getElementById('SDL').value;
-            const LL=+document.getElementById('LL').value;
-            const d=h-cover-0.25;
-            const wSW=h/12*150;
-            const wu=1.2*(wSW+SDL)+1.6*LL;
-            const Ln=type==='one-way'?L1:Math.min(L1,L2);
-            const Mu=wu*Ln*Ln/(8*12*1000);
-            const hMin=type==='one-way'?Ln/20:Ln/30;
-            const AsMin=0.0018*12*h;
-            const Rn=Mu*12000/(0.9*12*d*d);
-            const rho=0.85*fc/fy*(1-Math.sqrt(1-2*Rn/(0.85*fc)));
-            const As=Math.max(rho*12*d,AsMin);
-            const Ab=0.2;
-            const s=Ab*12/As;
-            const a=As*fy/(0.85*fc*12);
-            const phiMn=0.9*As*fy*(d-a/2)/(12*1000);
-            const Ie=0.5*12*Math.pow(h,3)/12;
-            const defl=5*wu/12*Math.pow(Ln,4)/(384*57000*Math.sqrt(fc)*Ie);
-            const deflRatio=defl/Ln;
-            const checks=[
-                {name:'Flexural Strength',dcr:Mu/phiMn,pass:phiMn>=Mu},
-                {name:'Min Thickness (h≥'+hMin.toFixed(1)+'")',dcr:hMin/h,pass:h>=hMin},
-                {name:'Deflection (L/'+Math.round(1/deflRatio)+')',dcr:deflRatio*240,pass:deflRatio<=1/240}
-            ];
-            const allPass=checks.every(c=>c.pass);
-            document.getElementById('phiMn').textContent=phiMn.toFixed(2)+' k-ft/ft';
-            document.getElementById('Mu').textContent=Mu.toFixed(2)+' k-ft/ft';
-            document.getElementById('hMin').textContent=hMin.toFixed(1)+'"';
-            document.getElementById('deflRatio').textContent='L/'+(1/deflRatio).toFixed(0);
-            document.getElementById('AsReq').textContent=As.toFixed(3)+' in²/ft';
-            document.getElementById('AsMin').textContent=AsMin.toFixed(3)+' in²/ft';
-            document.getElementById('spacing').textContent=Math.min(s,18).toFixed(1)+'" o.c.';
-            document.getElementById('barSize').textContent='#4 @ '+Math.min(s,18).toFixed(0)+'"';
-            document.getElementById('status').className='status '+(allPass?'pass':'fail');
-            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
-            document.getElementById('flexCard').className='result-card '+(checks[0].pass?'pass':'fail');
-            document.getElementById('checks').innerHTML=checks.map(c=>
-                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
-            ).join('');
-            draw();
+
+        const Mu_ftlb = Mu_coeff * wu * Math.pow(L1, 2);
+        const Mu = Mu_ftlb * 12;
+        const Ms_ftlb = Mu_coeff * ws * Math.pow(L1, 2);
+        const Ms = Ms_ftlb * 12;
+        const Msustained_ftlb = Mu_coeff * wSustained * Math.pow(L1, 2);
+
+        let twoWayFactor = 1.0;
+        if (slabType === 'twoway' && L1/L2 <= 2) {
+          twoWayFactor = 0.5 + 0.5 * Math.pow(L2/L1, 2);
         }
-    </script>
+
+        const Mu_design = Mu * twoWayFactor;
+        const Mu_design_ftlb = Mu_ftlb * twoWayFactor;
+        const Ms_design = Ms * twoWayFactor;
+        const Ms_design_ftlb = Ms_ftlb * twoWayFactor;
+
+        const phi = 0.9;
+        const Rn = Mu_design / (phi * b * d * d);
+        const rho = (0.85 * fc / fy) * (1 - Math.sqrt(1 - 2 * Rn / (0.85 * fc)));
+        const As_req = rho * b * d;
+
+        const As_min_temp = 0.0018 * b * h;
+        const As_min_flex = Math.max(3 * Math.sqrt(fc) / fy * b * d, 200 / fy * b * d);
+        const As_min = Math.max(As_min_temp, As_min_flex);
+        const As_design = Math.max(As_req, As_min);
+
+        const beta1 = fc <= 4000 ? 0.85 : Math.max(0.65, 0.85 - 0.05 * (fc - 4000) / 1000);
+        const rho_max = 0.85 * beta1 * fc / fy * (0.003 / (0.003 + 0.005));
+        const As_max = rho_max * b * d;
+
+        const rebarTable = [];
+        Object.entries(rebarData).forEach(([name, data]) => {
+          spacings.forEach(s => {
+            const As_provided = (data.As * 12) / s;
+            const ratio = As_provided / As_design;
+            const status = ratio >= 1.0 ? (ratio <= 1.5 ? 'optimal' : 'over') : 'under';
+            if (ratio >= 0.8 && ratio <= 2.0) {
+              rebarTable.push({ rebar: name, spacing: s, As_provided: As_provided.toFixed(3), ratio: ratio.toFixed(3), status: status });
+            }
+          });
+        });
+        rebarTable.sort((a, b) => Math.abs(a.ratio - 1) - Math.abs(b.ratio - 1));
+
+        const Vu = wu * L1 / 2;
+        const Vu_d = wu * (L1/2 - d/12);
+        const Vc = 2 * lambda * Math.sqrt(fc) * b * d;
+        const phi_Vc = 0.75 * Vc;
+        const shearOK = Vu_d <= phi_Vc;
+
+        const Ig = b * Math.pow(h, 3) / 12;
+        const yt = h / 2;
+        const Mcr = fr * Ig / yt;
+        const Mcr_ftlb = Mcr / 12;
+
+        const rho_actual = As_design / (b * d);
+        const k = Math.sqrt(2 * rho_actual * n + Math.pow(rho_actual * n, 2)) - rho_actual * n;
+        const Icr = n * As_design * Math.pow(d, 2) * (1 - k/3) + b * Math.pow(k*d, 3) / 3;
+
+        const Ma = Ms_design;
+        let Ie = Ma <= Mcr ? Ig : Math.min(Math.pow(Mcr/Ma, 3) * Ig + (1 - Math.pow(Mcr/Ma, 3)) * Icr, Ig);
+
+        let delta_coeff;
+        switch(boundaryCondition) {
+          case 'simply': delta_coeff = 5/384; break;
+          case 'one_cont': delta_coeff = 1/185; break;
+          case 'both_cont': delta_coeff = 1/384; break;
+          case 'cantilever': delta_coeff = 1/8; break;
+          default: delta_coeff = 5/384;
+        }
+
+        const w_DL_pli = totalDL / 12;
+        const w_LL_pli = totalLL / 12;
+        const delta_i_DL = delta_coeff * w_DL_pli * Math.pow(Ln, 4) / (Ec * Ie);
+        const delta_i_LL = delta_coeff * w_LL_pli * Math.pow(Ln, 4) / (Ec * Ie);
+        const delta_i_total = delta_i_DL + delta_i_LL;
+
+        const xi_5yr = 2.0;
+        const rho_prime = compressionSteel ? rho_actual * 0.5 : 0;
+        const lambda_delta = xi_5yr / (1 + 50 * rho_prime);
+
+        const delta_LT = (delta_i_DL + delta_i_LL * sustainedLiveRatio) * lambda_delta;
+        const delta_total = delta_i_total + delta_LT;
+
+        const delta_limit_LL = Ln / 360;
+        const delta_limit_longterm = Ln / 480;
+
+        const deflectionCheck = {
+          LL_ok: delta_i_LL <= delta_limit_LL,
+          LT_ok: delta_LT <= delta_limit_longterm
+        };
+
+        let h_min;
+        switch(boundaryCondition) {
+          case 'simply': h_min = Ln / 20; break;
+          case 'one_cont': h_min = Ln / 24; break;
+          case 'both_cont': h_min = Ln / 28; break;
+          case 'cantilever': h_min = Ln / 10; break;
+          default: h_min = Ln / 20;
+        }
+        const thicknessOK = h >= h_min;
+
+        return {
+          Ec: Ec, n: n, fr: fr, beta1: beta1, selfWeight: selfWeight, totalDL: totalDL, totalLL: totalLL, wu: wu, ws: ws, wSustained: wSustained,
+          Mu: Mu_design, Mu_ftlb: Mu_design_ftlb, Ms: Ms_design, Ms_ftlb: Ms_design_ftlb,
+          Rn: Rn, rho: rho, As_req: As_req, As_min: As_min, As_max: As_max, As_design: As_design, rebarTable: rebarTable,
+          Vu: Vu, Vu_d: Vu_d, Vc: Vc, phi_Vc: phi_Vc, shearOK: shearOK,
+          Ig: Ig, Icr: Icr, Ie: Ie, Mcr: Mcr, Mcr_ftlb: Mcr_ftlb,
+          delta_i_DL: delta_i_DL, delta_i_LL: delta_i_LL, delta_i_total: delta_i_total, lambda_delta: lambda_delta, delta_LT: delta_LT, delta_total: delta_total,
+          delta_limit_LL: delta_limit_LL, delta_limit_longterm: delta_limit_longterm, deflectionCheck: deflectionCheck,
+          h_min: h_min, thicknessOK: thicknessOK, d: d, Ln: Ln, twoWayFactor: twoWayFactor
+        };
+      }, [inputs]);
+
+      const styles = {
+        container: { maxWidth: '1200px', margin: '0 auto', padding: '16px', backgroundColor: '#f8fafc', minHeight: '100vh' },
+        header: { backgroundColor: '#1e40af', color: 'white', padding: '16px', borderRadius: '8px', marginBottom: '16px' },
+        title: { margin: 0, fontSize: '20px', fontWeight: 'bold' },
+        subtitle: { margin: '4px 0 0 0', opacity: 0.9, fontSize: '12px' },
+        card: { backgroundColor: 'white', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
+        cardTitle: { fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#1e40af', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' },
+        grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' },
+        inputGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
+        label: { fontSize: '12px', fontWeight: '500', color: '#374151' },
+        input: { padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', width: '100%' },
+        select: { padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', backgroundColor: 'white', width: '100%' },
+        table: { width: '100%', borderCollapse: 'collapse', fontSize: '12px' },
+        th: { backgroundColor: '#f1f5f9', padding: '8px 6px', textAlign: 'left', fontWeight: '600', borderBottom: '2px solid #e2e8f0' },
+        td: { padding: '6px', borderBottom: '1px solid #e2e8f0' },
+        resultRow: { display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: '13px' },
+        calcSection: { backgroundColor: '#f8fafc', padding: '12px', borderRadius: '6px', marginTop: '12px', fontFamily: 'monospace', fontSize: '11px', lineHeight: '1.5', whiteSpace: 'pre-wrap', overflowX: 'auto' },
+        button: { backgroundColor: '#1e40af', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', marginTop: '8px', width: '100%' },
+        checkbox: { display: 'flex', alignItems: 'center', gap: '8px' }
+      };
+
+      const Badge = (props) => {
+        const colors = {
+          optimal: { bg: '#dcfce7', color: '#166534', text: 'Optimal' },
+          over: { bg: '#fef3c7', color: '#92400e', text: 'Over' },
+          under: { bg: '#fee2e2', color: '#991b1b', text: 'Under' }
+        };
+        const c = colors[props.status];
+        return h('span', { style: { padding: '2px 6px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', backgroundColor: c.bg, color: c.color } }, c.text);
+      };
+
+      const StatusBadge = (props) => {
+        return h('span', { 
+          style: { padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', 
+                   backgroundColor: props.ok ? '#dcfce7' : '#fee2e2', 
+                   color: props.ok ? '#166534' : '#991b1b', marginLeft: '4px' } 
+        }, props.text || (props.ok ? 'OK' : 'NG'));
+      };
+
+      // Build calculation text
+      const calcText = "══════════════════════════════════════════\nACI 318-19 CONCRETE SLAB DESIGN CALCULATIONS\n══════════════════════════════════════════\n\n1. MATERIAL PROPERTIES\n──────────────────────\nConcrete:\n  f'c = " + inputs.fc + " psi\n  Ec = 57,000√f'c = 57,000 × √" + inputs.fc + "\n     = " + (results.Ec/1000).toFixed(0) + " ksi\n  fr = 7.5λ√f'c = 7.5 × 1.0 × √" + inputs.fc + "\n     = " + results.fr.toFixed(1) + " psi\n  β₁ = " + results.beta1.toFixed(2) + "\n\nSteel:\n  fy = " + inputs.fy + " psi\n  Es = 29,000 ksi\n  n = Es/Ec = " + results.n.toFixed(2) + "\n\n2. GEOMETRY\n───────────\nSpan: L = " + inputs.L1 + " ft = " + results.Ln + " in\nThickness: h = " + inputs.h + " in\nCover: " + inputs.cover + " in\nEffective depth: d = h - cover - db/2\n                 d = " + inputs.h + " - " + inputs.cover + " - 0.5 = " + results.d.toFixed(2) + " in\n\n3. LOADS\n────────\nSelf-weight = 150 × " + inputs.h + "/12 = " + results.selfWeight.toFixed(1) + " psf\nTotal DL (wD) = " + results.selfWeight.toFixed(1) + " + " + inputs.deadLoad + " = " + results.totalDL.toFixed(1) + " psf\nTotal LL (wL) = " + results.totalLL.toFixed(1) + " psf\n\nFactored: wu = 1.2(" + results.totalDL.toFixed(1) + ") + 1.6(" + results.totalLL.toFixed(1) + ")\n              = " + results.wu.toFixed(1) + " psf\n\nService: ws = " + results.ws.toFixed(1) + " psf\nSustained: " + results.wSustained.toFixed(1) + " psf\n\n4. FLEXURAL DESIGN (ACI 318-19 §22.2)\n─────────────────────────────────────\nFactored Moment:\n  Mu = (coefficient) × wu × L²\n  Mu = " + results.Mu_ftlb.toFixed(0) + " ft-lb/ft\n     = " + (results.Mu_ftlb/1000).toFixed(3) + " kip-ft/ft\n\nFlexural Coefficient:\n  Rn = Mu/(φbd²)\n     = " + results.Mu.toFixed(0) + "/(0.9 × 12 × " + results.d.toFixed(2) + "²)\n     = " + results.Rn.toFixed(2) + " psi\n\nReinforcement Ratio:\n  ρ = (0.85f'c/fy)[1-√(1-2Rn/0.85f'c)]\n    = " + results.rho.toFixed(6) + "\n\nRequired Steel:\n  As,req = ρ × b × d\n         = " + results.rho.toFixed(6) + " × 12 × " + results.d.toFixed(2) + "\n         = " + results.As_req.toFixed(3) + " in²/ft\n\nMinimum Steel (ACI 318-19 §7.6.1.1):\n  As,min(temp) = 0.0018bh = " + (0.0018*12*inputs.h).toFixed(3) + " in²/ft\n  As,min(flex) = " + (Math.max(3*Math.sqrt(inputs.fc)/inputs.fy*12*results.d, 200/inputs.fy*12*results.d)).toFixed(3) + " in²/ft\n  As,min = " + results.As_min.toFixed(3) + " in²/ft\n\nDesign Steel:\n  As = max(" + results.As_req.toFixed(3) + ", " + results.As_min.toFixed(3) + ")\n     = " + results.As_design.toFixed(3) + " in²/ft\n\n5. SHEAR CHECK (ACI 318-19 §22.5)\n─────────────────────────────────\nFactored Shear @ support:\n  Vu = wu × L/2 = " + results.wu.toFixed(1) + " × " + inputs.L1 + "/2\n     = " + results.Vu.toFixed(0) + " lb/ft = " + (results.Vu/1000).toFixed(2) + " kips/ft\n\nFactored Shear @ d:\n  Vu,d = " + results.Vu_d.toFixed(0) + " lb/ft = " + (results.Vu_d/1000).toFixed(2) + " kips/ft\n\nConcrete Shear Strength:\n  Vc = 2λ√f'c × b × d\n     = 2 × 1.0 × √" + inputs.fc + " × 12 × " + results.d.toFixed(2) + "\n     = " + results.Vc.toFixed(0) + " lb/ft = " + (results.Vc/1000).toFixed(2) + " kips/ft\n\n  φVc = 0.75 × " + (results.Vc/1000).toFixed(2) + " = " + (results.phi_Vc/1000).toFixed(2) + " kips/ft\n\nCheck: Vu,d = " + (results.Vu_d/1000).toFixed(2) + " " + (results.shearOK ? "≤" : ">") + " φVc = " + (results.phi_Vc/1000).toFixed(2) + "\n       → " + (results.shearOK ? "OK" : "NG") + "\n\n6. DEFLECTION (ACI 318-19 §24.2)\n────────────────────────────────\nGross Moment of Inertia:\n  Ig = bh³/12 = 12 × " + inputs.h + "³/12 = " + results.Ig.toFixed(1) + " in⁴/ft\n\nCracking Moment:\n  Mcr = fr × Ig / yt\n      = " + results.fr.toFixed(1) + " × " + results.Ig.toFixed(1) + " / " + (inputs.h/2) + "\n      = " + results.Mcr.toFixed(0) + " in-lb/ft\n      = " + (results.Mcr_ftlb/1000).toFixed(3) + " kip-ft/ft\n\nCracked Moment of Inertia:\n  Icr = " + results.Icr.toFixed(1) + " in⁴/ft\n\nEffective Moment of Inertia (Branson):\n  Ie = " + results.Ie.toFixed(1) + " in⁴/ft\n\nImmediate Deflection:\n  δi,DL = " + results.delta_i_DL.toFixed(4) + " in\n  δi,LL = " + results.delta_i_LL.toFixed(4) + " in\n  δi,total = " + results.delta_i_total.toFixed(4) + " in\n\nLong-term Factor (ACI 318-19 §24.2.4.1):\n  ξ = 2.0 (5 years)\n  ρ' = " + (inputs.compressionSteel ? (results.rho/2).toFixed(6) : "0") + "\n  λΔ = ξ/(1+50ρ') = " + results.lambda_delta.toFixed(3) + "\n\nLong-term Deflection:\n  δLT = (δi,DL + " + inputs.sustainedLiveRatio + "×δi,LL) × λΔ\n      = " + results.delta_LT.toFixed(4) + " in\n\nTotal Deflection:\n  δtotal = " + results.delta_i_total.toFixed(4) + " + " + results.delta_LT.toFixed(4) + "\n         = " + results.delta_total.toFixed(4) + " in\n\nDeflection Limits (Table 24.2.2):\n  LL only: L/360 = " + results.delta_limit_LL.toFixed(3) + " in\n    δi,LL = " + results.delta_i_LL.toFixed(4) + " " + (results.deflectionCheck.LL_ok ? "≤" : ">") + " " + results.delta_limit_LL.toFixed(3) + " → " + (results.deflectionCheck.LL_ok ? "OK" : "NG") + "\n\n  Long-term: L/480 = " + results.delta_limit_longterm.toFixed(3) + " in\n    δLT = " + results.delta_LT.toFixed(4) + " " + (results.deflectionCheck.LT_ok ? "≤" : ">") + " " + results.delta_limit_longterm.toFixed(3) + " → " + (results.deflectionCheck.LT_ok ? "OK" : "NG") + "\n\n7. MINIMUM THICKNESS (Table 7.3.1.1)\n────────────────────────────────────\nCondition: " + (inputs.boundaryCondition === 'simply' ? 'Simply Supported (L/20)' : inputs.boundaryCondition === 'one_cont' ? 'One End Continuous (L/24)' : inputs.boundaryCondition === 'both_cont' ? 'Both Ends Continuous (L/28)' : 'Cantilever (L/10)') + "\nh_min = " + results.h_min.toFixed(2) + " in\nh = " + inputs.h + " in " + (results.thicknessOK ? "≥" : "<") + " h_min → " + (results.thicknessOK ? "OK" : "NG") + "\n\n══════════════════════════════════════════\nEND OF CALCULATIONS\n══════════════════════════════════════════";
+
+      return h('div', { style: styles.container },
+        // Header
+        h('div', { style: styles.header },
+          h('h1', { style: styles.title }, 'ACI 318-19 Slab Design'),
+          h('p', { style: styles.subtitle }, 'Flexure, Shear & Long-term Deflection (US Units)')
+        ),
+
+        // Input Card
+        h('div', { style: styles.card },
+          h('h2', { style: styles.cardTitle }, '📐 Design Input'),
+          h('div', { style: styles.grid },
+            // Slab Type
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Slab Type'),
+              h('select', { style: styles.select, value: inputs.slabType, onChange: (e) => handleChange('slabType', e.target.value) },
+                h('option', { value: 'oneway' }, 'One-Way'),
+                h('option', { value: 'twoway' }, 'Two-Way')
+              )
+            ),
+            // Boundary
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Boundary'),
+              h('select', { style: styles.select, value: inputs.boundaryCondition, onChange: (e) => handleChange('boundaryCondition', e.target.value) },
+                h('option', { value: 'simply' }, 'Simply Supported'),
+                h('option', { value: 'one_cont' }, 'One End Cont.'),
+                h('option', { value: 'both_cont' }, 'Both Ends Cont.'),
+                h('option', { value: 'cantilever' }, 'Cantilever')
+              )
+            ),
+            // Span L1
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Span L₁ (ft)'),
+              h('input', { type: 'number', step: '0.5', style: styles.input, value: inputs.L1, onChange: (e) => handleChange('L1', Number(e.target.value)) })
+            ),
+            // Span L2 (conditional)
+            inputs.slabType === 'twoway' && h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Span L₂ (ft)'),
+              h('input', { type: 'number', step: '0.5', style: styles.input, value: inputs.L2, onChange: (e) => handleChange('L2', Number(e.target.value)) })
+            ),
+            // Thickness
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Thickness h (in)'),
+              h('input', { type: 'number', step: '0.5', style: styles.input, value: inputs.h, onChange: (e) => handleChange('h', Number(e.target.value)) })
+            ),
+            // Cover
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Cover (in)'),
+              h('input', { type: 'number', step: '0.25', style: styles.input, value: inputs.cover, onChange: (e) => handleChange('cover', Number(e.target.value)) })
+            ),
+            // f'c
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, "f'c (psi)"),
+              h('select', { style: styles.select, value: inputs.fc, onChange: (e) => handleChange('fc', Number(e.target.value)) },
+                h('option', { value: 3000 }, '3,000'),
+                h('option', { value: 4000 }, '4,000'),
+                h('option', { value: 5000 }, '5,000'),
+                h('option', { value: 6000 }, '6,000')
+              )
+            ),
+            // fy
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'fy (psi)'),
+              h('select', { style: styles.select, value: inputs.fy, onChange: (e) => handleChange('fy', Number(e.target.value)) },
+                h('option', { value: 40000 }, '40,000'),
+                h('option', { value: 60000 }, '60,000'),
+                h('option', { value: 80000 }, '80,000')
+              )
+            ),
+            // SDL
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'SDL (psf)'),
+              h('input', { type: 'number', step: '5', style: styles.input, value: inputs.deadLoad, onChange: (e) => handleChange('deadLoad', Number(e.target.value)) })
+            ),
+            // Live Load
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Live Load (psf)'),
+              h('input', { type: 'number', step: '5', style: styles.input, value: inputs.liveLoad, onChange: (e) => handleChange('liveLoad', Number(e.target.value)) })
+            ),
+            // Sustained LL Ratio
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Sustained LL Ratio'),
+              h('input', { type: 'number', step: '0.1', min: '0', max: '1', style: styles.input, value: inputs.sustainedLiveRatio, onChange: (e) => handleChange('sustainedLiveRatio', Number(e.target.value)) })
+            ),
+            // Compression Steel
+            h('div', { style: styles.inputGroup },
+              h('label', { style: styles.label }, 'Comp. Steel'),
+              h('div', { style: styles.checkbox },
+                h('input', { type: 'checkbox', checked: inputs.compressionSteel, onChange: (e) => handleChange('compressionSteel', e.target.checked) }),
+                h('span', { style: { fontSize: '12px' } }, 'Present')
+              )
+            )
+          )
+        ),
+
+        // Flexure Card
+        h('div', { style: styles.card },
+          h('h2', { style: styles.cardTitle }, '💪 Flexure Design'),
+          h('div', { style: styles.resultRow }, h('span', null, 'Mu'), h('strong', null, (results.Mu_ftlb/1000).toFixed(2) + ' kip-ft/ft')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Ms'), h('strong', null, (results.Ms_ftlb/1000).toFixed(2) + ' kip-ft/ft')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Effective d'), h('strong', null, results.d.toFixed(2) + ' in')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Required As'), h('strong', null, results.As_req.toFixed(3) + ' in²/ft')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Minimum As'), h('strong', null, results.As_min.toFixed(3) + ' in²/ft')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Design As'), h('strong', { style: { color: '#1e40af' } }, results.As_design.toFixed(3) + ' in²/ft')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Min. Thickness'), h('span', null, 'h_min=' + results.h_min.toFixed(1) + '" ', h(StatusBadge, { ok: results.thicknessOK })))
+        ),
+
+        // Shear Card
+        h('div', { style: styles.card },
+          h('h2', { style: styles.cardTitle }, '⚡ Shear Check'),
+          h('div', { style: styles.resultRow }, h('span', null, 'Vu @ support'), h('strong', null, (results.Vu/1000).toFixed(2) + ' kips/ft')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Vu @ d'), h('strong', null, (results.Vu_d/1000).toFixed(2) + ' kips/ft')),
+          h('div', { style: styles.resultRow }, h('span', null, 'φVc'), h('strong', null, (results.phi_Vc/1000).toFixed(2) + ' kips/ft')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Shear Check'), h(StatusBadge, { ok: results.shearOK, text: results.shearOK ? 'OK' : 'NG - Increase h' }))
+        ),
+
+        // Deflection Card
+        h('div', { style: styles.card },
+          h('h2', { style: styles.cardTitle }, '📉 Deflection Check'),
+          h('div', { style: styles.resultRow }, h('span', null, 'δi (DL)'), h('strong', null, results.delta_i_DL.toFixed(3) + ' in')),
+          h('div', { style: styles.resultRow }, h('span', null, 'δi (LL)'), h('strong', null, results.delta_i_LL.toFixed(3) + ' in')),
+          h('div', { style: styles.resultRow }, h('span', null, 'λΔ factor'), h('strong', null, results.lambda_delta.toFixed(2))),
+          h('div', { style: styles.resultRow }, h('span', null, 'Long-term δLT'), h('strong', null, results.delta_LT.toFixed(3) + ' in')),
+          h('div', { style: styles.resultRow }, h('span', null, 'Total δ'), h('strong', { style: { color: '#1e40af' } }, results.delta_total.toFixed(3) + ' in')),
+          h('div', { style: { marginTop: '8px', fontSize: '11px', color: '#6b7280' } },
+            h('div', null, 'L/360 = ' + results.delta_limit_LL.toFixed(2) + '" (LL) ', h(StatusBadge, { ok: results.deflectionCheck.LL_ok })),
+            h('div', null, 'L/480 = ' + results.delta_limit_longterm.toFixed(2) + '" (LT) ', h(StatusBadge, { ok: results.deflectionCheck.LT_ok }))
+          )
+        ),
+
+        // Rebar Table Card
+        h('div', { style: styles.card },
+          h('h2', { style: styles.cardTitle }, '🔩 Rebar Selection (As = ' + results.As_design.toFixed(3) + ' in²/ft)'),
+          h('div', { style: { overflowX: 'auto' } },
+            h('table', { style: styles.table },
+              h('thead', null,
+                h('tr', null,
+                  h('th', { style: styles.th }, 'Bar'),
+                  h('th', { style: styles.th }, 'Spacing'),
+                  h('th', { style: styles.th }, 'As'),
+                  h('th', { style: styles.th }, 'Ratio'),
+                  h('th', { style: styles.th }, 'Status')
+                )
+              ),
+              h('tbody', null,
+                results.rebarTable.slice(0, 12).map((row, idx) =>
+                  h('tr', { key: idx, style: { backgroundColor: row.status === 'optimal' ? '#f0fdf4' : 'transparent' } },
+                    h('td', { style: styles.td }, h('strong', null, row.rebar)),
+                    h('td', { style: styles.td }, row.spacing + '"'),
+                    h('td', { style: styles.td }, row.As_provided),
+                    h('td', { style: styles.td }, row.ratio),
+                    h('td', { style: styles.td }, h(Badge, { status: row.status }))
+                  )
+                )
+              )
+            )
+          )
+        ),
+
+        // Calculations Card
+        h('div', { style: styles.card },
+          h('h2', { style: styles.cardTitle }, '📝 Detailed Calculations'),
+          h('button', { style: styles.button, onClick: () => setShowCalc(!showCalc) }, showCalc ? 'Hide Calculations' : 'Show Calculations'),
+          showCalc && h('div', { style: styles.calcSection }, calcText)
+        ),
+
+        // Footer
+        h('div', { style: { textAlign: 'center', padding: '16px', color: '#6b7280', fontSize: '11px' } },
+          'ACI 318-19 Building Code Requirements for Structural Concrete'
+        )
+      );
+    };
+
+    ReactDOM.render(React.createElement(ACI318SlabDesignUS), document.getElementById('root'));
+  </script>
 </body>
 </html>

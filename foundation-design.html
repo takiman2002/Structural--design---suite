@@ -1,184 +1,719 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foundation Design | ACI 318-19</title>
-    <style>
-        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--orange:#ff9500;--yellow:#ffd166;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-        .header h1{font-size:1.2rem;color:var(--orange)}
-        .back{color:var(--orange);text-decoration:none}
-        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
-        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-        .panel-title{font-size:0.85rem;font-weight:600;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-        .form-group{margin-bottom:10px}
-        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
-        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--orange),var(--yellow));color:#000}
-        .viz{background:var(--bg);border-radius:8px;height:280px}
-        #canvas{width:100%;height:100%}
-        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--orange)}
-        .result-card.pass{border-left-color:var(--green)}
-        .result-card.fail{border-left-color:var(--red)}
-        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
-        .result-value{font-size:1.1rem;font-weight:600}
-        .checks{display:flex;flex-direction:column;gap:6px}
-        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
-        .check.pass{border-left-color:var(--green)}
-        .check.fail{border-left-color:var(--red)}
-        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
-        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
-        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
-        @media(max-width:1200px){.main{grid-template-columns:1fr}}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACI 318 Foundation Design</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--blue:#58a6ff;--green:#3fb950;--red:#f85149;--amber:#d29922;--text:#c9d1d9;--muted:#8b949e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+.container{max-width:1400px;margin:0 auto}
+h1{font-size:24px;margin-bottom:8px;color:var(--blue)}
+.subtitle{color:var(--muted);font-size:14px;margin-bottom:24px}
+.tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.tab{padding:10px 20px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:14px}
+.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.panel-title{font-size:16px;font-weight:700;margin-bottom:16px}
+.section{margin-bottom:20px}
+.section-title{font-size:12px;color:var(--blue);font-weight:600;margin-bottom:12px;text-transform:uppercase}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:span 2}
+label{font-size:12px;color:var(--muted)}
+input,select{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--text);font-size:14px}
+input:focus{outline:none;border-color:var(--blue)}
+.btn{padding:12px 24px;border-radius:8px;border:none;font-weight:600;cursor:pointer;font-size:14px}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.btn-group{display:flex;gap:10px;margin-top:16px}
+.result{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px}
+.result-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.result-title{font-size:14px;font-weight:600}
+.status{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.status.ok{background:rgba(63,185,80,0.2);color:var(--green)}
+.status.ng{background:rgba(248,81,73,0.2);color:var(--red)}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.result-item span:first-child{font-size:11px;color:var(--muted);display:block}
+.result-item span:last-child{font-size:15px;font-weight:600}
+.hl{color:var(--blue)}
+.warn-text{color:var(--amber)}
+.dcr-bar{margin-top:12px}
+.dcr-track{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.dcr-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.dcr-fill.safe{background:var(--green)}
+.dcr-fill.warn{background:var(--amber)}
+.dcr-fill.danger{background:var(--red)}
+canvas{width:100%;background:var(--bg);border-radius:8px;margin-bottom:16px}
+.code{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:13px;color:var(--blue);margin-top:8px}
+.code.warn{border-color:var(--amber);color:var(--amber)}
+.page{display:none}
+.page.active{display:block}
+.note{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic}
+</style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="back">← Back</a>
-        <div style="text-align:center"><h1>⬛ Foundation Design</h1><span style="font-size:0.75rem;color:var(--text2)">ACI 318-19</span></div>
-        <div></div>
-    </header>
-    <div class="main">
-        <div class="panel">
-            <div class="panel-title">Footing Geometry</div>
-            <div class="form-row">
-                <div class="form-group"><label>B (ft)</label><input type="number" id="B" value="8" onchange="draw();calculate()"></div>
-                <div class="form-group"><label>L (ft)</label><input type="number" id="L" value="8" onchange="draw();calculate()"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>h (in)</label><input type="number" id="h" value="24" onchange="calculate()"></div>
-                <div class="form-group"><label>Cover (in)</label><input type="number" id="cover" value="3" onchange="calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Column</div>
-            <div class="form-row">
-                <div class="form-group"><label>bc (in)</label><input type="number" id="bc" value="18" onchange="draw();calculate()"></div>
-                <div class="form-group"><label>dc (in)</label><input type="number" id="dc" value="18" onchange="draw();calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Materials</div>
-            <div class="form-row">
-                <div class="form-group"><label>f'c (psi)</label><input type="number" id="fc" value="4000" onchange="calculate()"></div>
-                <div class="form-group"><label>fy (ksi)</label><input type="number" id="fy" value="60" onchange="calculate()"></div>
-            </div>
-            <div class="form-group"><label>qa (ksf)</label><input type="number" id="qa" value="4" step="0.5" onchange="calculate()"></div>
-            <div class="panel-title" style="margin-top:16px">Loads (Service)</div>
-            <div class="form-row">
-                <div class="form-group"><label>P (kips)</label><input type="number" id="P" value="350" onchange="calculate()"></div>
-                <div class="form-group"><label>M (k-ft)</label><input type="number" id="M" value="60" onchange="calculate()"></div>
-            </div>
-            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
-        </div>
-        <div class="panel">
-            <div class="panel-title">Footing Plan</div>
-            <div class="viz"><canvas id="canvas"></canvas></div>
-            <div class="panel-title" style="margin-top:16px">Reinforcement</div>
-            <div class="result-grid">
-                <div class="result-card"><div class="result-label">As,req</div><div class="result-value" id="AsReq">--</div></div>
-                <div class="result-card"><div class="result-label">Bars</div><div class="result-value" id="bars">--</div></div>
-            </div>
-        </div>
-        <div class="panel">
-            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
-            <div class="result-grid">
-                <div class="result-card pass" id="bearCard"><div class="result-label">q,max</div><div class="result-value" id="qMax">--</div></div>
-                <div class="result-card pass" id="punchCard"><div class="result-label">φVc (punch)</div><div class="result-value" id="phiVcPunch">--</div></div>
-                <div class="result-card pass" id="owCard"><div class="result-label">φVc (1-way)</div><div class="result-value" id="phiVc1">--</div></div>
-                <div class="result-card pass" id="flexCard"><div class="result-label">φMn</div><div class="result-value" id="phiMn">--</div></div>
-            </div>
-            <div class="panel-title">Design Checks</div>
-            <div class="checks" id="checks"></div>
-        </div>
-    </div>
-    <script>
-        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
-        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;draw()}
-        document.addEventListener('DOMContentLoaded',()=>{resize();calculate()});
-        window.addEventListener('resize',resize);
-        function draw(){
-            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
-            const B=+document.getElementById('B').value;
-            const L=+document.getElementById('L').value;
-            const bc=+document.getElementById('bc').value/12;
-            const dc=+document.getElementById('dc').value/12;
-            const sc=25,cx=c.width/2,cy=c.height/2;
-            ctx.fillStyle='rgba(255,149,0,0.3)';
-            ctx.fillRect(cx-B*sc/2,cy-L*sc/2,B*sc,L*sc);
-            ctx.strokeStyle='#ff9500';ctx.lineWidth=2;
-            ctx.strokeRect(cx-B*sc/2,cy-L*sc/2,B*sc,L*sc);
-            ctx.fillStyle='#48cae4';
-            ctx.fillRect(cx-bc*sc/2,cy-dc*sc/2,bc*sc,dc*sc);
-            ctx.strokeStyle='#ffd166';ctx.setLineDash([4,4]);
-            const h=+document.getElementById('h').value/12;
-            const d=h-3/12-0.5/12;
-            ctx.strokeRect(cx-(bc/2+d)*sc,cy-(dc/2+d)*sc,(bc+2*d)*sc,(dc+2*d)*sc);
-            ctx.setLineDash([]);
-            ctx.fillStyle='#8b99a8';ctx.font='11px system-ui';
-            ctx.fillText(B+' ft',cx-12,cy+L*sc/2+18);
-            ctx.fillText('Critical Section',cx+20,cy-(dc/2+d)*sc-5);
-        }
-        function calculate(){
-            const B=+document.getElementById('B').value;
-            const L=+document.getElementById('L').value;
-            const h=+document.getElementById('h').value;
-            const cover=+document.getElementById('cover').value;
-            const bc=+document.getElementById('bc').value;
-            const dc=+document.getElementById('dc').value;
-            const fc=+document.getElementById('fc').value;
-            const fy=+document.getElementById('fy').value*1000;
-            const qa=+document.getElementById('qa').value;
-            const P=+document.getElementById('P').value;
-            const M=+document.getElementById('M').value;
-            const A=B*L;
-            const qMax=P/A+6*M/(B*L*L);
-            const qMin=P/A-6*M/(B*L*L);
-            const d=h-cover-0.5;
-            const b0=2*((bc+d)+(dc+d));
-            const VuPunch=1.4*P-1.4*qMax*(bc+d)*(dc+d)/144;
-            const VcPunch1=4*Math.sqrt(fc)*b0*d/1000;
-            const VcPunch2=(2+4/(bc/dc))*Math.sqrt(fc)*b0*d/1000;
-            const VcPunch3=(2+40*d/b0)*Math.sqrt(fc)*b0*d/1000;
-            const VcPunch=Math.min(VcPunch1,VcPunch2,VcPunch3);
-            const phiVcPunch=0.75*VcPunch;
-            const cantilever=(B*12-bc)/2-d;
-            const Vu1Way=1.4*qMax*B*cantilever/144;
-            const Vc1Way=2*Math.sqrt(fc)*B*12*d/1000;
-            const phiVc1=0.75*Vc1Way;
-            const Mu=1.4*qMax*L*(B*12/2-bc/2)**2/(2*144*12);
-            const Rn=Mu*12000/(0.9*L*12*d*d);
-            const rho=0.85*fc/fy*(1-Math.sqrt(1-2*Rn/(0.85*fc)));
-            const AsMin=0.0018*L*12*h;
-            const As=Math.max(rho*L*12*d,AsMin);
-            const a=As*fy/(0.85*fc*L*12);
-            const phiMn=0.9*As*fy*(d-a/2)/(12*1000);
-            const nBars=Math.ceil(As/0.79);
-            const checks=[
-                {name:'Bearing Pressure',dcr:qMax/qa,pass:qMax<=qa},
-                {name:'Punching Shear',dcr:VuPunch/phiVcPunch,pass:phiVcPunch>=VuPunch},
-                {name:'One-Way Shear',dcr:Vu1Way/phiVc1,pass:phiVc1>=Vu1Way},
-                {name:'Flexure',dcr:Mu/phiMn,pass:phiMn>=Mu}
-            ];
-            const allPass=checks.every(c=>c.pass);
-            document.getElementById('qMax').textContent=qMax.toFixed(2)+' ksf';
-            document.getElementById('phiVcPunch').textContent=phiVcPunch.toFixed(0)+' k';
-            document.getElementById('phiVc1').textContent=phiVc1.toFixed(0)+' k';
-            document.getElementById('phiMn').textContent=phiMn.toFixed(1)+' k-ft';
-            document.getElementById('AsReq').textContent=As.toFixed(2)+' in²';
-            document.getElementById('bars').textContent=nBars+'-#8 EW';
-            document.getElementById('status').className='status '+(allPass?'pass':'fail');
-            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
-            document.getElementById('bearCard').className='result-card '+(checks[0].pass?'pass':'fail');
-            document.getElementById('punchCard').className='result-card '+(checks[1].pass?'pass':'fail');
-            document.getElementById('owCard').className='result-card '+(checks[2].pass?'pass':'fail');
-            document.getElementById('flexCard').className='result-card '+(checks[3].pass?'pass':'fail');
-            document.getElementById('checks').innerHTML=checks.map(c=>
-                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
-            ).join('');
-            draw();
-        }
-    </script>
+<div class="container">
+<h1>🏗️ ACI 318-19 Foundation Design</h1>
+<p class="subtitle">Spread / Strip / Combined Footing (US Units: kips, ft, in, psi, ksf)</p>
+
+<div class="tabs">
+<button class="tab active" onclick="showPage('spread',this)">▣ Spread Footing</button>
+<button class="tab" onclick="showPage('strip',this)">▬ Strip Footing</button>
+<button class="tab" onclick="showPage('combined',this)">▤ Combined Footing</button>
+</div>
+
+<!-- SPREAD -->
+<div id="spread" class="page active">
+<div class="grid">
+<div class="panel">
+<div class="panel-title">📐 Input Data</div>
+<div class="section"><div class="section-title">Material</div>
+<div class="form-grid">
+<div class="form-group"><label>f'c (psi)</label><input type="number" id="sp-fc" value="4000"></div>
+<div class="form-group"><label>fy (ksi)</label><input type="number" id="sp-fy" value="60"></div>
+</div></div>
+<div class="section"><div class="section-title">Loads</div>
+<div class="form-grid">
+<div class="form-group"><label>P service (kips)</label><input type="number" id="sp-P" value="225"></div>
+<div class="form-group"><label>Pu factored (kips)</label><input type="number" id="sp-Pu" value="315"></div>
+</div></div>
+<div class="section"><div class="section-title">Column</div>
+<div class="form-grid">
+<div class="form-group"><label>Width (in)</label><input type="number" id="sp-bc" value="16"></div>
+<div class="form-group"><label>Depth (in)</label><input type="number" id="sp-dc" value="16"></div>
+</div></div>
+<div class="section"><div class="section-title">Footing</div>
+<div class="form-grid">
+<div class="form-group"><label>B (ft)</label><input type="number" id="sp-B" value="8" step="0.5"></div>
+<div class="form-group"><label>L (ft)</label><input type="number" id="sp-L" value="8" step="0.5"></div>
+<div class="form-group"><label>h (in)</label><input type="number" id="sp-h" value="24"></div>
+<div class="form-group"><label>Cover (in)</label><input type="number" id="sp-cov" value="3"></div>
+</div></div>
+<div class="section"><div class="section-title">Soil & Rebar</div>
+<div class="form-grid">
+<div class="form-group"><label>qa (ksf)</label><input type="number" id="sp-qa" value="4" step="0.5"></div>
+<div class="form-group"><label>Bar</label>
+<select id="sp-bar"><option value="0.5">#4</option><option value="0.625">#5</option><option value="0.75" selected>#6</option><option value="0.875">#7</option><option value="1.0">#8</option></select></div>
+<div class="form-group full"><label>Spacing (in)</label><input type="number" id="sp-sp" value="8"></div>
+</div></div>
+<div class="btn-group">
+<button class="btn btn-primary" onclick="calcSpread()">⚡ Calculate</button>
+<button class="btn btn-secondary" onclick="location.reload()">↺ Reset</button>
+</div>
+</div>
+<div class="panel">
+<div class="panel-title">📊 Results</div>
+<canvas id="spCanvas" width="360" height="200"></canvas>
+<div class="result"><div class="result-header"><span class="result-title">📍 Bearing</span><span class="status ok" id="sp-st1">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>Area</span><span id="sp-A">-</span></div>
+<div class="result-item"><span>q applied</span><span id="sp-q">-</span></div>
+<div class="result-item"><span>qa allow</span><span id="sp-qa2">-</span></div>
+<div class="result-item"><span>DCR</span><span class="hl" id="sp-dcr1">-</span></div>
+</div>
+<div class="dcr-bar"><div class="dcr-track"><div class="dcr-fill safe" id="sp-bar1"></div></div></div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">🔲 Two-Way Shear</span><span class="status ok" id="sp-st2">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>bo</span><span id="sp-bo">-</span></div>
+<div class="result-item"><span>d</span><span id="sp-d">-</span></div>
+<div class="result-item"><span>Vu</span><span id="sp-Vup">-</span></div>
+<div class="result-item"><span>φVc</span><span id="sp-pVcp">-</span></div>
+</div>
+<div class="dcr-bar"><div class="dcr-track"><div class="dcr-fill safe" id="sp-bar2"></div></div></div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">📏 One-Way Shear</span><span class="status ok" id="sp-st3">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>Vu</span><span id="sp-Vu1">-</span></div>
+<div class="result-item"><span>φVc</span><span id="sp-pVc1">-</span></div>
+</div></div>
+<div class="result"><div class="result-header"><span class="result-title">🔩 Bottom Reinforcement</span><span class="status ok" id="sp-st4">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>Mu</span><span id="sp-Mu">-</span></div>
+<div class="result-item"><span>As,req</span><span id="sp-Asr">-</span></div>
+<div class="result-item"><span>As,min</span><span id="sp-Asm">-</span></div>
+<div class="result-item"><span>As,prov</span><span class="hl" id="sp-Asp">-</span></div>
+</div>
+<div class="code" id="sp-rb">#6 @ 8" E.W.</div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">📏 Development Length</span><span class="status ok" id="sp-st5">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>ℓd required</span><span id="sp-ld">-</span></div>
+<div class="result-item"><span>ℓ available</span><span id="sp-lavail">-</span></div>
+<div class="result-item"><span>Hook ℓdh</span><span id="sp-ldh">-</span></div>
+<div class="result-item"><span>Hook Req'd?</span><span class="hl" id="sp-hook">-</span></div>
+</div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">🔝 Top Reinforcement</span><span class="status ok" id="sp-st6">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>h threshold</span><span id="sp-hth">24"</span></div>
+<div class="result-item"><span>Top steel req'd?</span><span class="hl" id="sp-topreq">-</span></div>
+<div class="result-item"><span>As,temp</span><span id="sp-Astemp">-</span></div>
+<div class="result-item"><span>Top bar</span><span id="sp-topbar">-</span></div>
+</div>
+<p class="note">Top reinforcement for shrinkage/temperature when h ≥ 24"</p>
+</div>
+</div></div></div>
+
+<!-- STRIP -->
+<div id="strip" class="page">
+<div class="grid">
+<div class="panel">
+<div class="panel-title">📐 Input Data</div>
+<div class="section"><div class="section-title">Material</div>
+<div class="form-grid">
+<div class="form-group"><label>f'c (psi)</label><input type="number" id="st-fc" value="4000"></div>
+<div class="form-group"><label>fy (ksi)</label><input type="number" id="st-fy" value="60"></div>
+</div></div>
+<div class="section"><div class="section-title">Line Load</div>
+<div class="form-grid">
+<div class="form-group"><label>w service (klf)</label><input type="number" id="st-w" value="7" step="0.5"></div>
+<div class="form-group"><label>wu factored (klf)</label><input type="number" id="st-wu" value="10" step="0.5"></div>
+</div></div>
+<div class="section"><div class="section-title">Dimensions</div>
+<div class="form-grid">
+<div class="form-group"><label>Wall t (in)</label><input type="number" id="st-tw" value="12"></div>
+<div class="form-group"><label>B (ft)</label><input type="number" id="st-B" value="5" step="0.5"></div>
+<div class="form-group"><label>h (in)</label><input type="number" id="st-h" value="16"></div>
+<div class="form-group"><label>Cover (in)</label><input type="number" id="st-cov" value="3"></div>
+</div></div>
+<div class="section"><div class="section-title">Soil & Rebar</div>
+<div class="form-grid">
+<div class="form-group"><label>qa (ksf)</label><input type="number" id="st-qa" value="3" step="0.5"></div>
+<div class="form-group"><label>Bar</label>
+<select id="st-bar"><option value="0.5">#4</option><option value="0.625" selected>#5</option><option value="0.75">#6</option></select></div>
+<div class="form-group full"><label>Spacing (in)</label><input type="number" id="st-sp" value="8"></div>
+</div></div>
+<div class="btn-group">
+<button class="btn btn-primary" onclick="calcStrip()">⚡ Calculate</button>
+<button class="btn btn-secondary" onclick="location.reload()">↺ Reset</button>
+</div>
+</div>
+<div class="panel">
+<div class="panel-title">📊 Results</div>
+<canvas id="stCanvas" width="360" height="180"></canvas>
+<div class="result"><div class="result-header"><span class="result-title">📍 Bearing</span><span class="status ok" id="st-st1">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>q</span><span id="st-q">-</span></div>
+<div class="result-item"><span>qa</span><span id="st-qa2">-</span></div>
+<div class="result-item"><span>DCR</span><span class="hl" id="st-dcr1">-</span></div>
+</div>
+<div class="dcr-bar"><div class="dcr-track"><div class="dcr-fill safe" id="st-bar1"></div></div></div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">📏 One-Way Shear</span><span class="status ok" id="st-st2">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>d</span><span id="st-d">-</span></div>
+<div class="result-item"><span>Vu</span><span id="st-Vu">-</span></div>
+<div class="result-item"><span>φVc</span><span id="st-pVc">-</span></div>
+<div class="result-item"><span>DCR</span><span class="hl" id="st-dcr2">-</span></div>
+</div>
+<div class="dcr-bar"><div class="dcr-track"><div class="dcr-fill safe" id="st-bar2"></div></div></div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">🔩 Transverse Flexure</span><span class="status ok" id="st-st3">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>Mu</span><span id="st-Mu">-</span></div>
+<div class="result-item"><span>As,req</span><span id="st-Asr">-</span></div>
+<div class="result-item"><span>As,min</span><span id="st-Asm">-</span></div>
+<div class="result-item"><span>As,prov</span><span class="hl" id="st-Asp">-</span></div>
+</div>
+<div class="code" id="st-rb">#5 @ 8"</div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">📏 Development Length</span><span class="status ok" id="st-st5">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>ℓd required</span><span id="st-ld">-</span></div>
+<div class="result-item"><span>ℓ available</span><span id="st-lavail">-</span></div>
+<div class="result-item"><span>Hook Req'd?</span><span class="hl" id="st-hook">-</span></div>
+</div>
+</div>
+</div></div></div>
+
+<!-- COMBINED -->
+<div id="combined" class="page">
+<div class="grid">
+<div class="panel">
+<div class="panel-title">📐 Input Data</div>
+<div class="section"><div class="section-title">Material</div>
+<div class="form-grid">
+<div class="form-group"><label>f'c (psi)</label><input type="number" id="cb-fc" value="4000"></div>
+<div class="form-group"><label>fy (ksi)</label><input type="number" id="cb-fy" value="60"></div>
+</div></div>
+<div class="section"><div class="section-title">Column 1 (Ext)</div>
+<div class="form-grid">
+<div class="form-group"><label>P1 (kips)</label><input type="number" id="cb-P1" value="180"></div>
+<div class="form-group"><label>Pu1 (kips)</label><input type="number" id="cb-Pu1" value="252"></div>
+<div class="form-group"><label>b1 (in)</label><input type="number" id="cb-b1" value="16"></div>
+<div class="form-group"><label>d1 (in)</label><input type="number" id="cb-d1" value="16"></div>
+</div></div>
+<div class="section"><div class="section-title">Column 2 (Int)</div>
+<div class="form-grid">
+<div class="form-group"><label>P2 (kips)</label><input type="number" id="cb-P2" value="270"></div>
+<div class="form-group"><label>Pu2 (kips)</label><input type="number" id="cb-Pu2" value="378"></div>
+<div class="form-group"><label>b2 (in)</label><input type="number" id="cb-b2" value="20"></div>
+<div class="form-group"><label>d2 (in)</label><input type="number" id="cb-d2" value="20"></div>
+</div></div>
+<div class="section"><div class="section-title">Footing</div>
+<div class="form-grid">
+<div class="form-group"><label>S spacing (ft)</label><input type="number" id="cb-S" value="14" step="0.5"></div>
+<div class="form-group"><label>e1 edge (ft)</label><input type="number" id="cb-e1" value="2" step="0.5"></div>
+<div class="form-group"><label>B (ft)</label><input type="number" id="cb-B" value="7" step="0.5"></div>
+<div class="form-group"><label>h (in)</label><input type="number" id="cb-h" value="30"></div>
+<div class="form-group"><label>Cover (in)</label><input type="number" id="cb-cov" value="3"></div>
+<div class="form-group"><label>qa (ksf)</label><input type="number" id="cb-qa" value="4" step="0.5"></div>
+</div></div>
+<div class="section"><div class="section-title">Rebar</div>
+<div class="form-grid">
+<div class="form-group"><label>Long Bar</label><select id="cb-bl"><option value="0.875" selected>#7</option><option value="1.0">#8</option></select></div>
+<div class="form-group"><label>Long Spc (in)</label><input type="number" id="cb-spl" value="6"></div>
+<div class="form-group"><label>Trans Bar</label><select id="cb-bt"><option value="0.625">#5</option><option value="0.75" selected>#6</option></select></div>
+<div class="form-group"><label>Trans Spc (in)</label><input type="number" id="cb-spt" value="8"></div>
+</div></div>
+<div class="btn-group">
+<button class="btn btn-primary" onclick="calcCombined()">⚡ Calculate</button>
+<button class="btn btn-secondary" onclick="location.reload()">↺ Reset</button>
+</div>
+</div>
+<div class="panel">
+<div class="panel-title">📊 Results</div>
+<canvas id="cbCanvas" width="360" height="160"></canvas>
+<div class="result"><div class="result-header"><span class="result-title">📐 Geometry</span><span class="status ok" id="cb-st1">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>x̄ resultant</span><span id="cb-xb">-</span></div>
+<div class="result-item"><span>L required</span><span id="cb-Lr">-</span></div>
+<div class="result-item"><span>L actual</span><span id="cb-La">-</span></div>
+<div class="result-item"><span>Eccentricity</span><span class="hl" id="cb-ec">-</span></div>
+</div></div>
+<div class="result"><div class="result-header"><span class="result-title">📍 Bearing</span><span class="status ok" id="cb-st2">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>Area</span><span id="cb-A">-</span></div>
+<div class="result-item"><span>qmax</span><span id="cb-qm">-</span></div>
+<div class="result-item"><span>qa</span><span id="cb-qa2">-</span></div>
+<div class="result-item"><span>DCR</span><span class="hl" id="cb-dcr1">-</span></div>
+</div>
+<div class="dcr-bar"><div class="dcr-track"><div class="dcr-fill safe" id="cb-bar1"></div></div></div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">📏 Shear</span><span class="status ok" id="cb-st3">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>Vu 1-way</span><span id="cb-Vu1">-</span></div>
+<div class="result-item"><span>φVc 1-way</span><span id="cb-pVc1">-</span></div>
+<div class="result-item"><span>Vu punch</span><span id="cb-Vup">-</span></div>
+<div class="result-item"><span>φVc punch</span><span id="cb-pVcp">-</span></div>
+</div></div>
+<div class="result"><div class="result-header"><span class="result-title">🔩 Bottom Reinforcement</span><span class="status ok" id="cb-st4">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>Mu,max</span><span id="cb-Mu">-</span></div>
+<div class="result-item"><span>As,req</span><span id="cb-Asr">-</span></div>
+<div class="result-item"><span>As,min</span><span id="cb-Asm">-</span></div>
+<div class="result-item"><span>As,prov</span><span class="hl" id="cb-Asp">-</span></div>
+</div>
+<div class="code" id="cb-rb1">Long: #7 @ 6"</div>
+<div class="code" id="cb-rb2" style="margin-top:6px">Trans: #6 @ 8"</div>
+</div>
+<div class="result"><div class="result-header"><span class="result-title">🔝 Top Reinforcement (Neg. Moment)</span><span class="status ok" id="cb-st5">-</span></div>
+<div class="result-grid">
+<div class="result-item"><span>-Mu (between cols)</span><span id="cb-Muneg">-</span></div>
+<div class="result-item"><span>As,top req</span><span id="cb-Astop">-</span></div>
+<div class="result-item"><span>Top bar</span><span class="hl" id="cb-topbar">-</span></div>
+</div>
+<p class="note">Top steel required for negative moment between columns</p>
+</div>
+</div></div></div>
+
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=(n,d=2)=>n.toFixed(d);
+const Ab=dia=>Math.PI*dia*dia/4;
+const BN={0.5:'#4',0.625:'#5',0.75:'#6',0.875:'#7',1.0:'#8',1.128:'#9'};
+const BNum={0.5:4,0.625:5,0.75:6,0.875:7,1.0:8};
+
+function showPage(id,btn){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+$(id).classList.add('active');
+btn.classList.add('active');
+}
+
+function setSt(id,ok){const e=$(id);e.textContent=ok?'OK':'NG';e.className='status '+(ok?'ok':'ng');}
+function setB(id,d){const e=$(id);e.style.width=Math.min(d*100,100)+'%';e.className='dcr-fill '+(d<=0.85?'safe':d<=1?'warn':'danger');}
+
+// Development length per ACI 318-19 Section 25.4
+function calcLd(db,fy,fc,isTopBar){
+    // Simplified formula for #7 and smaller
+    const psi_t = isTopBar ? 1.3 : 1.0; // top bar factor
+    const psi_e = 1.0; // uncoated
+    const psi_s = db <= 0.875 ? 0.8 : 1.0; // size factor
+    const lambda = 1.0; // normal weight
+    
+    // ld = (fy * psi_t * psi_e * psi_s * db) / (25 * lambda * sqrt(f'c))
+    let ld = (fy * 1000 * psi_t * psi_e * psi_s * db) / (25 * lambda * Math.sqrt(fc));
+    ld = Math.max(ld, 12); // minimum 12"
+    return ld;
+}
+
+// Hook development length per ACI 318-19 Section 25.4.3
+function calcLdh(db,fy,fc){
+    // ldh = (0.02 * fy * db) / (lambda * sqrt(f'c))
+    let ldh = (0.02 * fy * 1000 * db) / (1.0 * Math.sqrt(fc));
+    ldh = Math.max(ldh, 8*db, 6); // minimum
+    return ldh;
+}
+
+// ============ SPREAD FOOTING ============
+function calcSpread(){
+const fc=+$('sp-fc').value,fy=+$('sp-fy').value,P=+$('sp-P').value,Pu=+$('sp-Pu').value;
+const bc=+$('sp-bc').value,dc=+$('sp-dc').value,B=+$('sp-B').value,L=+$('sp-L').value;
+const h=+$('sp-h').value,cov=+$('sp-cov').value,qa=+$('sp-qa').value;
+const bar=+$('sp-bar').value,sp=+$('sp-sp').value;
+const d=h-cov-bar/2,A=B*L,q=P/A,dcr1=q/qa;
+
+$('sp-A').textContent=fmt(A)+' ft²';
+$('sp-q').textContent=fmt(q,2)+' ksf';
+$('sp-qa2').textContent=fmt(qa,2)+' ksf';
+$('sp-dcr1').textContent=fmt(dcr1,3);
+setSt('sp-st1',dcr1<=1);setB('sp-bar1',dcr1);
+
+const quU=Pu/A,b0=bc+d,d0=dc+d,bo=2*(b0+d0),pA=b0*d0/144,VuP=Pu-quU*pA;
+const beta=Math.max(bc,dc)/Math.min(bc,dc);
+const vc=Math.min(4*Math.sqrt(fc),(2+2/beta)*2*Math.sqrt(fc),(2+40*d/bo)*Math.sqrt(fc));
+const phi=0.75,phiVcP=phi*vc*bo*d/1000,dcr2=VuP/phiVcP;
+$('sp-bo').textContent=fmt(bo,1)+' in';
+$('sp-d').textContent=fmt(d,1)+' in';
+$('sp-Vup').textContent=fmt(VuP,1)+' kips';
+$('sp-pVcp').textContent=fmt(phiVcP,1)+' kips';
+setSt('sp-st2',dcr2<=1);setB('sp-bar2',dcr2);
+
+const Bin=B*12,Lin=L*12,crit=(Lin-dc)/2-d;
+const Vu1=quU*(Bin/12)*Math.max(crit,0)/12;
+const phiVc1=phi*2*Math.sqrt(fc)*Bin*d/1000;
+$('sp-Vu1').textContent=fmt(Vu1,1)+' kips';
+$('sp-pVc1').textContent=fmt(phiVc1,1)+' kips';
+setSt('sp-st3',Vu1<=phiVc1);
+
+const cant=(Lin-dc)/2,Mu=quU*B*Math.pow(cant/12,2)/2;
+let Asr=Mu*12/(0.9*fy*(d-0.5)),Asm=0.0018*Bin*h;
+Asr=Math.max(Asr,Asm);
+const nB=Math.ceil(Bin/sp),Asp=nB*Ab(bar);
+$('sp-Mu').textContent=fmt(Mu,1)+' k-ft';
+$('sp-Asr').textContent=fmt(Asr,2)+' in²';
+$('sp-Asm').textContent=fmt(Asm,2)+' in²';
+$('sp-Asp').textContent=fmt(Asp,2)+' in²';
+$('sp-rb').textContent=BN[bar]+' @ '+sp+'" E.W. ('+nB+' bars)';
+setSt('sp-st4',Asp>=Asr);
+
+// Development Length Check
+const ld = calcLd(bar, fy, fc, false);
+const lavail = (Bin - bc)/2 - cov; // available from column face to edge minus cover
+const ldh = calcLdh(bar, fy, fc);
+const needHook = ld > lavail;
+
+$('sp-ld').textContent=fmt(ld,1)+'"';
+$('sp-lavail').textContent=fmt(lavail,1)+'"';
+$('sp-ldh').textContent=fmt(ldh,1)+'"';
+$('sp-hook').textContent=needHook?'YES - 90° STD':'NO';
+$('sp-hook').className=needHook?'hl warn-text':'hl';
+setSt('sp-st5', !needHook || ldh <= lavail);
+
+// Top Reinforcement for deep footings
+const hThreshold = 24; // inches
+const needTop = h >= hThreshold;
+const AsTemp = 0.0018 * Bin * h; // same as min for temp/shrinkage
+const topSp = needTop ? Math.floor(Bin / Math.ceil(AsTemp / Ab(0.5))) : 0; // use #4 for top
+
+$('sp-hth').textContent = hThreshold + '"';
+$('sp-topreq').textContent = needTop ? 'YES' : 'NO';
+$('sp-topreq').className = needTop ? 'hl warn-text' : 'hl';
+$('sp-Astemp').textContent = needTop ? fmt(AsTemp,2)+' in²' : 'N/A';
+$('sp-topbar').textContent = needTop ? '#4 @ '+Math.min(topSp,18)+'" E.W.' : 'N/A';
+setSt('sp-st6', true);
+
+drawSp(B,h,bc,cov,bar,needHook,needTop);
+}
+
+function drawSp(B,h,bc,cov,bar,needHook,needTop){
+const c=$('spCanvas'),x=c.getContext('2d');
+x.clearRect(0,0,c.width,c.height);
+const sc=Math.min((c.width-80)/(B*12),(c.height-70)/h);
+const ox=c.width/2,oy=35,fW=B*12*sc,fH=h*sc;
+
+// Footing
+x.fillStyle='#30363d';x.fillRect(ox-fW/2,oy,fW,fH);
+x.strokeStyle='#58a6ff';x.lineWidth=1.5;x.strokeRect(ox-fW/2,oy,fW,fH);
+
+// Column
+x.fillStyle='#484f58';x.fillRect(ox-bc*sc/2,oy-12*sc,bc*sc,12*sc);
+x.strokeRect(ox-bc*sc/2,oy-12*sc,bc*sc,12*sc);
+
+const covSc=cov*sc;
+const barD=bar*sc*1.5;
+
+// Bottom reinforcement
+x.strokeStyle='#f0883e';x.lineWidth=3;
+
+if(needHook){
+    // Draw with hooks at ends
+    const hookLen = 8*sc;
+    // Left hook (90° up)
+    x.beginPath();
+    x.moveTo(ox-fW/2+covSc,oy+fH-covSc-hookLen);
+    x.lineTo(ox-fW/2+covSc,oy+fH-covSc);
+    x.lineTo(ox+fW/2-covSc,oy+fH-covSc);
+    x.lineTo(ox+fW/2-covSc,oy+fH-covSc-hookLen);
+    x.stroke();
+} else {
+    // Straight bar
+    x.beginPath();
+    x.moveTo(ox-fW/2+covSc,oy+fH-covSc);
+    x.lineTo(ox+fW/2-covSc,oy+fH-covSc);
+    x.stroke();
+}
+
+// Transverse bars (dots)
+x.fillStyle='#f0883e';
+for(let i=0;i<5;i++){
+    x.beginPath();
+    x.arc(ox-fW/2+25+i*(fW-50)/4,oy+fH-covSc-barD,4,0,Math.PI*2);
+    x.fill();
+}
+
+// Top reinforcement if needed
+if(needTop){
+    x.strokeStyle='#22c55e';x.lineWidth=2;
+    x.beginPath();
+    x.moveTo(ox-fW/2+covSc,oy+covSc);
+    x.lineTo(ox+fW/2-covSc,oy+covSc);
+    x.stroke();
+    
+    // Top transverse dots
+    x.fillStyle='#22c55e';
+    for(let i=0;i<4;i++){
+        x.beginPath();
+        x.arc(ox-fW/2+30+i*(fW-60)/3,oy+covSc+barD/2,3,0,Math.PI*2);
+        x.fill();
+    }
+}
+
+// Labels
+x.fillStyle='#8b949e';x.font='11px sans-serif';x.textAlign='center';
+x.fillText('B = '+B+' ft',ox,oy+fH+18);
+x.fillText('h = '+h+'"',ox+fW/2+25,oy+fH/2);
+
+// Legend
+x.font='10px sans-serif';
+x.fillStyle='#f0883e';x.fillText('● Bottom',ox-40,oy-5);
+if(needTop){x.fillStyle='#22c55e';x.fillText('● Top (T&S)',ox+40,oy-5);}
+if(needHook){x.fillStyle='#d29922';x.fillText('⤾ 90° Hook',ox,oy+fH+32);}
+}
+
+// ============ STRIP FOOTING ============
+function calcStrip(){
+const fc=+$('st-fc').value,fy=+$('st-fy').value,w=+$('st-w').value,wu=+$('st-wu').value;
+const tw=+$('st-tw').value,B=+$('st-B').value,h=+$('st-h').value,cov=+$('st-cov').value;
+const qa=+$('st-qa').value,bar=+$('st-bar').value,sp=+$('st-sp').value;
+const d=h-cov-bar/2,q=w/B,dcr1=q/qa;
+
+$('st-q').textContent=fmt(q,2)+' ksf';
+$('st-qa2').textContent=fmt(qa,2)+' ksf';
+$('st-dcr1').textContent=fmt(dcr1,3);
+setSt('st-st1',dcr1<=1);setB('st-bar1',dcr1);
+
+const Bin=B*12,quU=wu/B,crit=(Bin-tw)/2-d;
+const Vu=quU*Math.max(crit,0)/12,phi=0.75;
+const phiVc=phi*2*Math.sqrt(fc)*12*d/1000,dcr2=Vu/phiVc;
+$('st-d').textContent=fmt(d,1)+' in';
+$('st-Vu').textContent=fmt(Vu,2)+' k/ft';
+$('st-pVc').textContent=fmt(phiVc,2)+' k/ft';
+$('st-dcr2').textContent=fmt(dcr2,3);
+setSt('st-st2',dcr2<=1);setB('st-bar2',dcr2);
+
+const cant=(Bin-tw)/2,Mu=quU*Math.pow(cant/12,2)/2;
+let Asr=Mu*12/(0.9*fy*(d-0.5)),Asm=0.0018*12*h;
+Asr=Math.max(Asr,Asm);
+const nB=Math.ceil(12/sp),Asp=nB*Ab(bar);
+$('st-Mu').textContent=fmt(Mu,2)+' k-ft/ft';
+$('st-Asr').textContent=fmt(Asr,2)+' in²/ft';
+$('st-Asm').textContent=fmt(Asm,2)+' in²/ft';
+$('st-Asp').textContent=fmt(Asp,2)+' in²/ft';
+$('st-rb').textContent=BN[bar]+' @ '+sp+'" trans';
+setSt('st-st3',Asp>=Asr);
+
+// Development length
+const ld = calcLd(bar, fy, fc, false);
+const lavail = (Bin - tw)/2 - cov;
+const needHook = ld > lavail;
+
+$('st-ld').textContent=fmt(ld,1)+'"';
+$('st-lavail').textContent=fmt(lavail,1)+'"';
+$('st-hook').textContent=needHook?'YES - 90° STD':'NO';
+$('st-hook').className=needHook?'hl warn-text':'hl';
+setSt('st-st5', !needHook || calcLdh(bar,fy,fc) <= lavail);
+
+drawSt(B,h,tw,cov,needHook);
+}
+
+function drawSt(B,h,tw,cov,needHook){
+const c=$('stCanvas'),x=c.getContext('2d');
+x.clearRect(0,0,c.width,c.height);
+const sc=Math.min((c.width-80)/(B*12),(c.height-60)/h);
+const ox=c.width/2,oy=30,fW=B*12*sc,fH=h*sc;
+
+x.fillStyle='#30363d';x.fillRect(ox-fW/2,oy,fW,fH);
+x.strokeStyle='#58a6ff';x.lineWidth=1.5;x.strokeRect(ox-fW/2,oy,fW,fH);
+
+// Wall
+x.fillStyle='#484f58';x.fillRect(ox-tw*sc/2,oy-12*sc,tw*sc,12*sc);
+x.strokeRect(ox-tw*sc/2,oy-12*sc,tw*sc,12*sc);
+
+const covSc=cov*sc;
+const barD=6;
+
+// Bottom rebar with optional hooks
+x.strokeStyle='#f0883e';x.lineWidth=3;
+if(needHook){
+    const hookLen = 6*sc;
+    x.beginPath();
+    x.moveTo(ox-fW/2+covSc,oy+fH-covSc-hookLen);
+    x.lineTo(ox-fW/2+covSc,oy+fH-covSc);
+    x.lineTo(ox+fW/2-covSc,oy+fH-covSc);
+    x.lineTo(ox+fW/2-covSc,oy+fH-covSc-hookLen);
+    x.stroke();
+} else {
+    x.beginPath();
+    x.moveTo(ox-fW/2+covSc,oy+fH-covSc);
+    x.lineTo(ox+fW/2-covSc,oy+fH-covSc);
+    x.stroke();
+}
+
+// Transverse (dots)
+x.fillStyle='#f0883e';
+for(let i=0;i<5;i++){
+    x.beginPath();
+    x.arc(ox-fW/2+20+i*(fW-40)/4,oy+fH-covSc-barD,4,0,Math.PI*2);
+    x.fill();
+}
+
+x.fillStyle='#8b949e';x.font='11px sans-serif';x.textAlign='center';
+x.fillText('B = '+B+' ft',ox,oy+fH+18);
+x.fillText('h = '+h+'"',ox+fW/2+25,oy+fH/2);
+if(needHook){x.fillStyle='#d29922';x.fillText('⤾ 90° Hook',ox,oy+fH+32);}
+}
+
+// ============ COMBINED FOOTING ============
+function calcCombined(){
+const fc=+$('cb-fc').value,fy=+$('cb-fy').value;
+const P1=+$('cb-P1').value,Pu1=+$('cb-Pu1').value,b1=+$('cb-b1').value,d1=+$('cb-d1').value;
+const P2=+$('cb-P2').value,Pu2=+$('cb-Pu2').value,b2=+$('cb-b2').value,d2=+$('cb-d2').value;
+const S=+$('cb-S').value,e1=+$('cb-e1').value,B=+$('cb-B').value;
+const h=+$('cb-h').value,cov=+$('cb-cov').value,qa=+$('cb-qa').value;
+const bl=+$('cb-bl').value,spl=+$('cb-spl').value,bt=+$('cb-bt').value,spt=+$('cb-spt').value;
+
+const d=h-cov-bl/2,Pt=P1+P2,Put=Pu1+Pu2;
+const xb=P2*S/Pt,Lreq=2*(e1+xb),La=e1+S+e1,ecc=Math.abs(La/2-(e1+xb));
+$('cb-xb').textContent=fmt(xb,2)+' ft';
+$('cb-Lr').textContent=fmt(Lreq,1)+' ft';
+$('cb-La').textContent=fmt(La,1)+' ft';
+$('cb-ec').textContent=fmt(ecc,2)+' ft';
+setSt('cb-st1',La>=Lreq*0.95);
+
+const A=B*La,qmax=Pt/A,dcr1=qmax/qa;
+$('cb-A').textContent=fmt(A,1)+' ft²';
+$('cb-qm').textContent=fmt(qmax,2)+' ksf';
+$('cb-qa2').textContent=fmt(qa,2)+' ksf';
+$('cb-dcr1').textContent=fmt(dcr1,3);
+setSt('cb-st2',dcr1<=1);setB('cb-bar1',dcr1);
+
+const quU=Put/A,wU=quU*B,Bin=B*12,phi=0.75;
+const x1c=e1+b1/24+d/12,Vu1=Math.abs(wU*x1c-Pu1);
+const phiVc1=phi*2*Math.sqrt(fc)*Bin*d/1000;
+const bo2=2*(b2+d)+2*(d2+d),pA2=(b2+d)*(d2+d)/144;
+const VuP=Pu2-quU*pA2;
+const beta2=Math.max(b2,d2)/Math.min(b2,d2);
+const vcp=Math.min(4*Math.sqrt(fc),(2+2/beta2)*2*Math.sqrt(fc));
+const phiVcP=phi*vcp*bo2*d/1000;
+$('cb-Vu1').textContent=fmt(Vu1,1)+' kips';
+$('cb-pVc1').textContent=fmt(phiVc1,1)+' kips';
+$('cb-Vup').textContent=fmt(VuP,1)+' kips';
+$('cb-pVcp').textContent=fmt(phiVcP,1)+' kips';
+setSt('cb-st3',Vu1<=phiVc1&&VuP<=phiVcP);
+
+// Positive moment (bottom steel)
+const span=S-b1/24-b2/24,MuPos=wU*span*span/8;
+let Asr=MuPos*12/(0.9*fy*(d-1)),Asm=0.0018*Bin*h;
+Asr=Math.max(Asr,Asm);
+const nBl=Math.ceil(Bin/spl),Asp=nBl*Ab(bl);
+$('cb-Mu').textContent=fmt(MuPos,1)+' k-ft';
+$('cb-Asr').textContent=fmt(Asr,2)+' in²';
+$('cb-Asm').textContent=fmt(Asm,2)+' in²';
+$('cb-Asp').textContent=fmt(Asp,2)+' in²';
+$('cb-rb1').textContent='Long: '+BN[bl]+' @ '+spl+'" ('+nBl+')';
+$('cb-rb2').textContent='Trans: '+BN[bt]+' @ '+spt+'"';
+setSt('cb-st4',Asp>=Asr);
+
+// Negative moment (top steel) - at column locations
+// Approximate: cantilever moment at column 1
+const MuNeg = wU * e1 * e1 / 2;
+let AsTop = MuNeg * 12 / (0.9 * fy * (d-1));
+AsTop = Math.max(AsTop, 0.5 * Asr); // at least 50% of bottom steel
+const nTop = Math.ceil(AsTop / Ab(bl));
+const topSpc = Math.floor(Bin / nTop);
+
+$('cb-Muneg').textContent = fmt(MuNeg,1)+' k-ft';
+$('cb-Astop').textContent = fmt(AsTop,2)+' in²';
+$('cb-topbar').textContent = BN[bl]+' @ '+Math.min(topSpc,12)+'" ('+nTop+' bars)';
+setSt('cb-st5', true);
+
+drawCb(La,B,e1,S,b1,b2,h,cov);
+}
+
+function drawCb(L,B,e1,S,b1,b2,h,cov){
+const c=$('cbCanvas'),x=c.getContext('2d');
+x.clearRect(0,0,c.width,c.height);
+const Lin=L*12,Bin=B*12;
+const sc=Math.min((c.width-40)/Lin,(c.height-50)/Bin);
+const ox=20,oy=(c.height-Bin*sc)/2+10,fW=Lin*sc,fH=Bin*sc;
+
+// Footing plan
+x.fillStyle='#30363d';x.fillRect(ox,oy,fW,fH);
+x.strokeStyle='#58a6ff';x.lineWidth=1.5;x.strokeRect(ox,oy,fW,fH);
+
+// Columns
+const c1x=ox+e1*12*sc,c2x=ox+(e1+S)*12*sc;
+x.fillStyle='#484f58';
+x.fillRect(c1x-b1*sc/2,oy+fH/2-b1*sc/2,b1*sc,b1*sc);
+x.strokeRect(c1x-b1*sc/2,oy+fH/2-b1*sc/2,b1*sc,b1*sc);
+x.fillRect(c2x-b2*sc/2,oy+fH/2-b2*sc/2,b2*sc,b2*sc);
+x.strokeRect(c2x-b2*sc/2,oy+fH/2-b2*sc/2,b2*sc,b2*sc);
+
+// Reinforcement indication
+x.strokeStyle='#f0883e';x.lineWidth=2;
+x.setLineDash([4,2]);
+x.beginPath();x.moveTo(ox+10,oy+fH/2);x.lineTo(ox+fW-10,oy+fH/2);x.stroke();
+x.setLineDash([]);
+
+// Top steel indication
+x.strokeStyle='#22c55e';x.lineWidth=2;
+x.setLineDash([2,3]);
+x.beginPath();x.moveTo(c1x-b1*sc,oy+fH/2-10);x.lineTo(c2x+b2*sc,oy+fH/2-10);x.stroke();
+x.setLineDash([]);
+
+x.fillStyle='#c9d1d9';x.font='10px sans-serif';x.textAlign='center';
+x.fillText('P₁',c1x,oy+fH/2+3);
+x.fillText('P₂',c2x,oy+fH/2+3);
+
+x.fillStyle='#8b949e';
+x.fillText('L = '+L+' ft',ox+fW/2,oy+fH+14);
+x.fillText('S = '+S+' ft',c1x+(c2x-c1x)/2,oy-8);
+
+// Legend
+x.font='9px sans-serif';
+x.fillStyle='#f0883e';x.fillText('― Bot',ox+25,oy-8);
+x.fillStyle='#22c55e';x.fillText('┅ Top',ox+60,oy-8);
+}
+
+window.onload=()=>calcSpread();
+</script>
 </body>
 </html>

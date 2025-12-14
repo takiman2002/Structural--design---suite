@@ -3,200 +3,1524 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Column Design P-M | ACI 318-19</title>
+    <title>RC Column Design - ACI 318</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root{--bg:#0a0e14;--bg2:#111820;--card:#1a2230;--orange:#ff9500;--yellow:#ffd166;--green:#06d6a0;--red:#ef476f;--text:#e8eef4;--text2:#8b99a8;--border:#2a3a4a}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-        .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-        .header h1{font-size:1.2rem;color:var(--orange)}
-        .back{color:var(--orange);text-decoration:none}
-        .main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:300px 1fr 300px;gap:20px}
-        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-        .panel-title{font-size:0.85rem;font-weight:600;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-        .form-group{margin-bottom:10px}
-        .form-group label{display:block;font-size:0.72rem;color:var(--text2);margin-bottom:3px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        input,select{width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
-        .btn{padding:10px;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;font-weight:600;width:100%;margin-top:12px;background:linear-gradient(135deg,var(--orange),var(--yellow));color:#000}
-        .viz{background:var(--bg);border-radius:8px;height:350px}
-        #canvas{width:100%;height:100%}
-        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .result-card{background:var(--bg);border-radius:8px;padding:12px;border-left:3px solid var(--orange)}
-        .result-card.pass{border-left-color:var(--green)}
-        .result-card.fail{border-left-color:var(--red)}
-        .result-label{font-size:0.65rem;color:var(--text2);text-transform:uppercase}
-        .result-value{font-size:1.1rem;font-weight:600}
-        .checks{display:flex;flex-direction:column;gap:6px}
-        .check{display:flex;justify-content:space-between;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--border)}
-        .check.pass{border-left-color:var(--green)}
-        .check.fail{border-left-color:var(--red)}
-        .status{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600}
-        .status.pass{background:rgba(6,214,160,0.15);color:var(--green)}
-        .status.fail{background:rgba(239,71,111,0.15);color:var(--red)}
-        @media(max-width:1200px){.main{grid-template-columns:1fr}}
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #2a2a3a;
+            --gradient-1: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            --gradient-2: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 300px;
+            background: radial-gradient(ellipse, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .code-ref {
+            display: inline-block;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin-top: 15px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr 1fr;
+            gap: 25px;
+            align-items: start;
+        }
+
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-1);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            width: 28px;
+            height: 28px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-row input {
+            flex: 1;
+        }
+
+        .unit {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            min-width: 40px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 20px 0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .chart-container {
+            position: relative;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            height: 500px;
+        }
+
+        #pmChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .report-container {
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+        }
+
+        .report-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .report-container::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .report-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .report-section {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .report-section h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calc-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 4px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+        }
+
+        .calc-line:last-child {
+            border-bottom: none;
+        }
+
+        .calc-label {
+            color: var(--text-secondary);
+        }
+
+        .calc-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .calc-formula {
+            display: block;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin: 8px 0;
+            color: var(--accent-cyan);
+            font-size: 0.8rem;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 15px;
+        }
+
+        .result-box.warning {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-title.pass {
+            color: var(--accent-green);
+        }
+
+        .result-title.fail {
+            color: var(--accent-red);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-badge.ok {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge.ng {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .applied-load-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--accent-yellow);
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+
+        .rebar-diagram {
+            width: 100%;
+            height: 180px;
+            margin: 15px 0;
+        }
+
+        .info-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .load-inputs {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .load-inputs h4 {
+            font-size: 0.9rem;
+            color: var(--accent-yellow);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="back">← Back</a>
-        <div style="text-align:center"><h1>🏛️ Column Design P-M</h1><span style="font-size:0.75rem;color:var(--text2)">ACI 318-19</span></div>
-        <div></div>
-    </header>
-    <div class="main">
-        <div class="panel">
-            <div class="panel-title">Column Geometry</div>
-            <div class="form-row">
-                <div class="form-group"><label>b (in)</label><input type="number" id="b" value="18" onchange="calculate()"></div>
-                <div class="form-group"><label>h (in)</label><input type="number" id="h" value="18" onchange="calculate()"></div>
+    <div class="container">
+        <header>
+            <h1>RC Column Design</h1>
+            <p class="subtitle">Reinforced Concrete Column Interaction Diagram & Design Check</p>
+            <span class="code-ref">ACI 318-19 / ACI 318-22</span>
+        </header>
+
+        <div class="main-grid">
+            <!-- Input Panel -->
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">📐</span>
+                    Design Parameters
+                </h2>
+
+                <div class="input-group">
+                    <label>Column Width (b)</label>
+                    <div class="input-row">
+                        <input type="number" id="width" value="24" min="8" step="1">
+                        <span class="unit">in</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Column Depth (h)</label>
+                    <div class="input-row">
+                        <input type="number" id="height" value="24" min="8" step="1">
+                        <span class="unit">in</span>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="input-group">
+                    <label>Concrete Strength (f'c)</label>
+                    <div class="input-row">
+                        <select id="fc">
+                            <option value="3000">3,000</option>
+                            <option value="4000" selected>4,000</option>
+                            <option value="5000">5,000</option>
+                            <option value="6000">6,000</option>
+                            <option value="8000">8,000</option>
+                            <option value="10000">10,000</option>
+                        </select>
+                        <span class="unit">psi</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Steel Yield Strength (fy)</label>
+                    <div class="input-row">
+                        <select id="fy">
+                            <option value="40000">40,000</option>
+                            <option value="60000" selected>60,000</option>
+                            <option value="80000">80,000</option>
+                        </select>
+                        <span class="unit">psi</span>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="input-group">
+                    <label>Reinforcement Configuration</label>
+                    <select id="rebarConfig">
+                        <option value="4">4 bars (corners)</option>
+                        <option value="8" selected>8 bars (3 per face)</option>
+                        <option value="12">12 bars (4 per face)</option>
+                        <option value="16">16 bars (5 per face)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Bar Size</label>
+                    <select id="barSize">
+                        <option value="6">#6 (0.44 in²)</option>
+                        <option value="7">#7 (0.60 in²)</option>
+                        <option value="8" selected>#8 (0.79 in²)</option>
+                        <option value="9">#9 (1.00 in²)</option>
+                        <option value="10">#10 (1.27 in²)</option>
+                        <option value="11">#11 (1.56 in²)</option>
+                        <option value="14">#14 (2.25 in²)</option>
+                        <option value="18">#18 (4.00 in²)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Clear Cover</label>
+                    <div class="input-row">
+                        <input type="number" id="cover" value="1.5" min="1" max="4" step="0.25">
+                        <span class="unit">in</span>
+                    </div>
+                    <p class="info-text">ACI 318-19 Table 20.5.1.3.1: 1.5" min for columns</p>
+                </div>
+
+                <div class="input-group">
+                    <label>Tie Bar Size</label>
+                    <select id="tieSize">
+                        <option value="3">#3</option>
+                        <option value="4" selected>#4</option>
+                        <option value="5">#5</option>
+                    </select>
+                </div>
+
+                <div class="load-inputs">
+                    <h4>🎯 Applied Loads (Factored)</h4>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>Pu (Axial)</label>
+                            <div class="input-row">
+                                <input type="number" id="Pu" value="800" step="10">
+                                <span class="unit">kip</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Mu (Moment)</label>
+                            <div class="input-row">
+                                <input type="number" id="Mu" value="300" step="10">
+                                <span class="unit">k-ft</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <button class="btn btn-primary" onclick="calculateColumn()">
+                    <span>⚡</span> Calculate & Generate P-M Curve
+                </button>
             </div>
-            <div class="form-row">
-                <div class="form-group"><label>Lu (ft)</label><input type="number" id="Lu" value="12" onchange="calculate()"></div>
-                <div class="form-group"><label>Cover (in)</label><input type="number" id="cover" value="1.5" onchange="calculate()"></div>
+
+            <!-- P-M Diagram Panel -->
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">📊</span>
+                    P-M Interaction Diagram
+                </h2>
+
+                <div class="chart-container">
+                    <canvas id="pmChart"></canvas>
+                    <div id="tooltip" class="tooltip"></div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #3b82f6;"></span>
+                        <span>Nominal Strength (Pn, Mn)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #10b981;"></span>
+                        <span>Design Strength (φPn, φMn)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #f59e0b; width: 10px; height: 10px; border-radius: 50%;"></span>
+                        <span>Applied Load (Pu, Mu)</span>
+                    </div>
+                </div>
+
+                <!-- Cross Section Diagram -->
+                <div style="margin-top: 20px;">
+                    <h3 style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">Cross Section</h3>
+                    <svg id="crossSection" class="rebar-diagram" viewBox="0 0 300 200"></svg>
+                </div>
             </div>
-            <div class="panel-title" style="margin-top:16px">Reinforcement</div>
-            <div class="form-row">
-                <div class="form-group"><label>Bar Size</label><select id="barSize" onchange="calculate()"><option value="8">#8</option><option value="9">#9</option><option value="10" selected>#10</option><option value="11">#11</option></select></div>
-                <div class="form-group"><label>No. Bars</label><input type="number" id="nBars" value="8" onchange="calculate()"></div>
+
+            <!-- Calculation Report Panel -->
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">📋</span>
+                    Calculation Report
+                </h2>
+
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="showTab('summary')">Summary</button>
+                    <button class="tab-btn" onclick="showTab('detailed')">Detailed</button>
+                    <button class="tab-btn" onclick="showTab('code')">Code Refs</button>
+                </div>
+
+                <div class="report-container">
+                    <div id="summary" class="tab-content active">
+                        <div id="reportContent">
+                            <p style="color: var(--text-muted); text-align: center; padding: 40px;">
+                                Click "Calculate" to generate the design report
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="detailed" class="tab-content">
+                        <div id="detailedContent">
+                            <p style="color: var(--text-muted); text-align: center; padding: 40px;">
+                                Click "Calculate" to generate detailed calculations
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="code" class="tab-content">
+                        <div class="report-section">
+                            <h3>ACI 318-19/22 Code References</h3>
+                            <div class="calc-line">
+                                <span class="calc-label">Maximum Axial Load</span>
+                                <span class="calc-value">§22.4.2</span>
+                            </div>
+                            <div class="calc-line">
+                                <span class="calc-label">Strength Reduction Factors</span>
+                                <span class="calc-value">§21.2.2</span>
+                            </div>
+                            <div class="calc-line">
+                                <span class="calc-label">Reinforcement Limits</span>
+                                <span class="calc-value">§10.6.1</span>
+                            </div>
+                            <div class="calc-line">
+                                <span class="calc-label">Equivalent Stress Block</span>
+                                <span class="calc-value">§22.2.2.4</span>
+                            </div>
+                            <div class="calc-line">
+                                <span class="calc-label">Clear Cover Requirements</span>
+                                <span class="calc-value">§20.5.1.3.1</span>
+                            </div>
+                            <div class="calc-line">
+                                <span class="calc-label">Lateral Tie Requirements</span>
+                                <span class="calc-value">§25.7.2</span>
+                            </div>
+                            <div class="calc-line">
+                                <span class="calc-label">Balanced Strain Condition</span>
+                                <span class="calc-value">§22.2.1.2</span>
+                            </div>
+                        </div>
+
+                        <div class="report-section">
+                            <h3>Key Equations</h3>
+                            <div class="calc-formula">
+                                β₁ = 0.85 - 0.05(f'c - 4000)/1000 ≥ 0.65 (§22.2.2.4.3)
+                            </div>
+                            <div class="calc-formula">
+                                εcu = 0.003 (Maximum concrete strain, §22.2.2.1)
+                            </div>
+                            <div class="calc-formula">
+                                φPn,max = 0.80φ[0.85f'c(Ag-Ast) + fyAst] (Tied, §22.4.2.1)
+                            </div>
+                            <div class="calc-formula">
+                                φ = 0.65 + (εt - 0.002)×0.25/0.003 (Transition, §21.2.2)
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="panel-title" style="margin-top:16px">Materials</div>
-            <div class="form-row">
-                <div class="form-group"><label>f'c (psi)</label><input type="number" id="fc" value="5000" onchange="calculate()"></div>
-                <div class="form-group"><label>fy (ksi)</label><input type="number" id="fy" value="60" onchange="calculate()"></div>
-            </div>
-            <div class="panel-title" style="margin-top:16px">Design Forces</div>
-            <div class="form-row">
-                <div class="form-group"><label>Pu (kips)</label><input type="number" id="Pu" value="450" onchange="calculate()"></div>
-                <div class="form-group"><label>Mu (k-ft)</label><input type="number" id="Mu" value="180" onchange="calculate()"></div>
-            </div>
-            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
         </div>
-        <div class="panel">
-            <div class="panel-title">P-M Interaction Diagram</div>
-            <div class="viz"><canvas id="canvas"></canvas></div>
-        </div>
-        <div class="panel">
-            <div class="panel-title" style="display:flex;justify-content:space-between"><span>Results</span><span class="status pass" id="status">● PASS</span></div>
-            <div class="result-grid">
-                <div class="result-card pass" id="pmCard"><div class="result-label">P-M Ratio</div><div class="result-value" id="pmRatio">--</div></div>
-                <div class="result-card"><div class="result-label">φPn,max</div><div class="result-value" id="phiPnMax">--</div></div>
-                <div class="result-card"><div class="result-label">φMn,max</div><div class="result-value" id="phiMnMax">--</div></div>
-                <div class="result-card"><div class="result-label">ρg</div><div class="result-value" id="rhoG">--</div></div>
-            </div>
-            <div class="panel-title">Design Checks</div>
-            <div class="checks" id="checks"></div>
-        </div>
+
+        <footer>
+            <p>RC Column Design Tool based on ACI 318-19/22 • For educational and preliminary design purposes only</p>
+            <p style="margin-top: 8px;">Professional engineering judgment required for final design</p>
+        </footer>
     </div>
+
     <script>
-        const barAreas={8:0.79,9:1.00,10:1.27,11:1.56};
-        const c=document.getElementById('canvas'),ctx=c.getContext('2d');
-        function resize(){const box=c.parentElement;c.width=box.clientWidth;c.height=box.clientHeight;calculate()}
-        document.addEventListener('DOMContentLoaded',()=>{resize()});
-        window.addEventListener('resize',resize);
-        function calculate(){
-            const b=+document.getElementById('b').value;
-            const h=+document.getElementById('h').value;
-            const cover=+document.getElementById('cover').value;
-            const fc=+document.getElementById('fc').value;
-            const fy=+document.getElementById('fy').value*1000;
-            const barNum=+document.getElementById('barSize').value;
-            const nBars=+document.getElementById('nBars').value;
-            const Pu=+document.getElementById('Pu').value;
-            const Mu=+document.getElementById('Mu').value;
-            const Ag=b*h;
-            const Ab=barAreas[barNum];
-            const Ast=nBars*Ab;
-            const rhoG=Ast/Ag;
-            const d=h-cover-0.5-barNum/16/2;
-            const P0=0.85*fc*(Ag-Ast)+fy*Ast;
-            const phiPnMax=0.65*0.80*P0/1000;
-            const cb=0.003*d/(0.003+fy/29000000);
-            const ab=0.85*cb;
-            const AsPrime=Ast/2;
-            const dPrime=cover+0.5+barNum/16/2;
-            const Pb=0.85*fc*ab*b/1000+AsPrime*(fy-0.85*fc)/1000-Ast/2*fy/1000;
-            const Mb=0.85*fc*ab*b*(h/2-ab/2)/12000+AsPrime*(fy-0.85*fc)*(h/2-dPrime)/12000+Ast/2*fy*(d-h/2)/12000;
-            const phiMnMax=0.65*Mb;
-            const pmPoints=[];
-            for(let cVal=0.1*h;cVal<=2*h;cVal+=h/20){
-                const a=0.85*cVal;
-                const epsilonT=0.003*(d-cVal)/cVal;
-                const fs=Math.min(Math.abs(epsilonT)*29000,fy);
-                const fsSign=epsilonT>=0?1:-1;
-                const Cc=0.85*fc*Math.min(a,h)*b/1000;
-                const Cs=AsPrime*(Math.min(0.003*(cVal-dPrime)/cVal*29000,fy)-0.85*fc)/1000;
-                const Ts=Ast/2*fs*fsSign/1000;
-                const Pn=Cc+Cs-Ts;
-                const Mn=(Cc*(h/2-Math.min(a,h)/2)+Cs*(h/2-dPrime)+Ts*(d-h/2))/12;
-                const phi=epsilonT>=0.005?0.9:epsilonT<=0.002?0.65:0.65+(epsilonT-0.002)*(0.9-0.65)/(0.005-0.002);
-                pmPoints.push({P:phi*Pn,M:phi*Mn});
-            }
-            pmPoints.unshift({P:phiPnMax,M:0});
-            pmPoints.push({P:0,M:0.9*Ast/2*fy*(d-dPrime)/12000});
-            const inside=isInsideCurve(Pu,Mu,pmPoints);
-            drawPMDiagram(pmPoints,Pu,Mu,inside);
-            const pmRatio=inside?0.85:1.15;
-            const checks=[
-                {name:'P-M Interaction',dcr:pmRatio,pass:inside},
-                {name:'Min ρg (≥1%)',dcr:0.01/rhoG,pass:rhoG>=0.01},
-                {name:'Max ρg (≤8%)',dcr:rhoG/0.08,pass:rhoG<=0.08}
-            ];
-            const allPass=checks.every(c=>c.pass);
-            document.getElementById('pmRatio').textContent=pmRatio.toFixed(3);
-            document.getElementById('phiPnMax').textContent=phiPnMax.toFixed(0)+' k';
-            document.getElementById('phiMnMax').textContent=phiMnMax.toFixed(0)+' k-ft';
-            document.getElementById('rhoG').textContent=(rhoG*100).toFixed(2)+'%';
-            document.getElementById('status').className='status '+(allPass?'pass':'fail');
-            document.getElementById('status').textContent='● '+(allPass?'PASS':'FAIL');
-            document.getElementById('pmCard').className='result-card '+(inside?'pass':'fail');
-            document.getElementById('checks').innerHTML=checks.map(c=>
-                `<div class="check ${c.pass?'pass':'fail'}"><span>${c.name}</span><span style="color:${c.pass?'var(--green)':'var(--red)'}">${c.dcr.toFixed(3)}</span></div>`
-            ).join('');
+        // Bar areas in square inches
+        const barAreas = {
+            3: 0.11, 4: 0.20, 5: 0.31, 6: 0.44, 7: 0.60,
+            8: 0.79, 9: 1.00, 10: 1.27, 11: 1.56, 14: 2.25, 18: 4.00
+        };
+
+        const barDiameters = {
+            3: 0.375, 4: 0.500, 5: 0.625, 6: 0.750, 7: 0.875,
+            8: 1.000, 9: 1.128, 10: 1.270, 11: 1.410, 14: 1.693, 18: 2.257
+        };
+
+        let chartData = null;
+        let canvas, ctx;
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
         }
-        function isInsideCurve(P,M,points){
-            for(let i=0;i<points.length-1;i++){
-                const p1=points[i],p2=points[i+1];
-                if(M>=Math.min(p1.M,p2.M)&&M<=Math.max(p1.M,p2.M)){
-                    const t=(M-p1.M)/(p2.M-p1.M||1);
-                    const Pbound=p1.P+(p2.P-p1.P)*t;
-                    if(P<=Pbound)return true;
+
+        function calculateColumn() {
+            // Get inputs
+            const b = parseFloat(document.getElementById('width').value);
+            const h = parseFloat(document.getElementById('height').value);
+            const fc = parseFloat(document.getElementById('fc').value);
+            const fy = parseFloat(document.getElementById('fy').value);
+            const numBars = parseInt(document.getElementById('rebarConfig').value);
+            const barSize = parseInt(document.getElementById('barSize').value);
+            const cover = parseFloat(document.getElementById('cover').value);
+            const tieSize = parseInt(document.getElementById('tieSize').value);
+            const Pu = parseFloat(document.getElementById('Pu').value);
+            const Mu = parseFloat(document.getElementById('Mu').value);
+
+            // Calculate properties
+            const Ag = b * h;
+            const Ab = barAreas[barSize];
+            const Ast = numBars * Ab;
+            const rho = Ast / Ag;
+            const db = barDiameters[barSize];
+            const dt = barDiameters[tieSize];
+
+            // Distance to centroid of reinforcement
+            const d_prime = cover + dt + db / 2;
+            const d = h - d_prime;
+
+            // Beta1 per ACI 318-19 §22.2.2.4.3
+            let beta1;
+            if (fc <= 4000) {
+                beta1 = 0.85;
+            } else if (fc >= 8000) {
+                beta1 = 0.65;
+            } else {
+                beta1 = 0.85 - 0.05 * (fc - 4000) / 1000;
+            }
+
+            // Modulus of elasticity
+            const Es = 29000000; // psi
+            const ecu = 0.003;
+            const ey = fy / Es;
+
+            // Generate bar positions
+            const barPositions = generateBarPositions(numBars, b, h, d_prime);
+
+            // Calculate P-M interaction points
+            const { nominalPoints, designPoints, balancedPoint, pureAxialPoint } = 
+                calculatePMCurve(b, h, fc, fy, beta1, barPositions, Ab, d, d_prime, Es, ecu);
+
+            // Check design
+            const isAdequate = checkDesign(Pu, Mu * 12, designPoints);
+
+            // Draw chart
+            drawPMChart(nominalPoints, designPoints, Pu, Mu * 12, balancedPoint);
+
+            // Draw cross section
+            drawCrossSection(b, h, barPositions, db, cover, dt);
+
+            // Generate report
+            generateReport(b, h, fc, fy, Ag, Ast, rho, numBars, barSize, cover, tieSize,
+                          d, d_prime, beta1, Pu, Mu, balancedPoint, pureAxialPoint, isAdequate, barPositions, Ab);
+
+            generateDetailedReport(b, h, fc, fy, Ag, Ast, beta1, d, d_prime, Es, ecu,
+                                  nominalPoints, designPoints, barPositions, Ab);
+        }
+
+        function generateBarPositions(numBars, b, h, d_prime) {
+            const positions = [];
+            const x_left = d_prime;
+            const x_right = b - d_prime;
+            const y_top = h - d_prime;
+            const y_bottom = d_prime;
+
+            if (numBars === 4) {
+                positions.push({ x: x_left, y: y_top });
+                positions.push({ x: x_right, y: y_top });
+                positions.push({ x: x_left, y: y_bottom });
+                positions.push({ x: x_right, y: y_bottom });
+            } else {
+                const barsPerFace = Math.floor(numBars / 4) + 1;
+                const spacing_x = (x_right - x_left) / (barsPerFace - 1);
+                const spacing_y = (y_top - y_bottom) / (barsPerFace - 1);
+
+                // Top face
+                for (let i = 0; i < barsPerFace; i++) {
+                    positions.push({ x: x_left + i * spacing_x, y: y_top });
+                }
+                // Bottom face
+                for (let i = 0; i < barsPerFace; i++) {
+                    positions.push({ x: x_left + i * spacing_x, y: y_bottom });
+                }
+                // Left face (excluding corners)
+                for (let i = 1; i < barsPerFace - 1; i++) {
+                    positions.push({ x: x_left, y: y_bottom + i * spacing_y });
+                }
+                // Right face (excluding corners)
+                for (let i = 1; i < barsPerFace - 1; i++) {
+                    positions.push({ x: x_right, y: y_bottom + i * spacing_y });
                 }
             }
+
+            return positions.slice(0, numBars);
+        }
+
+        function calculatePMCurve(b, h, fc, fy, beta1, barPositions, Ab, d, d_prime, Es, ecu) {
+            const nominalPoints = [];
+            const designPoints = [];
+
+            // Pure compression (c = infinity, strain = uniform compression)
+            const Ag = b * h;
+            const Ast = barPositions.length * Ab;
+            const P0 = 0.85 * fc * (Ag - Ast) + fy * Ast;
+            const Pn_max = 0.80 * P0; // ACI 318-19 §22.4.2.1
+
+            nominalPoints.push({ P: P0 / 1000, M: 0, c: Infinity, phi: 0.65, et: 0 });
+            designPoints.push({ P: 0.65 * Pn_max / 1000, M: 0, c: Infinity, phi: 0.65, et: 0 });
+
+            // Varying neutral axis depth
+            const cValues = [];
+            for (let c = h * 3; c >= 0.1; c -= h * 0.02) {
+                cValues.push(c);
+            }
+
+            let balancedPoint = null;
+
+            for (const c of cValues) {
+                const a = beta1 * c;
+                const aEff = Math.min(a, h);
+
+                // Concrete compression force
+                const Cc = 0.85 * fc * b * aEff;
+
+                // Steel forces
+                let Cs = 0;
+                let Ts = 0;
+                let Ms = 0;
+                let et_max = -Infinity;
+
+                for (const bar of barPositions) {
+                    const y = bar.y; // distance from bottom
+                    const d_bar = h - y; // distance from top
+                    
+                    // Strain at bar location
+                    const es = ecu * (c - d_bar) / c;
+                    const fs = Math.min(Math.abs(es * Es), fy) * Math.sign(es);
+                    const Fs = Ab * fs;
+
+                    // Track maximum tensile strain
+                    if (-es > et_max) et_max = -es;
+
+                    if (es > 0) {
+                        // Compression
+                        // Subtract concrete area if bar is in compression zone
+                        if (d_bar < a) {
+                            Cs += Fs - 0.85 * fc * Ab;
+                        } else {
+                            Cs += Fs;
+                        }
+                    } else {
+                        // Tension
+                        Ts += Math.abs(Fs);
+                    }
+
+                    // Moment about centroid
+                    const lever = y - h / 2;
+                    Ms += Fs * lever;
+                }
+
+                // Total forces
+                const Pn = Cc + Cs - Ts;
+                const centroid_c = h / 2 - aEff / 2;
+                const Mn = Cc * centroid_c + Ms;
+
+                if (Pn < -Ast * fy) continue; // Below pure tension
+
+                // Strength reduction factor
+                let phi;
+                const et = et_max;
+                
+                if (et <= 0.002) {
+                    phi = 0.65; // Compression controlled
+                } else if (et >= 0.005) {
+                    phi = 0.90; // Tension controlled
+                } else {
+                    phi = 0.65 + (et - 0.002) * (0.90 - 0.65) / (0.005 - 0.002);
+                }
+
+                // Apply maximum axial load limit
+                let Pn_limited = Math.min(Pn, Pn_max);
+
+                if (Pn > 0 && Mn >= 0) {
+                    nominalPoints.push({ P: Pn / 1000, M: Mn / 12000, c: c, phi: phi, et: et });
+                    designPoints.push({ P: phi * Pn_limited / 1000, M: phi * Mn / 12000, c: c, phi: phi, et: et });
+
+                    // Check for balanced point (et ≈ ey)
+                    const ey = fy / Es;
+                    if (Math.abs(et - ey) < 0.0005 && !balancedPoint) {
+                        balancedPoint = { P: Pn / 1000, M: Mn / 12000, phi: phi };
+                    }
+                }
+            }
+
+            // Pure tension
+            const Tn = Ast * fy;
+            nominalPoints.push({ P: -Tn / 1000, M: 0, c: 0, phi: 0.90, et: Infinity });
+            designPoints.push({ P: -0.90 * Tn / 1000, M: 0, c: 0, phi: 0.90, et: Infinity });
+
+            // Sort points by moment for smooth curve
+            nominalPoints.sort((a, b) => a.M - b.M);
+            designPoints.sort((a, b) => a.M - b.M);
+
+            const pureAxialPoint = { P: P0 / 1000, Pn_max: Pn_max / 1000 };
+
+            return { nominalPoints, designPoints, balancedPoint, pureAxialPoint };
+        }
+
+        function checkDesign(Pu, Mu_inlb, designPoints) {
+            // Find if point is inside design envelope
+            // Simple check: interpolate M at given P
+            const sortedByP = [...designPoints].sort((a, b) => b.P - a.P);
+            
+            for (let i = 0; i < sortedByP.length - 1; i++) {
+                const p1 = sortedByP[i];
+                const p2 = sortedByP[i + 1];
+                
+                if (Pu <= p1.P && Pu >= p2.P) {
+                    const ratio = (Pu - p2.P) / (p1.P - p2.P);
+                    const M_interp = p2.M + ratio * (p1.M - p2.M);
+                    return (Mu_inlb / 12000) <= M_interp;
+                }
+            }
+            
             return false;
         }
-        function drawPMDiagram(points,Pu,Mu,inside){
-            ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,c.width,c.height);
-            const pad=50;
-            const maxP=Math.max(...points.map(p=>p.P))*1.1;
-            const maxM=Math.max(...points.map(p=>p.M))*1.1;
-            const scX=(c.width-2*pad)/maxM;
-            const scY=(c.height-2*pad)/maxP;
-            const toX=m=>pad+m*scX;
-            const toY=p=>c.height-pad-p*scY;
-            ctx.strokeStyle='#2a3a4a';ctx.lineWidth=1;
-            for(let i=0;i<=5;i++){
-                const p=i*maxP/5;
-                ctx.beginPath();ctx.moveTo(pad,toY(p));ctx.lineTo(c.width-pad,toY(p));ctx.stroke();
-                ctx.fillStyle='#8b99a8';ctx.font='10px system-ui';ctx.fillText(p.toFixed(0),5,toY(p)+3);
+
+        function drawPMChart(nominalPoints, designPoints, Pu, Mu, balancedPoint) {
+            canvas = document.getElementById('pmChart');
+            ctx = canvas.getContext('2d');
+
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width - 40;
+            canvas.height = rect.height - 40;
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = { top: 40, right: 40, bottom: 60, left: 80 };
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Find data bounds
+            const allPoints = [...nominalPoints, ...designPoints];
+            let maxP = Math.max(...allPoints.map(p => p.P), Pu) * 1.1;
+            let minP = Math.min(...allPoints.map(p => p.P), 0) * 1.1;
+            let maxM = Math.max(...allPoints.map(p => p.M), Mu / 12) * 1.1;
+
+            const plotWidth = width - padding.left - padding.right;
+            const plotHeight = height - padding.top - padding.bottom;
+
+            // Scale functions
+            const scaleX = (m) => padding.left + (m / maxM) * plotWidth;
+            const scaleY = (p) => padding.top + ((maxP - p) / (maxP - minP)) * plotHeight;
+
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+
+            // Vertical grid lines
+            for (let i = 0; i <= 5; i++) {
+                const x = padding.left + (i / 5) * plotWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, padding.top);
+                ctx.lineTo(x, height - padding.bottom);
+                ctx.stroke();
             }
-            for(let i=0;i<=5;i++){
-                const m=i*maxM/5;
-                ctx.beginPath();ctx.moveTo(toX(m),pad);ctx.lineTo(toX(m),c.height-pad);ctx.stroke();
-                ctx.fillText(m.toFixed(0),toX(m)-10,c.height-pad+15);
+
+            // Horizontal grid lines
+            for (let i = 0; i <= 5; i++) {
+                const y = padding.top + (i / 5) * plotHeight;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
             }
+
+            // Draw axes
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+
+            // Y axis
             ctx.beginPath();
-            ctx.moveTo(toX(points[0].M),toY(points[0].P));
-            points.forEach(p=>ctx.lineTo(toX(p.M),toY(p.P)));
-            ctx.strokeStyle='#ff9500';ctx.lineWidth=3;ctx.stroke();
-            ctx.fillStyle='rgba(255,149,0,0.1)';ctx.fill();
+            ctx.moveTo(padding.left, padding.top);
+            ctx.lineTo(padding.left, height - padding.bottom);
+            ctx.stroke();
+
+            // X axis (at P=0 if visible)
+            const zeroY = scaleY(0);
+            if (zeroY > padding.top && zeroY < height - padding.bottom) {
+                ctx.beginPath();
+                ctx.moveTo(padding.left, zeroY);
+                ctx.lineTo(width - padding.right, zeroY);
+                ctx.stroke();
+            }
+
+            // Draw nominal curve
             ctx.beginPath();
-            ctx.arc(toX(Mu),toY(Pu),8,0,Math.PI*2);
-            ctx.fillStyle=inside?'#06d6a0':'#ef476f';ctx.fill();
-            ctx.fillStyle='#e8eef4';ctx.font='12px system-ui';
-            ctx.fillText('φMn (k-ft)',c.width/2-30,c.height-10);
-            ctx.save();ctx.translate(15,c.height/2);ctx.rotate(-Math.PI/2);ctx.fillText('φPn (k)',0,0);ctx.restore();
-            ctx.fillText('(Pu, Mu)',toX(Mu)+12,toY(Pu)+4);
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            const sortedNominal = [...nominalPoints].sort((a, b) => a.M - b.M);
+            sortedNominal.forEach((p, i) => {
+                const x = scaleX(p.M);
+                const y = scaleY(p.P);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Draw design curve
+            ctx.beginPath();
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 3;
+            const sortedDesign = [...designPoints].sort((a, b) => a.M - b.M);
+            sortedDesign.forEach((p, i) => {
+                const x = scaleX(p.M);
+                const y = scaleY(p.P);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Fill design area
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+            sortedDesign.forEach((p, i) => {
+                const x = scaleX(p.M);
+                const y = scaleY(p.P);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.lineTo(scaleX(0), scaleY(sortedDesign[sortedDesign.length - 1].P));
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw applied load point
+            const loadX = scaleX(Mu / 12);
+            const loadY = scaleY(Pu);
+            
+            ctx.beginPath();
+            ctx.fillStyle = '#f59e0b';
+            ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+            ctx.shadowBlur = 15;
+            ctx.arc(loadX, loadY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw load point label
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = '12px IBM Plex Mono';
+            ctx.fillText(`(${(Mu/12).toFixed(0)}, ${Pu.toFixed(0)})`, loadX + 12, loadY - 8);
+
+            // Axis labels
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = '14px Space Grotesk';
+            ctx.textAlign = 'center';
+            ctx.fillText('Moment, M (k-ft)', width / 2, height - 15);
+
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Axial Load, P (kips)', 0, 0);
+            ctx.restore();
+
+            // Axis tick labels
+            ctx.font = '11px IBM Plex Mono';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.textAlign = 'center';
+
+            for (let i = 0; i <= 5; i++) {
+                const mVal = (maxM * i / 5).toFixed(0);
+                const x = padding.left + (i / 5) * plotWidth;
+                ctx.fillText(mVal, x, height - padding.bottom + 20);
+            }
+
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const pVal = (maxP - (maxP - minP) * i / 5).toFixed(0);
+                const y = padding.top + (i / 5) * plotHeight;
+                ctx.fillText(pVal, padding.left - 10, y + 4);
+            }
+
+            chartData = { nominalPoints, designPoints, Pu, Mu, scaleX, scaleY, padding, maxP, minP, maxM };
         }
+
+        function drawCrossSection(b, h, barPositions, db, cover, dt) {
+            const svg = document.getElementById('crossSection');
+            const svgWidth = 300;
+            const svgHeight = 200;
+            const padding = 30;
+
+            const scale = Math.min(
+                (svgWidth - 2 * padding) / b,
+                (svgHeight - 2 * padding) / h
+            );
+
+            const offsetX = (svgWidth - b * scale) / 2;
+            const offsetY = (svgHeight - h * scale) / 2;
+
+            let svgContent = `
+                <defs>
+                    <pattern id="concrete" patternUnits="userSpaceOnUse" width="8" height="8">
+                        <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/>
+                        <circle cx="6" cy="6" r="1" fill="rgba(255,255,255,0.1)"/>
+                    </pattern>
+                </defs>
+            `;
+
+            // Column outline
+            svgContent += `
+                <rect x="${offsetX}" y="${offsetY}" 
+                      width="${b * scale}" height="${h * scale}"
+                      fill="url(#concrete)" stroke="#3b82f6" stroke-width="2" rx="2"/>
+            `;
+
+            // Tie outline
+            const tieOffset = (cover + dt / 2) * scale;
+            svgContent += `
+                <rect x="${offsetX + tieOffset}" y="${offsetY + tieOffset}"
+                      width="${b * scale - 2 * tieOffset}" height="${h * scale - 2 * tieOffset}"
+                      fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="4,2" rx="1"/>
+            `;
+
+            // Reinforcing bars
+            for (const bar of barPositions) {
+                const cx = offsetX + bar.x * scale;
+                const cy = offsetY + (h - bar.y) * scale;
+                const r = (db / 2) * scale * 1.5; // Slightly enlarged for visibility
+
+                svgContent += `
+                    <circle cx="${cx}" cy="${cy}" r="${r}"
+                            fill="#10b981" stroke="#0d9668" stroke-width="1"/>
+                `;
+            }
+
+            // Dimensions
+            const dimOffset = 18;
+            
+            // Width dimension
+            svgContent += `
+                <line x1="${offsetX}" y1="${offsetY + h * scale + dimOffset}"
+                      x2="${offsetX + b * scale}" y2="${offsetY + h * scale + dimOffset}"
+                      stroke="#94a3b8" stroke-width="1" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="${offsetX + b * scale / 2}" y="${offsetY + h * scale + dimOffset + 14}"
+                      fill="#94a3b8" font-size="11" text-anchor="middle" font-family="IBM Plex Mono">
+                    ${b}"
+                </text>
+            `;
+
+            // Height dimension
+            svgContent += `
+                <line x1="${offsetX - dimOffset}" y1="${offsetY}"
+                      x2="${offsetX - dimOffset}" y2="${offsetY + h * scale}"
+                      stroke="#94a3b8" stroke-width="1"/>
+                <text x="${offsetX - dimOffset - 4}" y="${offsetY + h * scale / 2}"
+                      fill="#94a3b8" font-size="11" text-anchor="middle" font-family="IBM Plex Mono"
+                      transform="rotate(-90, ${offsetX - dimOffset - 4}, ${offsetY + h * scale / 2})">
+                    ${h}"
+                </text>
+            `;
+
+            svg.innerHTML = svgContent;
+        }
+
+        function generateReport(b, h, fc, fy, Ag, Ast, rho, numBars, barSize, cover, tieSize,
+                               d, d_prime, beta1, Pu, Mu, balancedPoint, pureAxialPoint, isAdequate, barPositions, Ab) {
+            const rhoPercent = (rho * 100).toFixed(2);
+            const rhoMin = 1.0;
+            const rhoMax = 8.0;
+            const rhoOK = rho * 100 >= rhoMin && rho * 100 <= rhoMax;
+
+            const Es = 29000000;
+            const phi_compression = 0.65;
+            
+            // Calculate capacity at applied load
+            const P0 = 0.85 * fc * (Ag - Ast) + fy * Ast;
+            const Pn_max = 0.80 * P0;
+            const phi_Pn_max = phi_compression * Pn_max / 1000;
+
+            let html = `
+                <div class="report-section">
+                    <h3>Section Properties</h3>
+                    <div class="calc-line">
+                        <span class="calc-label">Column Size</span>
+                        <span class="calc-value">${b}" × ${h}"</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Gross Area (Ag)</span>
+                        <span class="calc-value">${Ag.toFixed(1)} in²</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Reinforcement</span>
+                        <span class="calc-value">${numBars}-#${barSize}</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Steel Area (Ast)</span>
+                        <span class="calc-value">${Ast.toFixed(2)} in²</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Reinforcement Ratio (ρ)</span>
+                        <span class="calc-value">${rhoPercent}%</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Effective Depth (d)</span>
+                        <span class="calc-value">${d.toFixed(2)}"</span>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Material Properties</h3>
+                    <div class="calc-line">
+                        <span class="calc-label">f'c</span>
+                        <span class="calc-value">${(fc/1000).toFixed(1)} ksi</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">fy</span>
+                        <span class="calc-value">${(fy/1000).toFixed(1)} ksi</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Es</span>
+                        <span class="calc-value">${(Es/1000000).toFixed(0)} × 10⁶ psi</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">β₁</span>
+                        <span class="calc-value">${beta1.toFixed(3)}</span>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Design Checks</h3>
+                    <div class="calc-line">
+                        <span class="calc-label">ρ Limits (1% - 8%)</span>
+                        <span class="calc-value">
+                            <span class="status-badge ${rhoOK ? 'ok' : 'ng'}">
+                                ${rhoOK ? '✓ OK' : '✗ NG'}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Cover (≥ 1.5")</span>
+                        <span class="calc-value">
+                            <span class="status-badge ${cover >= 1.5 ? 'ok' : 'ng'}">
+                                ${cover >= 1.5 ? '✓ OK' : '✗ NG'}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Applied Loads (Factored)</h3>
+                    <div class="calc-line">
+                        <span class="calc-label">Pu</span>
+                        <span class="calc-value">${Pu.toFixed(1)} kips</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Mu</span>
+                        <span class="calc-value">${Mu.toFixed(1)} k-ft</span>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Nominal Strength</h3>
+                    <div class="calc-line">
+                        <span class="calc-label">Po (Pure Axial)</span>
+                        <span class="calc-value">${pureAxialPoint.P.toFixed(1)} kips</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Pn,max (0.80Po)</span>
+                        <span class="calc-value">${pureAxialPoint.Pn_max.toFixed(1)} kips</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">φPn,max (φ=0.65)</span>
+                        <span class="calc-value">${phi_Pn_max.toFixed(1)} kips</span>
+                    </div>
+                    ${balancedPoint ? `
+                    <div class="calc-line">
+                        <span class="calc-label">Balanced Pb</span>
+                        <span class="calc-value">${balancedPoint.P.toFixed(1)} kips</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Balanced Mb</span>
+                        <span class="calc-value">${balancedPoint.M.toFixed(1)} k-ft</span>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="result-box ${isAdequate ? '' : 'warning'}">
+                    <div class="result-title ${isAdequate ? 'pass' : 'fail'}">
+                        ${isAdequate ? '✓ DESIGN ADEQUATE' : '✗ DESIGN INADEQUATE'}
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">
+                        ${isAdequate 
+                            ? 'The applied load point (Pu, Mu) falls within the design interaction envelope. The column has adequate capacity.'
+                            : 'The applied load point (Pu, Mu) falls outside the design interaction envelope. Increase section size or reinforcement.'}
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('reportContent').innerHTML = html;
+        }
+
+        function generateDetailedReport(b, h, fc, fy, Ag, Ast, beta1, d, d_prime, Es, ecu,
+                                       nominalPoints, designPoints, barPositions, Ab) {
+            const ey = fy / Es;
+            
+            // Find key points
+            const maxMoment = designPoints.reduce((max, p) => p.M > max.M ? p : max, designPoints[0]);
+            const balanced = designPoints.find(p => Math.abs(p.et - ey) < 0.001) || 
+                           designPoints.reduce((closest, p) => 
+                               Math.abs(p.et - ey) < Math.abs(closest.et - ey) ? p : closest, designPoints[0]);
+
+            let html = `
+                <div class="report-section">
+                    <h3>Stress Block Parameters</h3>
+                    <div class="calc-formula">
+                        β₁ = 0.85 - 0.05(f'c - 4000)/1000
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">For f'c = ${fc} psi:</span>
+                        <span class="calc-value">β₁ = ${beta1.toFixed(3)}</span>
+                    </div>
+                    <div class="calc-formula">
+                        a = β₁ × c (compression block depth)
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Strain Compatibility</h3>
+                    <div class="calc-line">
+                        <span class="calc-label">εcu (concrete)</span>
+                        <span class="calc-value">0.003</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">εy (steel yield)</span>
+                        <span class="calc-value">${ey.toFixed(5)}</span>
+                    </div>
+                    <div class="calc-formula">
+                        εs = εcu × (c - d') / c
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Strength Reduction Factor (φ)</h3>
+                    <div class="calc-line">
+                        <span class="calc-label">Compression Controlled (εt ≤ 0.002)</span>
+                        <span class="calc-value">φ = 0.65</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Tension Controlled (εt ≥ 0.005)</span>
+                        <span class="calc-value">φ = 0.90</span>
+                    </div>
+                    <div class="calc-formula">
+                        Transition: φ = 0.65 + (εt - 0.002) × 0.25/0.003
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Reinforcement Layout</h3>
+                    <div class="calc-line">
+                        <span class="calc-label">Number of Bars</span>
+                        <span class="calc-value">${barPositions.length}</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">Bar Area (each)</span>
+                        <span class="calc-value">${Ab.toFixed(2)} in²</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">d' (to centroid)</span>
+                        <span class="calc-value">${d_prime.toFixed(2)}"</span>
+                    </div>
+                    <div class="calc-line">
+                        <span class="calc-label">d (effective)</span>
+                        <span class="calc-value">${d.toFixed(2)}"</span>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Key Interaction Points</h3>
+                    <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <th style="text-align: left; padding: 6px 0; color: var(--text-muted);">Point</th>
+                            <th style="text-align: right; padding: 6px 0; color: var(--text-muted);">φPn (kip)</th>
+                            <th style="text-align: right; padding: 6px 0; color: var(--text-muted);">φMn (k-ft)</th>
+                            <th style="text-align: right; padding: 6px 0; color: var(--text-muted);">εt</th>
+                            <th style="text-align: right; padding: 6px 0; color: var(--text-muted);">φ</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 6px 0;">Pure Compression</td>
+                            <td style="text-align: right;">${designPoints[0].P.toFixed(0)}</td>
+                            <td style="text-align: right;">${designPoints[0].M.toFixed(0)}</td>
+                            <td style="text-align: right;">-</td>
+                            <td style="text-align: right;">0.65</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 6px 0;">Balanced</td>
+                            <td style="text-align: right;">${(balanced.P * balanced.phi).toFixed(0)}</td>
+                            <td style="text-align: right;">${(balanced.M * balanced.phi).toFixed(0)}</td>
+                            <td style="text-align: right;">${balanced.et.toFixed(4)}</td>
+                            <td style="text-align: right;">${balanced.phi.toFixed(2)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 6px 0;">Max Moment</td>
+                            <td style="text-align: right;">${maxMoment.P.toFixed(0)}</td>
+                            <td style="text-align: right;">${maxMoment.M.toFixed(0)}</td>
+                            <td style="text-align: right;">${maxMoment.et.toFixed(4)}</td>
+                            <td style="text-align: right;">${maxMoment.phi.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px 0;">Pure Tension</td>
+                            <td style="text-align: right;">${designPoints[designPoints.length-1].P.toFixed(0)}</td>
+                            <td style="text-align: right;">0</td>
+                            <td style="text-align: right;">∞</td>
+                            <td style="text-align: right;">0.90</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="report-section">
+                    <h3>Force Equilibrium</h3>
+                    <div class="calc-formula">
+                        Cc = 0.85 × f'c × b × a (Concrete compression)
+                    </div>
+                    <div class="calc-formula">
+                        Pn = Cc + Σ(fs × As) (Total axial)
+                    </div>
+                    <div class="calc-formula">
+                        Mn = Cc × (h/2 - a/2) + Σ(fs × As × y) (Moment about centroid)
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailedContent').innerHTML = html;
+        }
+
+        // Initialize on load
+        window.addEventListener('load', function() {
+            calculateColumn();
+        });
+
+        // Recalculate on window resize
+        window.addEventListener('resize', function() {
+            if (chartData) {
+                calculateColumn();
+            }
+        });
     </script>
 </body>
 </html>
