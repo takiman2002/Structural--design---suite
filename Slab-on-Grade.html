@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slab on Grade Design | ACI 360R</title>
+    <style>
+        :root {
+            --bg: #0a0e14;
+            --bg2: #111820;
+            --card: #1a2230;
+            --blue: #00b4d8;
+            --cyan: #48cae4;
+            --green: #06d6a0;
+            --red: #ef476f;
+            --orange: #ff9500;
+            --yellow: #ffd166;
+            --text: #e8eef4;
+            --text2: #8b99a8;
+            --border: #2a3a4a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        
+        .header {
+            background: linear-gradient(135deg, var(--bg2), #1a2535);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 1.3rem; color: var(--cyan); display: flex; align-items: center; gap: 10px; }
+        .header-sub { font-size: 0.7rem; color: var(--text2); }
+        .back { color: var(--cyan); text-decoration: none; font-size: 0.85rem; }
+        .header-btns { display: flex; gap: 10px; }
+        .header-btn {
+            padding: 8px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        .header-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+        .header-btn.primary { background: linear-gradient(135deg, var(--blue), var(--cyan)); color: #000; border: none; }
+        
+        .main {
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 15px;
+        }
+        
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+        }
+        
+        .panel-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text2);
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, var(--blue), var(--cyan));
+            color: #000;
+            border-color: var(--cyan);
+            font-weight: 600;
+        }
+        
+        .form-group { margin-bottom: 10px; }
+        .form-group label {
+            display: block;
+            font-size: 0.68rem;
+            color: var(--text2);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        
+        input, select {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--blue); }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            background: linear-gradient(135deg, var(--blue), var(--cyan));
+            color: #000;
+        }
+        
+        .canvas-container {
+            background: var(--bg);
+            border-radius: 8px;
+            height: 280px;
+        }
+        canvas { width: 100%; height: 100%; }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .result-card {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 10px;
+            border-left: 3px solid var(--blue);
+        }
+        .result-card.pass { border-left-color: var(--green); }
+        .result-card.fail { border-left-color: var(--red); }
+        .result-label { font-size: 0.62rem; color: var(--text2); text-transform: uppercase; margin-bottom: 2px; }
+        .result-value { font-size: 1.05rem; font-weight: 700; }
+        
+        .checks { display: flex; flex-direction: column; gap: 6px; }
+        .check {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--bg);
+            border-radius: 6px;
+            border-left: 3px solid var(--border);
+            font-size: 0.8rem;
+        }
+        .check.pass { border-left-color: var(--green); }
+        .check.fail { border-left-color: var(--red); }
+        .dcr-pass { color: var(--green); font-weight: 600; }
+        .dcr-fail { color: var(--red); font-weight: 600; }
+        
+        .status { padding: 5px 12px; border-radius: 15px; font-size: 0.7rem; font-weight: 600; }
+        .status.pass { background: rgba(6, 214, 160, 0.15); color: var(--green); }
+        .status.fail { background: rgba(239, 71, 111, 0.15); color: var(--red); }
+        
+        .info-box {
+            background: rgba(0, 180, 216, 0.1);
+            border: 1px solid rgba(0, 180, 216, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: var(--text2);
+        }
+        .info-box strong { color: var(--cyan); }
+        
+        .reinf-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+        .reinf-table th, .reinf-table td {
+            padding: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .reinf-table th { background: var(--bg2); color: var(--cyan); }
+        .reinf-table td { background: var(--bg); }
+        .reinf-table .highlight { background: rgba(6, 214, 160, 0.2); color: var(--green); font-weight: 600; }
+        
+        .section-divider { height: 1px; background: var(--border); margin: 14px 0; }
+        
+        /* View tabs */
+        .view-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .view-tab {
+            padding: 8px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .view-tab.active { background: var(--cyan); color: #000; font-weight: 600; }
+        
+        /* Drawing canvas */
+        .drawing-container { background: #fff; border-radius: 8px; height: 400px; }
+        #drawingCanvas { width: 100%; height: 100%; }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: #fff;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .modal-header {
+            background: #1a2230;
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body { padding: 20px; overflow-y: auto; max-height: calc(90vh - 120px); }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        /* Print styles */
+        .calc-report { color: #000; font-family: 'Times New Roman', serif; line-height: 1.6; }
+        .calc-report h1 { font-size: 18pt; text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        .calc-report h2 { font-size: 14pt; color: #333; margin: 20px 0 10px; border-bottom: 1px solid #ccc; }
+        .calc-report h3 { font-size: 12pt; color: #555; margin: 15px 0 8px; }
+        .calc-report table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10pt; }
+        .calc-report th, .calc-report td { border: 1px solid #999; padding: 6px 10px; text-align: left; }
+        .calc-report th { background: #f0f0f0; }
+        .calc-report .formula { background: #f9f9f9; padding: 10px; margin: 10px 0; border-left: 3px solid #00b4d8; font-family: 'Courier New', monospace; }
+        .calc-report .result { font-weight: bold; color: #00b4d8; }
+        .calc-report .pass { color: #06d6a0; }
+        .calc-report .fail { color: #ef476f; }
+        .calc-report .note { background: #fffde7; padding: 10px; border-radius: 4px; font-size: 9pt; margin: 10px 0; }
+        
+        @media print {
+            body { background: #fff; }
+            .no-print { display: none !important; }
+        }
+        @media (max-width: 1400px) { .main { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="header no-print">
+        <a href="index.html" class="back">← Back</a>
+        <div style="text-align: center;">
+            <h1>🏗️ Slab on Grade Design</h1>
+            <div class="header-sub">ACI 360R-10 • ACI 318-19 • Westergaard Theory</div>
+        </div>
+        <div class="header-btns">
+            <button class="header-btn" onclick="showDrawing()">📐 Drawing</button>
+            <button class="header-btn primary" onclick="showReport()">📄 Report</button>
+        </div>
+    </header>
+
+    <div class="main no-print">
+        <!-- LEFT PANEL -->
+        <div class="panel">
+            <div class="panel-title">📋 Loading Type</div>
+            <div class="tabs">
+                <div class="tab active" onclick="setLoadType('general')">General Use</div>
+                <div class="tab" onclick="setLoadType('heavy')">Heavy Equipment</div>
+            </div>
+
+            <div class="panel-title">🏗️ Slab Properties</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Thickness (in)</label>
+                    <input type="number" id="thickness" value="6" step="0.5" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>f'c (psi)</label>
+                    <select id="fc" onchange="calculate()">
+                        <option value="3000">3,000</option>
+                        <option value="4000" selected>4,000</option>
+                        <option value="5000">5,000</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>fy (ksi)</label>
+                    <select id="fy" onchange="calculate()">
+                        <option value="40">40</option>
+                        <option value="60" selected>60</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Slab Width (ft)</label>
+                    <input type="number" id="slabWidth" value="50" onchange="calculate()">
+                </div>
+            </div>
+
+            <div class="panel-title" style="margin-top: 12px;">🌍 Subgrade</div>
+            <div class="form-group">
+                <label>Subgrade Type</label>
+                <select id="subgradeType" onchange="updateSubgrade(); calculate()">
+                    <option value="50">Poor - Soft Clay (k=50)</option>
+                    <option value="100">Fair - Silty Clay (k=100)</option>
+                    <option value="150" selected>Good - Sandy Clay (k=150)</option>
+                    <option value="200">Very Good - Sand/Gravel (k=200)</option>
+                    <option value="300">Excellent - Crushed Base (k=300)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>k - Subgrade Modulus (pci)</label>
+                <input type="number" id="k" value="150" onchange="calculate()">
+            </div>
+
+            <div class="panel-title" style="margin-top: 12px;">⚖️ Loading</div>
+            <div id="generalLoading">
+                <div class="form-group">
+                    <label>Load Type</label>
+                    <select id="generalLoadType" onchange="updateLoadInputs(); calculate()">
+                        <option value="point">Point/Post Load</option>
+                        <option value="forklift" selected>Forklift</option>
+                    </select>
+                </div>
+                <div id="pointLoadInput" style="display:none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Point Load (lbs)</label>
+                            <input type="number" id="pointLoad" value="5000" onchange="calculate()">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Area (in²)</label>
+                            <input type="number" id="contactArea" value="16" onchange="calculate()">
+                        </div>
+                    </div>
+                </div>
+                <div id="forkliftInput">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Forklift Capacity</label>
+                            <select id="forkliftCap" onchange="updateForklift(); calculate()">
+                                <option value="4000">4,000 lbs</option>
+                                <option value="6000" selected>6,000 lbs</option>
+                                <option value="8000">8,000 lbs</option>
+                                <option value="10000">10,000 lbs</option>
+                                <option value="15000">15,000 lbs</option>
+                                <option value="20000">20,000 lbs</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Axle Load (lbs)</label>
+                            <input type="number" id="axleLoad" value="11100" onchange="calculate()">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Wheel Spacing (in)</label>
+                            <input type="number" id="wheelSpacing" value="36" onchange="calculate()">
+                        </div>
+                        <div class="form-group">
+                            <label>Tire Contact (in²)</label>
+                            <input type="number" id="tireContact" value="36" onchange="calculate()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="heavyLoading" style="display:none;">
+                <div class="form-group">
+                    <label>Equipment Type</label>
+                    <select id="equipType" onchange="updateEquipment(); calculate()">
+                        <option value="truck">Semi-Truck (34k axle)</option>
+                        <option value="crane">Mobile Crane (50k axle)</option>
+                        <option value="forklift_heavy">Heavy Forklift (45k axle)</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Axle Load (lbs)</label>
+                        <input type="number" id="heavyAxleLoad" value="34000" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Tire Contact (in²)</label>
+                        <input type="number" id="heavyTireContact" value="100" onchange="calculate()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Factor of Safety</label>
+                <select id="fos" onchange="calculate()">
+                    <option value="1.7">1.7 - Standard</option>
+                    <option value="2.0" selected>2.0 - Conservative</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="calculate()">⚙️ Calculate</button>
+        </div>
+
+        <!-- CENTER PANEL -->
+        <div class="panel">
+            <div class="view-tabs">
+                <div class="view-tab active" onclick="setView('section')">Section View</div>
+                <div class="view-tab" onclick="setView('plan')">Plan View</div>
+                <div class="view-tab" onclick="setView('joint')">Joint Detail</div>
+            </div>
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="panel-title">🔩 Shrinkage & Temperature Reinforcement (ACI 318-19 §24.4)</div>
+            <table class="reinf-table">
+                <thead>
+                    <tr>
+                        <th>Grade</th>
+                        <th>Min ρ</th>
+                        <th>As,req (in²/ft)</th>
+                        <th>Recommended</th>
+                    </tr>
+                </thead>
+                <tbody id="reinfTable">
+                    <tr><td>40/50</td><td>0.0020</td><td id="as40">--</td><td id="rec40">--</td></tr>
+                    <tr class="highlight"><td>60</td><td>0.0018</td><td id="as60">--</td><td id="rec60">--</td></tr>
+                </tbody>
+            </table>
+
+            <div class="section-divider"></div>
+
+            <div class="panel-title">📏 Control Joint Spacing</div>
+            <table class="reinf-table">
+                <thead>
+                    <tr><th>Thickness</th><th>Unreinforced</th><th>w/ S&T Reinf.</th><th>Sawcut</th></tr>
+                </thead>
+                <tbody>
+                    <tr id="jt4"><td>4"</td><td>8-10 ft</td><td>12-15 ft</td><td>1.0-1.3"</td></tr>
+                    <tr id="jt5"><td>5"</td><td>10-13 ft</td><td>15-18 ft</td><td>1.3-1.7"</td></tr>
+                    <tr id="jt6"><td>6"</td><td>12-15 ft</td><td>18-22 ft</td><td>1.5-2.0"</td></tr>
+                    <tr id="jt8"><td>8"</td><td>16-20 ft</td><td>24-30 ft</td><td>2.0-2.7"</td></tr>
+                    <tr id="jt10"><td>10"</td><td>20-25 ft</td><td>30-36 ft</td><td>2.5-3.3"</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="panel">
+            <div class="panel-title" style="justify-content: space-between;">
+                <span>📊 Design Results</span>
+                <span class="status pass" id="overallStatus">● PASS</span>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-card pass" id="thickCard">
+                    <div class="result-label">Required t</div>
+                    <div class="result-value" id="reqThick">--</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Provided t</div>
+                    <div class="result-value" id="provThick">--</div>
+                </div>
+                <div class="result-card" id="stressCard">
+                    <div class="result-label">Flexural Stress</div>
+                    <div class="result-value" id="flexStress">--</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Allowable Stress</div>
+                    <div class="result-value" id="allowStress">--</div>
+                </div>
+            </div>
+
+            <div class="panel-title">✅ Design Checks</div>
+            <div class="checks" id="checks"></div>
+
+            <div class="section-divider"></div>
+
+            <div class="panel-title">📋 Design Summary</div>
+            <div class="result-grid">
+                <div class="result-card">
+                    <div class="result-label">Joint Spacing</div>
+                    <div class="result-value" id="jointSpacing">--</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Sawcut Depth</div>
+                    <div class="result-value" id="sawcutDepth">--</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">S&T Reinf.</div>
+                    <div class="result-value" id="stReinf">--</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Position</div>
+                    <div class="result-value" id="reinfPos">--</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>📌 Notes:</strong><br>
+                • S&T reinf. in upper 1/3 of slab (ACI 360R)<br>
+                • Sawcut depth = t/4 to t/3<br>
+                • Cut within 4-12 hrs of placement
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawing Modal -->
+    <div class="modal" id="drawingModal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h3>📐 Slab on Grade - Construction Drawing</h3>
+                <button class="modal-close" onclick="closeDrawing()">×</button>
+            </div>
+            <div class="modal-body" style="background: #fff; padding: 0;">
+                <canvas id="drawingCanvas" width="960" height="700"></canvas>
+                <div style="padding: 15px; text-align: center; border-top: 1px solid #ddd;">
+                    <button onclick="printDrawing()" style="padding: 10px 30px; background: #00b4d8; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🖨️ Print Drawing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div class="modal" id="reportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📄 Calculation Report</h3>
+                <button class="modal-close" onclick="closeReport()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="reportContent" class="calc-report"></div>
+                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                    <button onclick="printReport()" style="padding: 10px 30px; background: #00b4d8; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🖨️ Print Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let loadType = 'general';
+        let currentView = 'section';
+        let calcResults = {};
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Data tables
+        const forkliftData = {
+            4000: { axle: 7400, spacing: 30, contact: 25 },
+            6000: { axle: 11100, spacing: 36, contact: 36 },
+            8000: { axle: 14800, spacing: 38, contact: 48 },
+            10000: { axle: 18500, spacing: 40, contact: 56 },
+            15000: { axle: 27750, spacing: 44, contact: 72 },
+            20000: { axle: 37000, spacing: 48, contact: 90 }
+        };
+
+        const equipmentData = {
+            truck: { axle: 34000, contact: 100 },
+            crane: { axle: 50000, contact: 150 },
+            forklift_heavy: { axle: 45000, contact: 100 }
+        };
+
+        // Reinforcement options
+        const reinfOptions = [
+            { bar: '#3', area: 0.11, spacing: 18, asPerFt: 0.073 },
+            { bar: '#3', area: 0.11, spacing: 16, asPerFt: 0.083 },
+            { bar: '#3', area: 0.11, spacing: 14, asPerFt: 0.094 },
+            { bar: '#3', area: 0.11, spacing: 12, asPerFt: 0.110 },
+            { bar: '#4', area: 0.20, spacing: 18, asPerFt: 0.133 },
+            { bar: '#4', area: 0.20, spacing: 16, asPerFt: 0.150 },
+            { bar: '#4', area: 0.20, spacing: 14, asPerFt: 0.171 },
+            { bar: '#4', area: 0.20, spacing: 12, asPerFt: 0.200 },
+            { bar: '#5', area: 0.31, spacing: 18, asPerFt: 0.207 },
+            { bar: '#5', area: 0.31, spacing: 16, asPerFt: 0.233 },
+            { bar: '#5', area: 0.31, spacing: 12, asPerFt: 0.310 },
+            { bar: 'WWF 6x6-W2.9', area: 0.029, spacing: 6, asPerFt: 0.058 },
+            { bar: 'WWF 6x6-W4.0', area: 0.040, spacing: 6, asPerFt: 0.080 },
+            { bar: 'WWF 4x4-W4.0', area: 0.040, spacing: 4, asPerFt: 0.120 }
+        ];
+
+        function setLoadType(type) {
+            loadType = type;
+            document.querySelectorAll('.tabs .tab').forEach((tab, i) => {
+                tab.classList.toggle('active', (i === 0 && type === 'general') || (i === 1 && type === 'heavy'));
+            });
+            document.getElementById('generalLoading').style.display = type === 'general' ? 'block' : 'none';
+            document.getElementById('heavyLoading').style.display = type === 'heavy' ? 'block' : 'none';
+            calculate();
+        }
+
+        function setView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-tab').forEach((tab, i) => {
+                const views = ['section', 'plan', 'joint'];
+                tab.classList.toggle('active', views[i] === view);
+            });
+            draw();
+        }
+
+        function updateSubgrade() {
+            document.getElementById('k').value = document.getElementById('subgradeType').value;
+        }
+
+        function updateLoadInputs() {
+            const type = document.getElementById('generalLoadType').value;
+            document.getElementById('pointLoadInput').style.display = type === 'point' ? 'block' : 'none';
+            document.getElementById('forkliftInput').style.display = type === 'forklift' ? 'block' : 'none';
+        }
+
+        function updateForklift() {
+            const cap = document.getElementById('forkliftCap').value;
+            const data = forkliftData[cap];
+            document.getElementById('axleLoad').value = data.axle;
+            document.getElementById('wheelSpacing').value = data.spacing;
+            document.getElementById('tireContact').value = data.contact;
+        }
+
+        function updateEquipment() {
+            const type = document.getElementById('equipType').value;
+            const data = equipmentData[type];
+            document.getElementById('heavyAxleLoad').value = data.axle;
+            document.getElementById('heavyTireContact').value = data.contact;
+        }
+
+        function selectReinforcement(asRequired) {
+            for (const opt of reinfOptions) {
+                if (opt.asPerFt >= asRequired) {
+                    return opt;
+                }
+            }
+            return reinfOptions[reinfOptions.length - 1];
+        }
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            draw();
+        }
+
+        function calculate() {
+            const t = parseFloat(document.getElementById('thickness').value);
+            const fc = parseFloat(document.getElementById('fc').value);
+            const fy = parseFloat(document.getElementById('fy').value) * 1000;
+            const k = parseFloat(document.getElementById('k').value);
+            const fos = parseFloat(document.getElementById('fos').value);
+            const slabWidth = parseFloat(document.getElementById('slabWidth').value);
+
+            // Material properties
+            const Ec = 57000 * Math.sqrt(fc);
+            const MOR = 7.5 * Math.sqrt(fc);
+            const Fb = MOR / fos;
+
+            // Radius of relative stiffness
+            const mu = 0.15;
+            const L = Math.pow((Ec * Math.pow(t, 3)) / (12 * (1 - mu * mu) * k), 0.25);
+
+            // Get loading
+            let P, a, axleLoad;
+            if (loadType === 'general') {
+                const genType = document.getElementById('generalLoadType').value;
+                if (genType === 'point') {
+                    P = parseFloat(document.getElementById('pointLoad').value);
+                    a = Math.sqrt(parseFloat(document.getElementById('contactArea').value) / Math.PI);
+                    axleLoad = P * 2;
+                } else {
+                    axleLoad = parseFloat(document.getElementById('axleLoad').value);
+                    P = axleLoad / 2;
+                    a = Math.sqrt(parseFloat(document.getElementById('tireContact').value) / Math.PI);
+                }
+            } else {
+                axleLoad = parseFloat(document.getElementById('heavyAxleLoad').value);
+                P = axleLoad / 2;
+                a = Math.sqrt(parseFloat(document.getElementById('heavyTireContact').value) / Math.PI);
+            }
+
+            // Equivalent contact radius
+            let b = (a < 1.724 * t) ? Math.sqrt(1.6 * a * a + t * t) - 0.675 * t : a;
+
+            // Westergaard Interior Load Stress
+            const sigma_i = (3 * P * (1 + mu)) / (2 * Math.PI * t * t) * (Math.log(L / b) + 0.6159);
+
+            // Required thickness (iterate)
+            let t_req = 4;
+            for (let iter = 0; iter < 30; iter++) {
+                const L_iter = Math.pow((Ec * Math.pow(t_req, 3)) / (12 * (1 - mu * mu) * k), 0.25);
+                let b_iter = (a < 1.724 * t_req) ? Math.sqrt(1.6 * a * a + t_req * t_req) - 0.675 * t_req : a;
+                const sigma_iter = (3 * P * (1 + mu)) / (2 * Math.PI * t_req * t_req) * (Math.log(L_iter / b_iter) + 0.6159);
+                if (Math.abs(sigma_iter - Fb) < 0.5) break;
+                t_req += (sigma_iter > Fb) ? 0.25 : -0.125;
+                t_req = Math.max(4, t_req);
+            }
+
+            // Shrinkage & Temperature Reinforcement (ACI 318-19 §24.4.3.2)
+            const rho_40 = 0.0020;
+            const rho_60 = 0.0018;
+            const As_40 = rho_40 * 12 * t;
+            const As_60 = rho_60 * 12 * t;
+            const As_req = (fy >= 60000) ? As_60 : As_40;
+
+            // Select reinforcement
+            const selectedReinf = selectReinforcement(As_req);
+
+            // Joint spacing (ACI 360R: 24-36 × thickness)
+            // Unreinforced: 24-30 × t (inches)
+            // With S&T Reinf: 30-36 × t (inches)
+            const jointUnreinfMin = t * 24; // inches
+            const jointUnreinfMax = t * 30; // inches
+            const jointReinfMin = t * 30; // inches
+            const jointReinfMax = t * 36; // inches
+            const sawcut = t / 4;
+
+            // Position (upper 1/3 per ACI 360R)
+            const reinfDepth = t / 3;
+            const cover = Math.max(1.5, reinfDepth - selectedReinf.area);
+
+            // Store results
+            calcResults = {
+                t, fc, fy, k, fos, slabWidth,
+                Ec, MOR, Fb, L, mu,
+                P, axleLoad, a, b,
+                sigma_i, t_req,
+                As_40, As_60, As_req,
+                selectedReinf,
+                jointUnreinfMin, jointUnreinfMax, jointReinfMin, jointReinfMax,
+                sawcut, reinfDepth, cover
+            };
+
+            // DCR
+            const dcr = sigma_i / Fb;
+            const checks = [
+                { name: 'Flexural Stress (σ ≤ Fb)', dcr: dcr, pass: dcr <= 1.0 },
+                { name: 'Thickness (t ≥ t_req)', dcr: t_req / t, pass: t >= t_req },
+                { name: 'Min Thickness (t ≥ 4")', dcr: 4 / t, pass: t >= 4 },
+                { name: 'S&T Reinf (As,prov ≥ As,req)', dcr: As_req / selectedReinf.asPerFt, pass: selectedReinf.asPerFt >= As_req }
+            ];
+            const allPass = checks.every(c => c.pass);
+
+            // Update UI
+            document.getElementById('reqThick').textContent = t_req.toFixed(1) + '"';
+            document.getElementById('provThick').textContent = t + '"';
+            document.getElementById('flexStress').textContent = sigma_i.toFixed(0) + ' psi';
+            document.getElementById('allowStress').textContent = Fb.toFixed(0) + ' psi';
+            document.getElementById('jointSpacing').textContent = (jointReinfMin/12).toFixed(0) + '-' + (jointReinfMax/12).toFixed(0) + ' ft';
+            document.getElementById('sawcutDepth').textContent = sawcut.toFixed(2) + '"';
+            document.getElementById('stReinf').textContent = selectedReinf.bar + ' @ ' + selectedReinf.spacing + '"';
+            document.getElementById('reinfPos').textContent = 'Top ' + reinfDepth.toFixed(1) + '"';
+
+            // Reinf table
+            document.getElementById('as40').textContent = As_40.toFixed(3);
+            document.getElementById('as60').textContent = As_60.toFixed(3);
+            const rec40 = selectReinforcement(As_40);
+            const rec60 = selectReinforcement(As_60);
+            document.getElementById('rec40').textContent = rec40.bar + ' @ ' + rec40.spacing + '"';
+            document.getElementById('rec60').textContent = rec60.bar + ' @ ' + rec60.spacing + '"';
+
+            // Highlight rows
+            document.querySelectorAll('#reinfTable tr').forEach((row, i) => {
+                row.classList.toggle('highlight', (i === 0 && fy < 60000) || (i === 1 && fy >= 60000));
+            });
+
+            // Joint table highlight
+            const thickMap = {4: 'jt4', 5: 'jt5', 6: 'jt6', 8: 'jt8', 10: 'jt10'};
+            Object.values(thickMap).forEach(id => document.getElementById(id)?.classList.remove('highlight'));
+            const closestT = [4, 5, 6, 8, 10].reduce((a, b) => Math.abs(b - t) < Math.abs(a - t) ? b : a);
+            document.getElementById(thickMap[closestT])?.classList.add('highlight');
+
+            // Status
+            document.getElementById('overallStatus').className = 'status ' + (allPass ? 'pass' : 'fail');
+            document.getElementById('overallStatus').textContent = '● ' + (allPass ? 'PASS' : 'FAIL');
+            document.getElementById('thickCard').className = 'result-card ' + (t >= t_req ? 'pass' : 'fail');
+            document.getElementById('stressCard').className = 'result-card ' + (dcr <= 1 ? 'pass' : 'fail');
+
+            // Checks
+            document.getElementById('checks').innerHTML = checks.map(c => 
+                `<div class="check ${c.pass ? 'pass' : 'fail'}">
+                    <span>${c.name}</span>
+                    <span class="${c.pass ? 'dcr-pass' : 'dcr-fail'}">${c.dcr.toFixed(3)}</span>
+                </div>`
+            ).join('');
+
+            draw();
+        }
+
+        function draw() {
+            const W = canvas.width, H = canvas.height;
+            ctx.fillStyle = '#0a0e14';
+            ctx.fillRect(0, 0, W, H);
+
+            if (currentView === 'section') drawSection(W, H);
+            else if (currentView === 'plan') drawPlan(W, H);
+            else drawJointDetail(W, H);
+        }
+
+        function drawSection(W, H) {
+            const { t, sigma_i, P, L, selectedReinf, sawcut } = calcResults;
+            if (!t) return;
+
+            const cx = W / 2, cy = H / 2;
+            const scale = 6;
+            const slabW = 280, slabT = t * scale;
+
+            // Subgrade
+            ctx.fillStyle = '#3d2914';
+            ctx.fillRect(cx - slabW/2 - 20, cy + slabT/2, slabW + 40, 50);
+            ctx.strokeStyle = '#5a3d1a';
+            for (let i = 0; i < 8; i++) {
+                ctx.beginPath();
+                ctx.moveTo(cx - slabW/2 - 20 + i * 45, cy + slabT/2);
+                ctx.lineTo(cx - slabW/2 - 20 + i * 45 - 25, cy + slabT/2 + 50);
+                ctx.stroke();
+            }
+
+            // Slab
+            const grad = ctx.createLinearGradient(0, cy - slabT/2, 0, cy + slabT/2);
+            grad.addColorStop(0, '#6b7280');
+            grad.addColorStop(1, '#4b5563');
+            ctx.fillStyle = grad;
+            ctx.fillRect(cx - slabW/2, cy - slabT/2, slabW, slabT);
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(cx - slabW/2, cy - slabT/2, slabW, slabT);
+
+            // Reinforcement bars
+            ctx.strokeStyle = '#06d6a0';
+            ctx.lineWidth = 3;
+            const reinfY = cy - slabT/2 + slabT/3;
+            ctx.beginPath();
+            ctx.moveTo(cx - slabW/2 + 15, reinfY);
+            ctx.lineTo(cx + slabW/2 - 15, reinfY);
+            ctx.stroke();
+            // Bar circles
+            for (let x = cx - slabW/2 + 30; x < cx + slabW/2 - 20; x += 25) {
+                ctx.beginPath();
+                ctx.arc(x, reinfY, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#06d6a0';
+                ctx.fill();
+            }
+
+            // Sawcut
+            ctx.fillStyle = '#ffd166';
+            ctx.fillRect(cx - 2, cy - slabT/2, 4, sawcut * scale);
+
+            // Load arrow
+            ctx.fillStyle = '#ef476f';
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - slabT/2 - 5);
+            ctx.lineTo(cx - 12, cy - slabT/2 - 30);
+            ctx.lineTo(cx - 4, cy - slabT/2 - 30);
+            ctx.lineTo(cx - 4, cy - slabT/2 - 55);
+            ctx.lineTo(cx + 4, cy - slabT/2 - 55);
+            ctx.lineTo(cx + 4, cy - slabT/2 - 30);
+            ctx.lineTo(cx + 12, cy - slabT/2 - 30);
+            ctx.closePath();
+            ctx.fill();
+
+            // Labels
+            ctx.fillStyle = '#ef476f';
+            ctx.font = 'bold 11px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('P = ' + (P/1000).toFixed(1) + ' k', cx, cy - slabT/2 - 62);
+
+            ctx.fillStyle = '#06d6a0';
+            ctx.font = '10px system-ui';
+            ctx.fillText(selectedReinf.bar + ' @ ' + selectedReinf.spacing + '" EW', cx, reinfY - 12);
+
+            ctx.fillStyle = '#ffd166';
+            ctx.fillText('Sawcut ' + sawcut.toFixed(1) + '"', cx + 45, cy - slabT/2 + 15);
+
+            // Dimension
+            ctx.strokeStyle = '#48cae4';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx + slabW/2 + 25, cy - slabT/2);
+            ctx.lineTo(cx + slabW/2 + 25, cy + slabT/2);
+            ctx.moveTo(cx + slabW/2 + 20, cy - slabT/2);
+            ctx.lineTo(cx + slabW/2 + 30, cy - slabT/2);
+            ctx.moveTo(cx + slabW/2 + 20, cy + slabT/2);
+            ctx.lineTo(cx + slabW/2 + 30, cy + slabT/2);
+            ctx.stroke();
+            ctx.fillStyle = '#48cae4';
+            ctx.font = '11px system-ui';
+            ctx.textAlign = 'left';
+            ctx.fillText(t + '"', cx + slabW/2 + 35, cy + 4);
+
+            // Stress
+            ctx.fillStyle = '#8b99a8';
+            ctx.font = '10px system-ui';
+            ctx.textAlign = 'left';
+            ctx.fillText('σt = ' + sigma_i.toFixed(0) + ' psi (bottom tension)', 10, H - 10);
+        }
+
+        function drawPlan(W, H) {
+            const { t, jointReinfMax, slabWidth, selectedReinf } = calcResults;
+            if (!t) return;
+
+            const cx = W / 2, cy = H / 2;
+            const panelFt = jointReinfMax / 12; // convert to feet
+            const scale = 8; // pixels per foot
+            const panelW = panelFt * scale;
+            const panelH = panelFt * scale;
+
+            // Draw multiple panels
+            ctx.strokeStyle = '#48cae4';
+            ctx.lineWidth = 2;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    ctx.strokeRect(cx + i * panelW - panelW/2, cy + j * panelH - panelH/2, panelW, panelH);
+                }
+            }
+
+            // Joint lines (dashed)
+            ctx.setLineDash([8, 4]);
+            ctx.strokeStyle = '#ffd166';
+            ctx.lineWidth = 2;
+            for (let i = -1; i <= 1; i++) {
+                ctx.beginPath();
+                ctx.moveTo(cx + i * panelW - panelW/2, cy - panelH * 1.5);
+                ctx.lineTo(cx + i * panelW - panelW/2, cy + panelH * 1.5);
+                ctx.stroke();
+            }
+            for (let j = -1; j <= 1; j++) {
+                ctx.beginPath();
+                ctx.moveTo(cx - panelW * 1.5, cy + j * panelH - panelH/2);
+                ctx.lineTo(cx + panelW * 1.5, cy + j * panelH - panelH/2);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Reinforcement indication
+            ctx.strokeStyle = '#06d6a0';
+            ctx.lineWidth = 1;
+            const spacing = selectedReinf.spacing * scale / 12;
+            for (let x = cx - panelW/2 + spacing; x < cx + panelW/2; x += spacing) {
+                ctx.beginPath();
+                ctx.moveTo(x, cy - panelH/2);
+                ctx.lineTo(x, cy + panelH/2);
+                ctx.stroke();
+            }
+            for (let y = cy - panelH/2 + spacing; y < cy + panelH/2; y += spacing) {
+                ctx.beginPath();
+                ctx.moveTo(cx - panelW/2, y);
+                ctx.lineTo(cx + panelW/2, y);
+                ctx.stroke();
+            }
+
+            // Dimension
+            ctx.fillStyle = '#48cae4';
+            ctx.font = '11px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText((jointReinfMax/12).toFixed(0) + "' typ.", cx, cy + panelH/2 + 25);
+            ctx.fillText('Control Joint', cx, cy - panelH * 1.5 - 10);
+
+            ctx.fillStyle = '#06d6a0';
+            ctx.fillText(selectedReinf.bar + ' @ ' + selectedReinf.spacing + '" EW', cx, cy);
+        }
+
+        function drawJointDetail(W, H) {
+            const { t, sawcut, selectedReinf } = calcResults;
+            if (!t) return;
+
+            const cx = W / 2, cy = H / 2;
+            const scale = 10;
+            const slabT = t * scale;
+
+            // Two slab sections
+            ctx.fillStyle = '#4b5563';
+            ctx.fillRect(cx - 120, cy - slabT/2, 100, slabT);
+            ctx.fillRect(cx + 20, cy - slabT/2, 100, slabT);
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(cx - 120, cy - slabT/2, 100, slabT);
+            ctx.strokeRect(cx + 20, cy - slabT/2, 100, slabT);
+
+            // Sawcut (V-shape)
+            ctx.fillStyle = '#0a0e14';
+            ctx.beginPath();
+            ctx.moveTo(cx - 20, cy - slabT/2);
+            ctx.lineTo(cx, cy - slabT/2 + sawcut * scale);
+            ctx.lineTo(cx + 20, cy - slabT/2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Crack line
+            ctx.strokeStyle = '#ef476f';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - slabT/2 + sawcut * scale);
+            ctx.lineTo(cx, cy + slabT/2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Reinforcement
+            ctx.strokeStyle = '#06d6a0';
+            ctx.lineWidth = 4;
+            const reinfY = cy - slabT/2 + slabT/3;
+            ctx.beginPath();
+            ctx.moveTo(cx - 110, reinfY);
+            ctx.lineTo(cx - 25, reinfY);
+            ctx.moveTo(cx + 25, reinfY);
+            ctx.lineTo(cx + 110, reinfY);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#ffd166';
+            ctx.font = '10px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('Sawcut d=' + sawcut.toFixed(1) + '"', cx, cy - slabT/2 - 15);
+            ctx.fillText('(t/4 to t/3)', cx, cy - slabT/2 - 3);
+
+            ctx.fillStyle = '#ef476f';
+            ctx.fillText('Crack', cx + 25, cy + 10);
+
+            ctx.fillStyle = '#06d6a0';
+            ctx.fillText(selectedReinf.bar, cx - 70, reinfY - 10);
+
+            // Dimension
+            ctx.strokeStyle = '#48cae4';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx + 130, cy - slabT/2);
+            ctx.lineTo(cx + 130, cy + slabT/2);
+            ctx.stroke();
+            ctx.fillStyle = '#48cae4';
+            ctx.font = '11px system-ui';
+            ctx.textAlign = 'left';
+            ctx.fillText(t + '"', cx + 135, cy + 4);
+
+            // Subgrade
+            ctx.fillStyle = '#3d2914';
+            ctx.fillRect(cx - 130, cy + slabT/2, 260, 30);
+        }
+
+        // Drawing modal
+        function showDrawing() {
+            document.getElementById('drawingModal').classList.add('show');
+            setTimeout(generateDrawing, 100);
+        }
+
+        function closeDrawing() {
+            document.getElementById('drawingModal').classList.remove('show');
+        }
+
+        function generateDrawing() {
+            const canvas = document.getElementById('drawingCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            const { t, fc, fy, k, jointReinfMin, jointReinfMax, sawcut, selectedReinf, slabWidth } = calcResults;
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, W, H);
+
+            // Title block
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('SLAB ON GRADE - CONSTRUCTION DRAWING', W/2, 30);
+            ctx.font = '11px Arial';
+            ctx.fillText('ACI 360R-10 / ACI 318-19', W/2, 48);
+
+            // Border
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(20, 60, W - 40, H - 120);
+
+            // Section A - Typical Section
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('A. TYPICAL SECTION', 40, 85);
+
+            const secCx = 200, secCy = 180;
+            const scale = 8;
+            const slabT = t * scale;
+
+            // Ground
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(40, secCy + slabT/2, 320, 40);
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(40 + i * 35, secCy + slabT/2);
+                ctx.lineTo(40 + i * 35 - 20, secCy + slabT/2 + 40);
+                ctx.stroke();
+            }
+
+            // Slab
+            ctx.fillStyle = '#d0d0d0';
+            ctx.fillRect(40, secCy - slabT/2, 320, slabT);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(40, secCy - slabT/2, 320, slabT);
+
+            // Reinforcement
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            const reinfY = secCy - slabT/2 + slabT/3;
+            ctx.beginPath();
+            ctx.moveTo(50, reinfY);
+            ctx.lineTo(350, reinfY);
+            ctx.stroke();
+
+            // Sawcut
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.moveTo(secCx - 8, secCy - slabT/2);
+            ctx.lineTo(secCx, secCy - slabT/2 + sawcut * scale);
+            ctx.lineTo(secCx + 8, secCy - slabT/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Dimensions
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#000';
+            ctx.textAlign = 'center';
+            
+            // Thickness dim
+            ctx.beginPath();
+            ctx.moveTo(370, secCy - slabT/2);
+            ctx.lineTo(390, secCy - slabT/2);
+            ctx.moveTo(370, secCy + slabT/2);
+            ctx.lineTo(390, secCy + slabT/2);
+            ctx.moveTo(380, secCy - slabT/2);
+            ctx.lineTo(380, secCy + slabT/2);
+            ctx.stroke();
+            ctx.fillText(t + '"', 405, secCy + 4);
+
+            // Cover dim
+            ctx.fillText('t/3 = ' + (t/3).toFixed(1) + '"', 420, reinfY);
+
+            // Sawcut label
+            ctx.fillText('SAWCUT', secCx, secCy - slabT/2 - 25);
+            ctx.fillText('d = ' + sawcut.toFixed(1) + '"', secCx, secCy - slabT/2 - 12);
+
+            // Reinf label
+            ctx.textAlign = 'left';
+            ctx.fillText(selectedReinf.bar + ' @ ' + selectedReinf.spacing + '" O.C. E.W.', 50, reinfY - 12);
+
+            // Section B - Plan View
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('B. CONTROL JOINT LAYOUT', 500, 85);
+
+            const planCx = 700, planCy = 180;
+            const panelSize = 80;
+
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 2; j++) {
+                    ctx.strokeRect(planCx - panelSize * 1.5 + i * panelSize, planCy - panelSize + j * panelSize, panelSize, panelSize);
+                }
+            }
+
+            // Joint lines
+            ctx.setLineDash([5, 3]);
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(planCx - panelSize * 1.5 + i * panelSize, planCy - panelSize - 15);
+                ctx.lineTo(planCx - panelSize * 1.5 + i * panelSize, planCy + panelSize + 15);
+                ctx.stroke();
+            }
+            for (let j = 0; j <= 2; j++) {
+                ctx.beginPath();
+                ctx.moveTo(planCx - panelSize * 1.5 - 15, planCy - panelSize + j * panelSize);
+                ctx.lineTo(planCx + panelSize * 1.5 + 15, planCy - panelSize + j * panelSize);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Dimensions
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText((jointReinfMax/12).toFixed(0) + "' TYP.", planCx, planCy + panelSize + 35);
+            ctx.fillText('CONTROL JOINT', planCx, planCy - panelSize - 25);
+
+            // Section C - Joint Detail
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('C. CONTROL JOINT DETAIL', 40, 320);
+
+            const detCx = 180, detCy = 420;
+            const detScale = 12;
+            const detSlabT = t * detScale;
+
+            // Slabs
+            ctx.fillStyle = '#d0d0d0';
+            ctx.fillRect(40, detCy - detSlabT/2, 120, detSlabT);
+            ctx.fillRect(180, detCy - detSlabT/2, 120, detSlabT);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(40, detCy - detSlabT/2, 120, detSlabT);
+            ctx.strokeRect(180, detCy - detSlabT/2, 120, detSlabT);
+
+            // Sawcut
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.moveTo(160, detCy - detSlabT/2);
+            ctx.lineTo(170, detCy - detSlabT/2 + sawcut * detScale);
+            ctx.lineTo(180, detCy - detSlabT/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.stroke();
+
+            // Crack
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(170, detCy - detSlabT/2 + sawcut * detScale);
+            ctx.lineTo(170, detCy + detSlabT/2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Subgrade
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(40, detCy + detSlabT/2, 260, 30);
+
+            // Reinf
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            const detReinfY = detCy - detSlabT/2 + detSlabT/3;
+            ctx.beginPath();
+            ctx.moveTo(50, detReinfY);
+            ctx.lineTo(155, detReinfY);
+            ctx.moveTo(185, detReinfY);
+            ctx.lineTo(290, detReinfY);
+            ctx.stroke();
+
+            // Labels
+            ctx.font = '9px Arial';
+            ctx.fillStyle = '#000';
+            ctx.textAlign = 'center';
+            ctx.fillText('SAWCUT d=' + sawcut.toFixed(1) + '"', 170, detCy - detSlabT/2 - 10);
+            ctx.fillText('(t/4 min)', 170, detCy - detSlabT/2 + 3);
+            ctx.fillText('INDUCED CRACK', 170, detCy + 15);
+
+            // Notes section
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('D. GENERAL NOTES', 400, 320);
+
+            ctx.font = '10px Arial';
+            const notes = [
+                '1. CONCRETE: f\'c = ' + fc + ' psi @ 28 days',
+                '2. REINFORCEMENT: ASTM A615 Gr. ' + (fy/1000),
+                '3. SLAB THICKNESS: ' + t + '"',
+                '4. SUBGRADE MODULUS: k = ' + k + ' pci',
+                '5. S&T REINFORCEMENT: ' + selectedReinf.bar + ' @ ' + selectedReinf.spacing + '" O.C. E.W.',
+                '6. REINF. POSITION: UPPER 1/3 OF SLAB (CLEAR COVER = ' + (t/3).toFixed(1) + '")',
+                '7. CONTROL JOINT SPACING: ' + (jointReinfMin/12).toFixed(0) + '-' + (jointReinfMax/12).toFixed(0) + '\' MAX.',
+                '8. SAWCUT DEPTH: ' + sawcut.toFixed(2) + '" (t/4)',
+                '9. SAWCUT TIMING: 4-12 HRS AFTER PLACEMENT',
+                '10. FILL JOINTS WITH APPROVED SEALANT',
+                '11. SUBGRADE: COMPACT TO 95% MOD. PROCTOR',
+                '12. VAPOR BARRIER: 10 MIL MIN. UNDER SLAB'
+            ];
+            notes.forEach((note, i) => {
+                ctx.fillText(note, 410, 345 + i * 18);
+            });
+
+            // Schedule
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('E. REINFORCEMENT SCHEDULE', 400, 570);
+
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            const schedX = 400, schedY = 585;
+            ctx.strokeRect(schedX, schedY, 450, 70);
+            ctx.beginPath();
+            ctx.moveTo(schedX, schedY + 25);
+            ctx.lineTo(schedX + 450, schedY + 25);
+            ctx.moveTo(schedX + 100, schedY);
+            ctx.lineTo(schedX + 100, schedY + 70);
+            ctx.moveTo(schedX + 200, schedY);
+            ctx.lineTo(schedX + 200, schedY + 70);
+            ctx.moveTo(schedX + 300, schedY);
+            ctx.lineTo(schedX + 300, schedY + 70);
+            ctx.stroke();
+
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('MARK', schedX + 50, schedY + 17);
+            ctx.fillText('SIZE', schedX + 150, schedY + 17);
+            ctx.fillText('SPACING', schedX + 250, schedY + 17);
+            ctx.fillText('REMARKS', schedX + 375, schedY + 17);
+
+            ctx.font = '10px Arial';
+            ctx.fillText('S&T', schedX + 50, schedY + 50);
+            ctx.fillText(selectedReinf.bar, schedX + 150, schedY + 50);
+            ctx.fillText(selectedReinf.spacing + '" O.C. E.W.', schedX + 250, schedY + 50);
+            ctx.fillText('TOP 1/3, BOTH DIRECTIONS', schedX + 375, schedY + 50);
+
+            // Title block at bottom
+            ctx.strokeRect(20, H - 55, W - 40, 35);
+            ctx.font = '9px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('PROJECT:', 30, H - 40);
+            ctx.fillText('SLAB ON GRADE DESIGN', 30, H - 28);
+            ctx.textAlign = 'center';
+            ctx.fillText('DATE: ' + new Date().toLocaleDateString(), W/2, H - 35);
+            ctx.textAlign = 'right';
+            ctx.fillText('DESIGNED BY: ENGINEER', W - 30, H - 40);
+            ctx.fillText('SCALE: NTS', W - 30, H - 28);
+        }
+
+        function printDrawing() {
+            const canvas = document.getElementById('drawingCanvas');
+            const win = window.open('', '_blank');
+            win.document.write('<html><head><title>Slab on Grade Drawing</title></head><body style="margin:0; display:flex; justify-content:center; align-items:center;">');
+            win.document.write('<img src="' + canvas.toDataURL() + '" style="max-width:100%; height:auto;">');
+            win.document.write('</body></html>');
+            win.document.close();
+            win.print();
+        }
+
+        // Report modal
+        function showReport() {
+            document.getElementById('reportModal').classList.add('show');
+            generateReport();
+        }
+
+        function closeReport() {
+            document.getElementById('reportModal').classList.remove('show');
+        }
+
+        function generateReport() {
+            const r = calcResults;
+            const allPass = (r.sigma_i <= r.Fb) && (r.t >= r.t_req);
+
+            const html = `
+                <h1>SLAB ON GRADE DESIGN CALCULATION</h1>
+                <p style="text-align:center; color:#666;">Per ACI 360R-10 & ACI 318-19</p>
+                <p style="text-align:center;">Date: ${new Date().toLocaleDateString()}</p>
+
+                <h2>1. DESIGN PARAMETERS</h2>
+                <table>
+                    <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+                    <tr><td>Slab Thickness (t)</td><td>${r.t}</td><td>in</td></tr>
+                    <tr><td>Concrete Strength (f'c)</td><td>${r.fc}</td><td>psi</td></tr>
+                    <tr><td>Reinforcement Grade (fy)</td><td>${r.fy/1000}</td><td>ksi</td></tr>
+                    <tr><td>Subgrade Modulus (k)</td><td>${r.k}</td><td>pci</td></tr>
+                    <tr><td>Factor of Safety (FOS)</td><td>${r.fos}</td><td>-</td></tr>
+                </table>
+
+                <h2>2. MATERIAL PROPERTIES</h2>
+                <div class="formula">
+                    Ec = 57,000 × √f'c = 57,000 × √${r.fc} = <span class="result">${(r.Ec/1000).toFixed(0)} ksi</span>
+                </div>
+                <div class="formula">
+                    MOR = 7.5 × √f'c = 7.5 × √${r.fc} = <span class="result">${r.MOR.toFixed(0)} psi</span>
+                </div>
+                <div class="formula">
+                    Fb = MOR / FOS = ${r.MOR.toFixed(0)} / ${r.fos} = <span class="result">${r.Fb.toFixed(0)} psi</span> (Allowable Flexural Stress)
+                </div>
+
+                <h2>3. LOADING</h2>
+                <table>
+                    <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+                    <tr><td>Axle Load</td><td>${r.axleLoad?.toLocaleString()}</td><td>lbs</td></tr>
+                    <tr><td>Wheel Load (P)</td><td>${r.P?.toLocaleString()}</td><td>lbs</td></tr>
+                    <tr><td>Contact Radius (a)</td><td>${r.a?.toFixed(2)}</td><td>in</td></tr>
+                    <tr><td>Equivalent Radius (b)</td><td>${r.b?.toFixed(2)}</td><td>in</td></tr>
+                </table>
+
+                <h2>4. WESTERGAARD ANALYSIS (Interior Load)</h2>
+                <h3>4.1 Radius of Relative Stiffness</h3>
+                <div class="formula">
+                    L = ⁴√[Ec × t³ / 12(1-μ²)k]<br><br>
+                    L = ⁴√[${(r.Ec).toFixed(0)} × ${r.t}³ / 12(1-0.15²) × ${r.k}]<br><br>
+                    L = <span class="result">${r.L?.toFixed(2)} in</span>
+                </div>
+
+                <h3>4.2 Flexural Stress</h3>
+                <div class="formula">
+                    σ = [3P(1+μ) / 2πt²] × [ln(L/b) + 0.6159]<br><br>
+                    σ = [3 × ${r.P} × (1+0.15) / 2π × ${r.t}²] × [ln(${r.L?.toFixed(2)}/${r.b?.toFixed(2)}) + 0.6159]<br><br>
+                    σ = <span class="result">${r.sigma_i?.toFixed(0)} psi</span>
+                </div>
+
+                <h2>5. THICKNESS CHECK</h2>
+                <table>
+                    <tr><th>Item</th><th>Required</th><th>Provided</th><th>Status</th></tr>
+                    <tr>
+                        <td>Slab Thickness</td>
+                        <td>${r.t_req?.toFixed(1)}"</td>
+                        <td>${r.t}"</td>
+                        <td class="${r.t >= r.t_req ? 'pass' : 'fail'}">${r.t >= r.t_req ? 'OK' : 'NG'}</td>
+                    </tr>
+                    <tr>
+                        <td>Flexural Stress</td>
+                        <td>≤ ${r.Fb?.toFixed(0)} psi</td>
+                        <td>${r.sigma_i?.toFixed(0)} psi</td>
+                        <td class="${r.sigma_i <= r.Fb ? 'pass' : 'fail'}">${r.sigma_i <= r.Fb ? 'OK' : 'NG'}</td>
+                    </tr>
+                </table>
+
+                <h2>6. SHRINKAGE & TEMPERATURE REINFORCEMENT (ACI 318-19 §24.4.3.2)</h2>
+                <div class="formula">
+                    For fy = ${r.fy/1000} ksi: ρ_min = ${r.fy >= 60000 ? '0.0018' : '0.0020'}<br><br>
+                    As,req = ρ × 12 × t = ${r.fy >= 60000 ? '0.0018' : '0.0020'} × 12 × ${r.t} = <span class="result">${r.As_req?.toFixed(3)} in²/ft</span>
+                </div>
+
+                <table>
+                    <tr><th>Item</th><th>Required</th><th>Provided</th><th>Status</th></tr>
+                    <tr>
+                        <td>S&T Reinforcement</td>
+                        <td>${r.As_req?.toFixed(3)} in²/ft</td>
+                        <td>${r.selectedReinf?.bar} @ ${r.selectedReinf?.spacing}" (${r.selectedReinf?.asPerFt?.toFixed(3)} in²/ft)</td>
+                        <td class="pass">OK</td>
+                    </tr>
+                </table>
+
+                <div class="note">
+                    <strong>Note:</strong> S&T reinforcement shall be placed in the upper 1/3 of slab thickness per ACI 360R-10. 
+                    Clear cover from top = ${(r.t/3)?.toFixed(1)}"
+                </div>
+
+                <h2>7. CONTROL JOINT SPACING</h2>
+                <div class="formula">
+                    Unreinforced: 24-30 × t = 24-30 × ${r.t}" = ${r.t * 24}" to ${r.t * 30}" = <span class="result">${(r.t * 24 / 12).toFixed(0)}-${(r.t * 30 / 12).toFixed(0)} ft</span><br><br>
+                    With S&T Reinf: 30-36 × t = 30-36 × ${r.t}" = ${r.t * 30}" to ${r.t * 36}" = <span class="result">${(r.t * 30 / 12).toFixed(0)}-${(r.t * 36 / 12).toFixed(0)} ft</span>
+                </div>
+
+                <table>
+                    <tr><th>Item</th><th>Value</th></tr>
+                    <tr><td>Joint Spacing (Unreinforced)</td><td>${(r.jointUnreinfMin/12).toFixed(0)}-${(r.jointUnreinfMax/12).toFixed(0)} ft</td></tr>
+                    <tr><td>Joint Spacing (with S&T Reinf)</td><td>${(r.jointReinfMin/12).toFixed(0)}-${(r.jointReinfMax/12).toFixed(0)} ft</td></tr>
+                    <tr><td>Sawcut Depth</td><td>${r.sawcut?.toFixed(2)}" (t/4)</td></tr>
+                    <tr><td>Sawcut Timing</td><td>4-12 hours after placement</td></tr>
+                </table>
+
+                <h2>8. DESIGN SUMMARY</h2>
+                <table>
+                    <tr><th colspan="2" style="background: ${allPass ? '#d4edda' : '#f8d7da'}; text-align: center;">
+                        DESIGN STATUS: <span class="${allPass ? 'pass' : 'fail'}">${allPass ? 'PASS ✓' : 'FAIL ✗'}</span>
+                    </th></tr>
+                    <tr><td>Slab Thickness</td><td>${r.t}"</td></tr>
+                    <tr><td>Concrete Strength</td><td>f'c = ${r.fc} psi</td></tr>
+                    <tr><td>S&T Reinforcement</td><td>${r.selectedReinf?.bar} @ ${r.selectedReinf?.spacing}" O.C. E.W.</td></tr>
+                    <tr><td>Reinforcement Position</td><td>Top 1/3 of slab (cover = ${(r.t/3)?.toFixed(1)}")</td></tr>
+                    <tr><td>Control Joint Spacing</td><td>${(r.jointReinfMin/12)?.toFixed(0)}-${(r.jointReinfMax/12)?.toFixed(0)} ft max.</td></tr>
+                    <tr><td>Sawcut Depth</td><td>${r.sawcut?.toFixed(2)}"</td></tr>
+                </table>
+
+                <div class="note" style="margin-top: 20px;">
+                    <strong>References:</strong><br>
+                    • ACI 360R-10: Guide to Design of Slabs-on-Ground<br>
+                    • ACI 318-19: Building Code Requirements for Structural Concrete<br>
+                    • PCA: Concrete Floors on Ground
+                </div>
+            `;
+
+            document.getElementById('reportContent').innerHTML = html;
+        }
+
+        function printReport() {
+            const content = document.getElementById('reportContent').innerHTML;
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html>
+                <head>
+                    <title>Slab on Grade Calculation Report</title>
+                    <style>
+                        body { font-family: 'Times New Roman', serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+                        h1 { font-size: 16pt; text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+                        h2 { font-size: 13pt; color: #333; margin: 20px 0 10px; border-bottom: 1px solid #ccc; }
+                        h3 { font-size: 11pt; color: #555; margin: 15px 0 8px; }
+                        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10pt; }
+                        th, td { border: 1px solid #999; padding: 6px 10px; text-align: left; }
+                        th { background: #f0f0f0; }
+                        .formula { background: #f9f9f9; padding: 10px; margin: 10px 0; border-left: 3px solid #00b4d8; font-family: 'Courier New', monospace; font-size: 10pt; }
+                        .result { font-weight: bold; color: #00b4d8; }
+                        .pass { color: #28a745; font-weight: bold; }
+                        .fail { color: #dc3545; font-weight: bold; }
+                        .note { background: #fffde7; padding: 10px; font-size: 9pt; margin: 10px 0; }
+                        @media print { body { padding: 0; } }
+                    </style>
+                </head>
+                <body>${content}</body>
+                </html>
+            `);
+            win.document.close();
+            win.print();
+        }
+
+        // Initialize
+        window.addEventListener('resize', resizeCanvas);
+        document.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas();
+            calculate();
+        });
+    </script>
+</body>
+</html>

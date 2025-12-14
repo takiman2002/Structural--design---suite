@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structural Design Suite | AISC & ACI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #03070f;
+            --bg-secondary: #0a1120;
+            --bg-tertiary: #111b2e;
+            --bg-card: rgba(15, 25, 45, 0.85);
+            --accent-blue: #00d4ff;
+            --accent-cyan: #00fff2;
+            --accent-green: #00ff88;
+            --accent-orange: #ff9500;
+            --accent-red: #ff3366;
+            --accent-purple: #a855f7;
+            --accent-yellow: #ffd500;
+            --text-primary: #e8f0f8;
+            --text-secondary: #8899aa;
+            --text-muted: #506070;
+            --border-color: rgba(0, 212, 255, 0.15);
+            --border-glow: rgba(0, 212, 255, 0.4);
+            --glass: rgba(10, 20, 40, 0.7);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 600px; height: 600px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow-1 { top: -200px; left: -200px; background: var(--accent-blue); }
+        .bg-glow-2 { bottom: -200px; right: -200px; background: var(--accent-purple); }
+        .bg-glow-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--accent-cyan); opacity: 0.08; }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', monospace;
+            font-weight: 800;
+            font-size: 15px;
+            color: var(--bg-primary);
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.5);
+        }
+
+        .logo-text h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .logo-text span {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .version-badge {
+            padding: 6px 14px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+        }
+
+        .main {
+            flex: 1;
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(168, 85, 247, 0.05));
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .hero h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(90deg, var(--text-primary), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item { text-align: center; }
+
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .category { margin-bottom: 50px; }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .category-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .category-icon.steel { background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); }
+        .category-icon.concrete { background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow)); }
+        .category-icon.specialty { background: linear-gradient(135deg, var(--accent-purple), var(--accent-red)); }
+
+        .category-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .category-count {
+            margin-left: auto;
+            padding: 5px 14px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        .tool-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 26px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: block;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tool-card.steel::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
+        .tool-card.concrete::before { background: linear-gradient(90deg, var(--accent-orange), var(--accent-yellow)); }
+        .tool-card.specialty::before { background: linear-gradient(90deg, var(--accent-purple), var(--accent-red)); }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--border-glow);
+            box-shadow: 0 25px 80px rgba(0, 212, 255, 0.2);
+        }
+
+        .tool-card:hover::before { opacity: 1; }
+
+        .tool-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .tool-icon {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+
+        .tool-icon.steel {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 255, 242, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .tool-icon.concrete {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.2), rgba(255, 213, 0, 0.1));
+            border: 1px solid rgba(255, 149, 0, 0.3);
+        }
+
+        .tool-icon.specialty {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(255, 51, 102, 0.1));
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .tool-info h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .code-ref {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            padding: 3px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .code-ref.steel { background: rgba(0, 212, 255, 0.15); color: var(--accent-cyan); }
+        .code-ref.concrete { background: rgba(255, 149, 0, 0.15); color: var(--accent-orange); }
+        .code-ref.specialty { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); }
+
+        .tool-desc {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .tool-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .feature-tag {
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .launch-badge {
+            position: absolute;
+            bottom: 22px;
+            right: 22px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--bg-primary);
+            opacity: 0;
+            transform: translateX(10px);
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover .launch-badge {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .footer {
+            padding: 20px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-logo {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', monospace;
+            font-weight: 800;
+            font-size: 22px;
+            color: var(--bg-primary);
+            animation: pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .loading-text {
+            margin-top: 24px;
+            font-family: 'Orbitron', monospace;
+            color: var(--accent-cyan);
+            font-size: 0.85rem;
+            letter-spacing: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; gap: 14px; }
+            .hero h2 { font-size: 1.8rem; }
+            .tools-grid { grid-template-columns: 1fr; }
+            .stats-row { gap: 20px; }
+            .stat-value { font-size: 1.6rem; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-logo">SDS</div>
+        <div class="loading-text">INITIALIZING</div>
+    </div>
+
+    <div class="app">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">SDS</div>
+                    <div class="logo-text">
+                        <h1>STRUCTURAL DESIGN SUITE</h1>
+                        <span>AISC 360-22 • ACI 318-19 • AISI S310</span>
+                    </div>
+                </div>
+                <span class="version-badge">v1.0.0</span>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="hero">
+                <h2>Engineering Design Tools</h2>
+                <p>Professional structural design applications for steel and concrete structures following current US design codes</p>
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-value">10</div>
+                        <div class="stat-label">Design Tools</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">4</div>
+                        <div class="stat-label">Steel Modules</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Concrete Modules</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Design Codes</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEEL DESIGN -->
+            <section class="category">
+                <div class="category-header">
+                    <div class="category-icon steel">🔩</div>
+                    <h2 class="category-title">Steel Design</h2>
+                    <span class="category-count">4 TOOLS</span>
+                </div>
+                <div class="tools-grid">
+                    <a href="https://takiman2002.github.io/steel-design-tool/AISC-360-22-Steel-Design-Tool.html" target="_blank" class="tool-card steel">
+                        <div class="tool-header">
+                            <div class="tool-icon steel">📐</div>
+                            <div class="tool-info">
+                                <h3>Steel Member Design</h3>
+                                <span class="code-ref steel">AISC 360-22</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">Comprehensive design for W-shapes, HSS, channels, angles. Includes tension, compression, flexure, shear, and P-M interaction checks.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">W-Shape</span>
+                            <span class="feature-tag">HSS</span>
+                            <span class="feature-tag">P-M Interaction</span>
+                            <span class="feature-tag">PDF Report</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+
+                    <a href="https://takiman2002.github.io/steel-design-tool/AISC-360-22-Frame-Analysis.html" target="_blank" class="tool-card steel">
+                        <div class="tool-header">
+                            <div class="tool-icon steel">🏗️</div>
+                            <div class="tool-info">
+                                <h3>Frame Analysis</h3>
+                                <span class="code-ref steel">AISC 360-22 + P-Δ</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">Multi-bay, multi-story frame analysis with P-Delta effects, 8 load combinations, and drift checks per AISC specifications.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">P-Delta</span>
+                            <span class="feature-tag">B1-B2 Method</span>
+                            <span class="feature-tag">Drift Check</span>
+                            <span class="feature-tag">DCR</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+
+                    <a href="https://takiman2002.github.io/steel-design-tool/HSS-Moment-Connection-3D.html" target="_blank" class="tool-card steel">
+                        <div class="tool-header">
+                            <div class="tool-icon steel">🔗</div>
+                            <div class="tool-info">
+                                <h3>HSS Connection 3D</h3>
+                                <span class="code-ref steel">AISC DG24</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">3D moment connection designer for HSS columns with welded, bolted, and combined connections. Interactive 3D visualization.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">3D View</span>
+                            <span class="feature-tag">Welded</span>
+                            <span class="feature-tag">Bolted</span>
+                            <span class="feature-tag">2D Details</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+
+                    <a href="https://takiman2002.github.io/steel-design-tool/Base-Plate-Designer.html" target="_blank" class="tool-card steel">
+                        <div class="tool-header">
+                            <div class="tool-icon steel">🔧</div>
+                            <div class="tool-info">
+                                <h3>Base Plate Design</h3>
+                                <span class="code-ref steel">AISC DG1 + ACI 318</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">Column base plate design with anchor bolt layout, bearing pressure, and concrete embedment per Design Guide 1.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">Anchor Bolts</span>
+                            <span class="feature-tag">Bearing</span>
+                            <span class="feature-tag">Moment</span>
+                            <span class="feature-tag">Concrete</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- CONCRETE DESIGN -->
+            <section class="category">
+                <div class="category-header">
+                    <div class="category-icon concrete">🧱</div>
+                    <h2 class="category-title">Concrete Design</h2>
+                    <span class="category-count">5 TOOLS</span>
+                </div>
+                <div class="tools-grid">
+                    <a href="https://takiman2002.github.io/steel-design-tool/ACI-318-Slab-Design.html" target="_blank" class="tool-card concrete">
+                        <div class="tool-header">
+                            <div class="tool-icon concrete">📋</div>
+                            <div class="tool-info">
+                                <h3>Slab Design</h3>
+                                <span class="code-ref concrete">ACI 318-19</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">One-way and two-way slab design with flexural reinforcement, shear checks, deflection, and crack control.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">One-Way</span>
+                            <span class="feature-tag">Two-Way</span>
+                            <span class="feature-tag">Deflection</span>
+                            <span class="feature-tag">Crack Control</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+
+                    <a href="https://takiman2002.github.io/steel-design-tool/ACI-318-Beam-Design.html" target="_blank" class="tool-card concrete">
+                        <div class="tool-header">
+                            <div class="tool-icon concrete">📏</div>
+                            <div class="tool-info">
+                                <h3>Beam Design</h3>
+                                <span class="code-ref concrete">ACI 318-19</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">Rectangular and T-beam design for flexure, shear, torsion with reinforcement detailing and development lengths.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">Flexure</span>
+                            <span class="feature-tag">Shear</span>
+                            <span class="feature-tag">Torsion</span>
+                            <span class="feature-tag">Development</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+
+                    <a href="https://takiman2002.github.io/steel-design-tool/ACI-318-Column-Design.html" target="_blank" class="tool-card concrete">
+                        <div class="tool-header">
+                            <div class="tool-icon concrete">🏛️</div>
+                            <div class="tool-info">
+                                <h3>Column Design P-M</h3>
+                                <span class="code-ref concrete">ACI 318-19/22</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">Column design with P-M interaction diagram, slenderness effects, biaxial bending, and tie/spiral detailing.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">P-M Diagram</span>
+                            <span class="feature-tag">Slenderness</span>
+                            <span class="feature-tag">Biaxial</span>
+                            <span class="feature-tag">Detailing</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+
+                    <a href="https://takiman2002.github.io/steel-design-tool/ACI-318-Wall-Design.html" target="_blank" class="tool-card concrete">
+                        <div class="tool-header">
+                            <div class="tool-icon concrete">🧱</div>
+                            <div class="tool-info">
+                                <h3>Wall Design</h3>
+                                <span class="code-ref concrete">ACI 318-19</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">Structural wall design for in-plane shear, out-of-plane bending, boundary elements, and reinforcement layout.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">In-Plane Shear</span>
+                            <span class="feature-tag">Out-of-Plane</span>
+                            <span class="feature-tag">Boundary Elements</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+
+                    <a href="https://takiman2002.github.io/steel-design-tool/ACI-318-Foundation-Design.html" target="_blank" class="tool-card concrete">
+                        <div class="tool-header">
+                            <div class="tool-icon concrete">⬛</div>
+                            <div class="tool-info">
+                                <h3>Foundation Design</h3>
+                                <span class="code-ref concrete">ACI 318-19</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">Spread footing design with bearing pressure, one-way/two-way shear, flexure, and punching shear checks.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">Bearing</span>
+                            <span class="feature-tag">Punching Shear</span>
+                            <span class="feature-tag">Flexure</span>
+                            <span class="feature-tag">One-Way Shear</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- SPECIALTY DESIGN -->
+            <section class="category">
+                <div class="category-header">
+                    <div class="category-icon specialty">⚙️</div>
+                    <h2 class="category-title">Specialty Design</h2>
+                    <span class="category-count">2 TOOLS</span>
+                </div>
+                <div class="tools-grid">
+                    <a href="https://takiman2002.github.io/steel-design-tool/Metal-Deck-Diaphragm.html" target="_blank" class="tool-card specialty">
+                        <div class="tool-header">
+                            <div class="tool-icon specialty">🔲</div>
+                            <div class="tool-info">
+                                <h3>Metal Deck & Bracing</h3>
+                                <span class="code-ref specialty">AISI S310 • SDI DDM04</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">Diaphragm design with deck shear strength, connection patterns, chord/collector forces, and lateral bracing design.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">Diaphragm</span>
+                            <span class="feature-tag">Chord Forces</span>
+                            <span class="feature-tag">Bracing</span>
+                            <span class="feature-tag">Connections</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+
+                    <a href="https://takiman2002.github.io/steel-design-tool/Slab-on-Grade.html" target="_blank" class="tool-card specialty">
+                        <div class="tool-header">
+                            <div class="tool-icon specialty">🏗️</div>
+                            <div class="tool-info">
+                                <h3>Slab on Grade</h3>
+                                <span class="code-ref specialty">ACI 360R • ACI 318-19</span>
+                            </div>
+                        </div>
+                        <p class="tool-desc">SOG design using Westergaard theory with thickness check, S&T reinforcement, control joints, and construction drawings.</p>
+                        <div class="tool-features">
+                            <span class="feature-tag">Westergaard</span>
+                            <span class="feature-tag">S&T Reinf.</span>
+                            <span class="feature-tag">Joint Layout</span>
+                            <span class="feature-tag">Drawings</span>
+                        </div>
+                        <div class="launch-badge">↗ LAUNCH</div>
+                    </a>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Structural Design Suite v1.0 • AISC 360-22, ACI 318-19, AISI S310 • For professional use by licensed engineers</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 1200);
+        });
+    </script>
+</body>
+</html>
