@@ -161,6 +161,13 @@
                                 <option value="HSS3x3x1/4">HSS3×3×1/4</option>
                                 <option value="HSS4x4x1/4">HSS4×4×1/4</option>
                                 <option value="HSS4x4x3/8">HSS4×4×3/8</option>
+                                <option value="HSS6x6x1/4">HSS6×6×1/4</option>
+                                <option value="HSS6x6x3/8">HSS6×6×3/8</option>
+                                <option value="HSS6x6x1/2">HSS6×6×1/2</option>
+                                <option value="HSS8x8x3/8">HSS8×8×3/8</option>
+                                <option value="HSS8x8x1/2">HSS8×8×1/2</option>
+                                <option value="HSS10x10x3/8">HSS10×10×3/8</option>
+                                <option value="HSS10x10x1/2">HSS10×10×1/2</option>
                             </optgroup>
                             <optgroup label="HSS Rectangular">
                                 <option value="HSS4x3x1/4">HSS4×3×1/4</option>
@@ -169,8 +176,23 @@
                                 <option value="HSS5x3x3/8">HSS5×3×3/8</option>
                                 <option value="HSS6x3x1/4">HSS6×3×1/4</option>
                                 <option value="HSS6x3x3/8">HSS6×3×3/8</option>
+                                <option value="HSS6x4x1/4">HSS6×4×1/4</option>
+                                <option value="HSS6x4x3/8">HSS6×4×3/8</option>
+                                <option value="HSS6x4x1/2">HSS6×4×1/2</option>
                                 <option value="HSS8x3x1/4">HSS8×3×1/4</option>
                                 <option value="HSS8x3x3/8">HSS8×3×3/8</option>
+                                <option value="HSS8x4x1/4">HSS8×4×1/4</option>
+                                <option value="HSS8x4x3/8">HSS8×4×3/8</option>
+                                <option value="HSS8x4x1/2">HSS8×4×1/2</option>
+                                <option value="HSS8x6x1/4">HSS8×6×1/4</option>
+                                <option value="HSS8x6x3/8">HSS8×6×3/8</option>
+                                <option value="HSS8x6x1/2">HSS8×6×1/2</option>
+                                <option value="HSS10x6x1/4">HSS10×6×1/4</option>
+                                <option value="HSS10x6x3/8">HSS10×6×3/8</option>
+                                <option value="HSS10x6x1/2">HSS10×6×1/2</option>
+                                <option value="HSS10x8x1/4">HSS10×8×1/4</option>
+                                <option value="HSS10x8x3/8">HSS10×8×3/8</option>
+                                <option value="HSS10x8x1/2">HSS10×8×1/2</option>
                             </optgroup>
                         </select>
                     </div>
@@ -332,17 +354,41 @@ const sections = {
     'W12x26': { type:'W', A:7.65, d:12.22, bf:6.49, tf:0.380, tw:0.230, Ix:204, Sx:33.4, Zx:37.2, Iy:17.3, ry:1.51, J:0.300, rts:1.75, ho:11.84, h_tw:47.2 },
     'W14x30': { type:'W', A:8.85, d:13.84, bf:6.73, tf:0.385, tw:0.270, Ix:291, Sx:42.0, Zx:47.3, Iy:19.6, ry:1.49, J:0.380, rts:1.80, ho:13.46, h_tw:45.4 },
     'W16x36': { type:'W', A:10.6, d:15.86, bf:6.985, tf:0.430, tw:0.295, Ix:448, Sx:56.5, Zx:64.0, Iy:24.5, ry:1.52, J:0.545, rts:1.88, ho:15.43, h_tw:48.1 },
+    // HSS Square
     'HSS3x3x1/4':   { type:'HSS', A:2.59, d:3.0, bf:3.0, t:0.233, Ix:2.60, Sx:1.73, Zx:2.10, Iy:2.60, ry:1.00, J:4.42, b_t:9.88 },
     'HSS4x4x1/4':   { type:'HSS', A:3.59, d:4.0, bf:4.0, t:0.233, Ix:6.59, Sx:3.30, Zx:3.96, Iy:6.59, ry:1.35, J:11.0, b_t:14.2 },
     'HSS4x4x3/8':   { type:'HSS', A:5.09, d:4.0, bf:4.0, t:0.349, Ix:8.53, Sx:4.27, Zx:5.26, Iy:8.53, ry:1.29, J:14.7, b_t:8.46 },
+    'HSS6x6x1/4':   { type:'HSS', A:5.59, d:6.0, bf:6.0, t:0.233, Ix:25.5, Sx:8.51, Zx:10.0, Iy:25.5, ry:2.14, J:41.2, b_t:22.8 },
+    'HSS6x6x3/8':   { type:'HSS', A:8.09, d:6.0, bf:6.0, t:0.349, Ix:34.8, Sx:11.6, Zx:14.0, Iy:34.8, ry:2.07, J:57.3, b_t:14.2 },
+    'HSS6x6x1/2':   { type:'HSS', A:10.4, d:6.0, bf:6.0, t:0.465, Ix:42.5, Sx:14.2, Zx:17.6, Iy:42.5, ry:2.02, J:71.4, b_t:9.90 },
+    'HSS8x8x3/8':   { type:'HSS', A:11.1, d:8.0, bf:8.0, t:0.349, Ix:90.6, Sx:22.6, Zx:26.9, Iy:90.6, ry:2.86, J:144, b_t:19.9 },
+    'HSS8x8x1/2':   { type:'HSS', A:14.4, d:8.0, bf:8.0, t:0.465, Ix:113, Sx:28.3, Zx:34.3, Iy:113, ry:2.80, J:183, b_t:14.2 },
+    'HSS10x10x3/8': { type:'HSS', A:14.1, d:10.0, bf:10.0, t:0.349, Ix:184, Sx:36.8, Zx:43.3, Iy:184, ry:3.61, J:290, b_t:25.7 },
+    'HSS10x10x1/2': { type:'HSS', A:18.4, d:10.0, bf:10.0, t:0.465, Ix:233, Sx:46.5, Zx:55.6, Iy:233, ry:3.56, J:372, b_t:18.5 },
+    // HSS Rectangular - requested sizes
     'HSS4x3x1/4':   { type:'HSS', A:3.09, d:4.0, bf:3.0, t:0.233, Ix:4.69, Sx:2.35, Zx:2.82, Iy:2.99, ry:0.984, J:5.87, b_t:9.88, h_t:14.2 },
     'HSS4x3x3/8':   { type:'HSS', A:4.36, d:4.0, bf:3.0, t:0.349, Ix:6.02, Sx:3.01, Zx:3.73, Iy:3.86, ry:0.941, J:7.66, b_t:5.60, h_t:8.46 },
     'HSS5x3x1/4':   { type:'HSS', A:3.59, d:5.0, bf:3.0, t:0.233, Ix:7.58, Sx:3.03, Zx:3.66, Iy:3.40, ry:0.973, J:7.65, b_t:9.88, h_t:18.5 },
     'HSS5x3x3/8':   { type:'HSS', A:5.09, d:5.0, bf:3.0, t:0.349, Ix:9.83, Sx:3.93, Zx:4.91, Iy:4.40, ry:0.930, J:10.1, b_t:5.60, h_t:11.3 },
     'HSS6x3x1/4':   { type:'HSS', A:4.09, d:6.0, bf:3.0, t:0.233, Ix:11.3, Sx:3.78, Zx:4.58, Iy:3.78, ry:0.961, J:9.22, b_t:9.88, h_t:22.8 },
     'HSS6x3x3/8':   { type:'HSS', A:5.82, d:6.0, bf:3.0, t:0.349, Ix:14.9, Sx:4.96, Zx:6.21, Iy:4.93, ry:0.921, J:12.3, b_t:5.60, h_t:14.2 },
+    'HSS6x4x1/4':   { type:'HSS', A:4.59, d:6.0, bf:4.0, t:0.233, Ix:15.3, Sx:5.09, Zx:6.02, Iy:8.16, ry:1.33, J:17.8, b_t:14.2, h_t:22.8 },
+    'HSS6x4x3/8':   { type:'HSS', A:6.55, d:6.0, bf:4.0, t:0.349, Ix:20.3, Sx:6.78, Zx:8.24, Iy:10.8, ry:1.28, J:24.2, b_t:8.46, h_t:14.2 },
+    'HSS6x4x1/2':   { type:'HSS', A:8.36, d:6.0, bf:4.0, t:0.465, Ix:24.5, Sx:8.15, Zx:10.2, Iy:13.0, ry:1.25, J:29.8, b_t:5.60, h_t:9.90 },
     'HSS8x3x1/4':   { type:'HSS', A:5.09, d:8.0, bf:3.0, t:0.233, Ix:22.1, Sx:5.52, Zx:6.70, Iy:4.55, ry:0.945, J:12.1, b_t:9.88, h_t:31.3 },
-    'HSS8x3x3/8':   { type:'HSS', A:7.28, d:8.0, bf:3.0, t:0.349, Ix:29.4, Sx:7.36, Zx:9.28, Iy:5.98, ry:0.906, J:16.1, b_t:5.60, h_t:19.9 }
+    'HSS8x3x3/8':   { type:'HSS', A:7.28, d:8.0, bf:3.0, t:0.349, Ix:29.4, Sx:7.36, Zx:9.28, Iy:5.98, ry:0.906, J:16.1, b_t:5.60, h_t:19.9 },
+    'HSS8x4x1/4':   { type:'HSS', A:5.59, d:8.0, bf:4.0, t:0.233, Ix:30.0, Sx:7.51, Zx:8.86, Iy:10.3, ry:1.36, J:27.5, b_t:14.2, h_t:31.3 },
+    'HSS8x4x3/8':   { type:'HSS', A:8.09, d:8.0, bf:4.0, t:0.349, Ix:40.3, Sx:10.1, Zx:12.2, Iy:13.8, ry:1.31, J:37.7, b_t:8.46, h_t:19.9 },
+    'HSS8x4x1/2':   { type:'HSS', A:10.4, d:8.0, bf:4.0, t:0.465, Ix:49.0, Sx:12.3, Zx:15.2, Iy:16.8, ry:1.27, J:46.9, b_t:5.60, h_t:14.2 },
+    'HSS8x6x1/4':   { type:'HSS', A:6.59, d:8.0, bf:6.0, t:0.233, Ix:38.8, Sx:9.69, Zx:11.2, Iy:24.0, ry:1.91, J:52.3, b_t:22.8, h_t:31.3 },
+    'HSS8x6x3/8':   { type:'HSS', A:9.55, d:8.0, bf:6.0, t:0.349, Ix:52.4, Sx:13.1, Zx:15.5, Iy:32.4, ry:1.84, J:72.2, b_t:14.2, h_t:19.9 },
+    'HSS8x6x1/2':   { type:'HSS', A:12.4, d:8.0, bf:6.0, t:0.465, Ix:64.2, Sx:16.1, Zx:19.4, Iy:39.6, ry:1.79, J:90.4, b_t:9.90, h_t:14.2 },
+    'HSS10x6x1/4':  { type:'HSS', A:7.59, d:10.0, bf:6.0, t:0.233, Ix:64.7, Sx:12.9, Zx:14.9, Iy:28.6, ry:1.94, J:71.9, b_t:22.8, h_t:39.9 },
+    'HSS10x6x3/8':  { type:'HSS', A:11.1, d:10.0, bf:6.0, t:0.349, Ix:88.2, Sx:17.6, Zx:20.8, Iy:39.0, ry:1.88, J:99.8, b_t:14.2, h_t:25.7 },
+    'HSS10x6x1/2':  { type:'HSS', A:14.4, d:10.0, bf:6.0, t:0.465, Ix:109, Sx:21.8, Zx:26.2, Iy:48.0, ry:1.83, J:126, b_t:9.90, h_t:18.5 },
+    'HSS10x8x1/4':  { type:'HSS', A:8.59, d:10.0, bf:8.0, t:0.233, Ix:76.0, Sx:15.2, Zx:17.4, Iy:52.1, ry:2.46, J:109, b_t:31.3, h_t:39.9 },
+    'HSS10x8x3/8':  { type:'HSS', A:12.6, d:10.0, bf:8.0, t:0.349, Ix:104, Sx:20.9, Zx:24.3, Iy:71.4, ry:2.39, J:151, b_t:19.9, h_t:25.7 },
+    'HSS10x8x1/2':  { type:'HSS', A:16.4, d:10.0, bf:8.0, t:0.465, Ix:129, Sx:25.9, Zx:30.6, Iy:88.4, ry:2.32, J:191, b_t:14.2, h_t:18.5 }
 };
 
 const grades = { 'A500C': { Fy:50, Fu:62 }, 'A992': { Fy:50, Fu:65 }, 'A36': { Fy:36, Fu:58 } };
@@ -369,6 +415,13 @@ const sectionOptions = `
         <option value="HSS3x3x1/4">HSS3×3×1/4</option>
         <option value="HSS4x4x1/4">HSS4×4×1/4</option>
         <option value="HSS4x4x3/8">HSS4×4×3/8</option>
+        <option value="HSS6x6x1/4">HSS6×6×1/4</option>
+        <option value="HSS6x6x3/8">HSS6×6×3/8</option>
+        <option value="HSS6x6x1/2">HSS6×6×1/2</option>
+        <option value="HSS8x8x3/8">HSS8×8×3/8</option>
+        <option value="HSS8x8x1/2">HSS8×8×1/2</option>
+        <option value="HSS10x10x3/8">HSS10×10×3/8</option>
+        <option value="HSS10x10x1/2">HSS10×10×1/2</option>
     </optgroup>
     <optgroup label="HSS Rectangular">
         <option value="HSS4x3x1/4">HSS4×3×1/4</option>
@@ -377,8 +430,23 @@ const sectionOptions = `
         <option value="HSS5x3x3/8">HSS5×3×3/8</option>
         <option value="HSS6x3x1/4">HSS6×3×1/4</option>
         <option value="HSS6x3x3/8">HSS6×3×3/8</option>
+        <option value="HSS6x4x1/4">HSS6×4×1/4</option>
+        <option value="HSS6x4x3/8">HSS6×4×3/8</option>
+        <option value="HSS6x4x1/2">HSS6×4×1/2</option>
         <option value="HSS8x3x1/4">HSS8×3×1/4</option>
         <option value="HSS8x3x3/8">HSS8×3×3/8</option>
+        <option value="HSS8x4x1/4">HSS8×4×1/4</option>
+        <option value="HSS8x4x3/8">HSS8×4×3/8</option>
+        <option value="HSS8x4x1/2">HSS8×4×1/2</option>
+        <option value="HSS8x6x1/4">HSS8×6×1/4</option>
+        <option value="HSS8x6x3/8">HSS8×6×3/8</option>
+        <option value="HSS8x6x1/2">HSS8×6×1/2</option>
+        <option value="HSS10x6x1/4">HSS10×6×1/4</option>
+        <option value="HSS10x6x3/8">HSS10×6×3/8</option>
+        <option value="HSS10x6x1/2">HSS10×6×1/2</option>
+        <option value="HSS10x8x1/4">HSS10×8×1/4</option>
+        <option value="HSS10x8x3/8">HSS10×8×3/8</option>
+        <option value="HSS10x8x1/2">HSS10×8×1/2</option>
     </optgroup>`;
 
 document.addEventListener('DOMContentLoaded', () => {
